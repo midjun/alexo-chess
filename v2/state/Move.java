@@ -2,7 +2,6 @@ package v2.state;
 
 import v2.piece.Colour;
 import v2.piece.Figure;
-import v2.piece.FigurePair;
 import v2.piece.Piece;
 
 /**
@@ -17,20 +16,20 @@ public class Move
 
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        int move = mobility(Piece.WHITE_QUEEN,
-                            0, 1, (byte) 0xF, (byte) 10);
-
-        System.out.println("colour: " + colour(move));
-        System.out.println("type: " + moveType(move));
-        System.out.println("from: " + fromSquareIndex(move));
-        System.out.println("to: " + toSquareIndex(move));
-        System.out.println("main: " + figures(move).main() );
-        System.out.println("cap: " + figures(move).captured() );
-        System.out.println("en pass: " + enPassantRank(move) );
-        System.out.println("promo: " + promotion(move) );
-        System.out.println("castle: " + castleType(move) );
-        System.out.println("avail castle: " + availCastles(move) );
-        System.out.println("reverse: " + reversibleMoves(move) );
+//        int move = mobility(Piece.WHITE_QUEEN,
+//                            0, 1, (byte) 0xF, (byte) 10);
+//
+//        System.out.println("colour: " + colour(move));
+//        System.out.println("type: " + moveType(move));
+//        System.out.println("from: " + fromSquareIndex(move));
+//        System.out.println("to: " + toSquareIndex(move));
+//        System.out.println("main: " + figures(move).main() );
+//        System.out.println("cap: " + figures(move).captured() );
+//        System.out.println("en pass: " + enPassantRank(move) );
+//        System.out.println("promo: " + promotion(move) );
+//        System.out.println("castle: " + castleType(move) );
+//        System.out.println("avail castle: " + availCastles(move) );
+//        System.out.println("reverse: " + reversibleMoves(move) );
 
 //        System.out.println(Integer.toBinaryString(
 //                colourMask( Colour.WHITE )));
@@ -70,8 +69,11 @@ public class Move
      *    to index
      *      lg 64 = 6 |
      *
-     *    FigurePair (used for mobility AND captures)
-     *      lg 30 = 5  |
+     *    Figure
+     *      lg 6 = 3  |
+     *
+     *    Capture (no king)
+     *      lg 5 = 3  |
      *
      *    en passant file (if en passant)
      *      lg 8 = 3  |
@@ -82,11 +84,11 @@ public class Move
      *    castle type (if castle)
      *      lg 2 = 1  |
      * 
-     *    castling rights (for undo) [used for RMC]
+     *    castling rights (for undo)
      *      lg 16 = 4
      *
-     *    extra [used for RMC]
-     *      2 bits
+     *    extra
+     *      1 bits
      *  ]
      *
      * totalling 31 bits.
@@ -111,12 +113,17 @@ public class Move
     private static final int TO_MASK  = mask(TO_SIZE) << TO_SHIFT;
 
     private static final int FIGURE_SHIFT = TO_SHIFT + TO_SIZE;
-    private static final int FIGURE_SIZE  = 5;
+    private static final int FIGURE_SIZE  = 3;
     private static final int FIGURE_MASK  =
             mask(FIGURE_SIZE) << FIGURE_SHIFT;
-    private static final int FIGURE_MASK_NOT = ~FIGURE_MASK;
 
-    private static final int EN_PASS_SHIFT = FIGURE_SHIFT + FIGURE_SIZE;
+    private static final int CAPTURE_SHIFT = FIGURE_SHIFT + FIGURE_SIZE;
+    private static final int CAPTURE_SIZE  = 3;
+    private static final int CAPTURE_MASK  =
+            mask(CAPTURE_SIZE) << CAPTURE_SHIFT;
+    //private static final int FIGURE_MASK_NOT = ~FIGURE_MASK;
+
+    private static final int EN_PASS_SHIFT = CAPTURE_SHIFT + CAPTURE_SIZE;
     private static final int EN_PASS_SIZE  = 3;
     private static final int EN_PASS_MASK  =
             mask(EN_PASS_SIZE) << EN_PASS_SHIFT;
@@ -137,10 +144,10 @@ public class Move
     private static final int AVAIL_CASTLE_MASK  =
             mask(AVAIL_CASTLE_SIZE) << AVAIL_CASTLE_SHIFT;
 
-    private static final int REVERSE_SHIFT = CASTLE_SHIFT;
-    private static final int REVERSE_SIZE  = 7;
-    private static final int REVERSE_MASK  =
-            mask(REVERSE_SIZE) << REVERSE_SHIFT;
+//    private static final int REVERSE_SHIFT = CASTLE_SHIFT;
+//    private static final int REVERSE_SIZE  = 7;
+//    private static final int REVERSE_MASK  =
+//            mask(REVERSE_SIZE) << REVERSE_SHIFT;
 
 
     //--------------------------------------------------------------------
@@ -166,10 +173,10 @@ public class Move
     }
     private static int figureMask(Figure figure) {
         
-        return figureMask(FigurePair.valueOf(figure));
+        return figure.ordinal() << FIGURE_SHIFT;
     }
-    private static int figureMask(FigurePair figures) {
-        return figures.ordinal() << FIGURE_SHIFT;
+    private static int capturedMask(Figure captured) {
+        return captured.ordinal() << CAPTURE_SHIFT;
     }
     private static int enPassantMask(int enPassantFile) {
         return enPassantFile << EN_PASS_SHIFT;
@@ -183,9 +190,9 @@ public class Move
     private static int availCastleMask(byte availeableCastles) {
         return availeableCastles << AVAIL_CASTLE_SHIFT;
     }
-    private static int reversibleMask(byte reversibleMoveCount) {
-        return reversibleMoveCount << REVERSE_SHIFT;
-    }
+//    private static int reversibleMask(byte reversibleMoveCount) {
+//        return reversibleMoveCount << REVERSE_SHIFT;
+//    }
 
 
     //--------------------------------------------------------------------
@@ -203,9 +210,13 @@ public class Move
     private static int toSquareIndex(int move) {
         return (move & TO_MASK) >>> TO_SHIFT;
     }
-    private static FigurePair figures(int move) {
+    private static Figure figure(int move) {
         int index = (move & FIGURE_MASK) >>> FIGURE_SHIFT;
-        return FigurePair.VALUES[ index ];
+        return Figure.VALUES[ index ];
+    }
+    private static Figure captured(int move) {
+        int index = (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
+        return Figure.VALUES[ index ];
     }
     private static int enPassantRank(int move) {
         return (move & EN_PASS_MASK) >>> EN_PASS_SHIFT;
@@ -221,18 +232,18 @@ public class Move
     private static int availCastles(int move) {
         return (move & AVAIL_CASTLE_MASK) >>> AVAIL_CASTLE_SHIFT;
     }
-    private static byte reversibleMoves(int move) {
-        return (byte) ((move & REVERSE_MASK) >>> REVERSE_SHIFT);
-    }
+//    private static byte reversibleMoves(int move) {
+//        return (byte) ((move & REVERSE_MASK) >>> REVERSE_SHIFT);
+//    }
 
 
     //--------------------------------------------------------------------
     private static int addCaptured(
             int toMove, Figure captured) {
-
-        FigurePair fp = figures(toMove);
-        return (toMove & FIGURE_MASK_NOT) |
-                figureMask(fp.withCaptured(captured));
+        return toMove | (captured.ordinal() << CAPTURE_SHIFT);
+//        FigurePair fp = figures(toMove);
+//        return (toMove & FIGURE_MASK_NOT) |
+//                figureMask(fp.withCaptured(captured));
     }
 
 
@@ -241,32 +252,28 @@ public class Move
             Piece moving,
             int   fromSquareIndex,
             int   toSquareIndex,
-            byte  availCastles,
-            byte  reversibleMoves)
+            byte  availCastles)
     {
         return   typeMask( MoveType.MOBILITY ) |
                colourMask( moving.colour()   ) |
                figureMask( moving.figure()   ) |
                  fromMask( fromSquareIndex   ) |
                    toMask( toSquareIndex     ) |
-          availCastleMask( availCastles      ) |
-           reversibleMask( reversibleMoves   );
+          availCastleMask( availCastles      );
     }
 
     public static int capture(
             Piece moving,
             int   fromSquareIndex,
             int   toSquareIndex,
-            byte  availCastles,
-            byte  reversibleMoves)
+            byte  availCastles)
     {
         return   typeMask( MoveType.CAPTURE  ) |
                colourMask( moving.colour()   ) |
                figureMask( moving.figure()   ) |
                  fromMask( fromSquareIndex   ) |
                    toMask( toSquareIndex     ) |
-          availCastleMask( availCastles      ) |
-           reversibleMask( reversibleMoves   );
+          availCastleMask( availCastles      );
     }
 
     public static int enPassant()
@@ -292,7 +299,7 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figures(move).main();
+                Figure figure = figure(move);
                 int    from   = fromSquareIndex(move);
                 int    to     = toSquareIndex(move);
 
@@ -302,7 +309,7 @@ public class Move
             }
 
             case CAPTURE: {
-                Figure attacker = figures(move).main();
+                Figure attacker = figure(move);
                 int    from     = fromSquareIndex(move);
                 int    to       = toSquareIndex(move);
 
@@ -323,29 +330,28 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figures(move).main();
+                Figure figure = figure(move);
                 int    from   = fromSquareIndex(move);
                 int    to     = toSquareIndex(move);
                 int    castle = availCastles(move);
-                byte   rev    = reversibleMoves(move);
 
                 toState.unMobalize(
                         Piece.valueOf(colour, figure),
-                        from, to, castle, rev);
+                        from, to, castle);
                 return;
             }
 
             case CAPTURE: {
-                FigurePair figures  = figures(move);
-                int        from     = fromSquareIndex(move);
-                int        to       = toSquareIndex(move);
-                int        castle = availCastles(move);
-                byte       rev    = reversibleMoves(move);
+                Figure attacker = figure(move);
+                Figure captured = captured(move);
+                int    from     = fromSquareIndex(move);
+                int    to       = toSquareIndex(move);
+                int    castle   = availCastles(move);
 
                 toState.unCapture(
-                        Piece.valueOf(colour, figures.main()),
-                        Piece.valueOf(colour.invert(), figures.captured()),
-                        from, to, castle, rev);
+                        Piece.valueOf(colour, attacker),
+                        Piece.valueOf(colour.invert(), captured),
+                        from, to, castle);
                 return;
             }
         }
@@ -359,7 +365,7 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figures(move).main();
+                Figure figure = figure(move);
                 int    from   = fromSquareIndex(move);
                 int    to     = toSquareIndex(move);
 
@@ -368,7 +374,7 @@ public class Move
             }
 
             case CAPTURE: {
-                Figure attacker = figures(move).main();
+                Figure attacker = figure(move);
                 int    from     = fromSquareIndex(move);
                 int    to       = toSquareIndex(move);
 

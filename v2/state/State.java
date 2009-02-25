@@ -50,6 +50,7 @@ public class State
 
     private byte castles;
     private byte reversibleMoves;
+    private byte prevReversibleMoves;
 
     private Colour nextToAct;
 
@@ -93,8 +94,9 @@ public class State
                   BLACK_K_CASTLE |
                   BLACK_Q_CASTLE;
 
-        reversibleMoves = 0;
-        nextToAct       = Colour.WHITE;
+        reversibleMoves     = 0;
+        prevReversibleMoves = 0;
+        nextToAct           = Colour.WHITE;
 
         for (Piece p : Piece.VALUES) {
             if (p.isWhite()) {
@@ -209,9 +211,8 @@ public class State
         int from = BitLoc.bitBoardToLocation(fromBB);
         int off = addMobility(
                 piece, from, moves, offset, movesBB & notOpponent);
-        return off;
-//        return addCaptures(
-//                piece, from, moves, off, movesBB & opponent);
+        return addCaptures(
+                piece, from, moves, off, movesBB & opponent);
     }
 
     private int addMobility(
@@ -227,7 +228,7 @@ public class State
             long moveBoard = BitBoard.lowestOneBit(moveBB);
             moves[ offset++ ] = Move.mobility(
                     piece, from, BitLoc.bitBoardToLocation(moveBoard),
-                    encodeCastles(piece.colour()), reversibleMoves);
+                    encodeCastles(piece.colour()));
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -246,7 +247,7 @@ public class State
             long moveBoard = BitBoard.lowestOneBit(moveBB);
             moves[ offset++ ] = Move.capture(
                     piece, from, BitLoc.bitBoardToLocation(moveBoard),
-                    encodeCastles(piece.colour()), reversibleMoves);
+                    encodeCastles(piece.colour()));
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -258,12 +259,11 @@ public class State
             Piece piece,
             int   fromSquareIndex,
             int   toSquareIndex,
-            int   castlingRights,
-            byte  reversibles)
+            int   castlingRights)
     {
         mobalize(piece, toSquareIndex, fromSquareIndex, false);
         castles         = decodeCastles(castlingRights, piece.colour());
-        reversibleMoves = reversibles;
+        reversibleMoves = prevReversibleMoves;
     }
 
 
@@ -273,6 +273,7 @@ public class State
             int     fromSquareIndex,
             int     toSquareIndex)
     {
+        prevReversibleMoves = reversibleMoves;
         mobalize(piece, fromSquareIndex, toSquareIndex, true);
     }
     private void mobalize(
@@ -342,8 +343,7 @@ public class State
             Piece captured,
             int   fromSquareIndex,
             int   toSquareIndex,
-            int   availCastles,
-            byte  reversibles)
+            int   availCastles)
     {
         long from   = BitLoc.locationToBitBoard(fromSquareIndex);
         long to     = BitLoc.locationToBitBoard(  toSquareIndex);
@@ -363,7 +363,7 @@ public class State
 
         nextToAct       = nextToAct.invert();
         castles         = decodeCastles(availCastles, attacker.colour());
-        reversibleMoves = reversibles;
+        reversibleMoves = prevReversibleMoves;
     }
 
 
@@ -383,7 +383,8 @@ public class State
 
         updateCasltingRights(
                 attacker.figure(), fromSquareIndex);
-        reversibleMoves = 0;
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
         return captured.figure();
     }
     private void capture(
