@@ -21,11 +21,17 @@ public class Test
     //--------------------------------------------------------------------
     public static void main(String[] args)
     {
-        int  count  = 1000;
+        // warmup
+        for (int i = 0; i < 15001; i++)
+        {
+            playOutRandom( new State() );
+        }
+
+        int  count  = 100000;
         long before = System.currentTimeMillis();
         for (int i = 0; i < count; i++)
         {
-            System.out.println(i);
+            //System.out.println(i);
             playOutRandom( new State() );
 //            playOutMediocre();
         }
