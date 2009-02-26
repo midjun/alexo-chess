@@ -84,4 +84,12 @@ public class Location
     {
         return (rankIndex + fileIndex) ^ 7; // xor
     }
+
+
+    //--------------------------------------------------------------------
+    public static String toString(int squareIndex)
+    {
+        return "[" + rankIndex(squareIndex) + ", " +
+                     fileIndex(squareIndex) + "]";
+    }
 }
