@@ -16,19 +16,16 @@ public class MovePicker
 
 
     //--------------------------------------------------------------------
-    private static final int       nMoves   = 256;
+    private static final int       maxMoves = 256;
     private static final int       picsPerN = 32;
 
-    private static final int[]     lastPick = new int[ nMoves ];
-    private static final int[][][] allPicks = new int[ nMoves ][][];
+    private static final int[]     lastPick = new int[ maxMoves ];
+    private static final int[][][] allPicks = new int[ maxMoves ][][];
 
-
-    //--------------------------------------------------------------------
-    public static int[] pick(int nMoves)
+    static
     {
-        int[][] availPicks = allPicks[ nMoves ];
-        if (availPicks == null) {
-            availPicks = new int[ picsPerN ][ nMoves ];
+        for (int nMoves = 0; nMoves < maxMoves; nMoves++) {
+            int[][] availPicks = new int[ picsPerN ][ nMoves ];
 
             for (int i = 0; i < picsPerN; i++) {
                 int[] picks = availPicks[ i ];
@@ -37,7 +34,14 @@ public class MovePicker
             }
             allPicks[ nMoves ] = availPicks;
         }
-        return availPicks[ lastPick[nMoves]++ % picsPerN ];
+    }
+
+
+    //--------------------------------------------------------------------
+    public static int[] pick(int nMoves)
+    {
+        return allPicks[ nMoves                        ]
+                       [ lastPick[nMoves]++ % picsPerN ];
     }
 
 

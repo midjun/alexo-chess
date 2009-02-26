@@ -2,6 +2,7 @@ package v2.state;
 
 import v2.data.BitBoard;
 import v2.data.BitLoc;
+import v2.data.Location;
 import v2.piece.Colour;
 import v2.piece.Figure;
 import v2.piece.Piece;
@@ -10,7 +11,8 @@ import v2.piece.Piece;
  * Date: Feb 6, 2009
  * Time: 2:07:25 AM
  *
- * NOTE: can only undo ONE move, after that the state is undefined.
+ * NOTE: can only undo ONE move, after that the reversible moves and
+ *          allowed castles might be out of whack.
  */
 public class State
 {
@@ -203,6 +205,7 @@ public class State
             long   moveBB)
     {
         if (moveBB == 0) return offset;
+
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
@@ -210,7 +213,9 @@ public class State
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
-        return offset;
+
+        return handlePromotions(
+                figure, moves, from, offset);
     }
 
     private int addCaptures(
@@ -224,84 +229,175 @@ public class State
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
-            moves[ offset++ ] = Move.capture(//nextToAct,
+            moves[ offset++ ] = Move.capture(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
-        return offset;
+        return handlePromotions(
+                figure, moves, from, offset);
     }
 
 
     //--------------------------------------------------------------------
-    public void unMobalize(
-            Figure figure,
-            int    fromSquareIndex,
-            int    toSquareIndex)
+    private int handlePromotions(
+            Figure active, int[] moves, int from, int nextOffset)
     {
-        mobalize(nextToAct.invert(), figure,
-                 BitLoc.locationToBitBoard(fromSquareIndex),
-                 BitLoc.locationToBitBoard(toSquareIndex));
+        if (active == Figure.PAWN) {
+            int fromRank = Location.rankIndex(from);
+            if (nextToAct == Colour.WHITE) {
+                if (fromRank == 6) {
+                    nextOffset = addPromotions(moves, from, nextOffset);
+                }
+            } else if (fromRank == 1) {
+                nextOffset = addPromotions(moves, from, nextOffset);
+            }
+        }
+        return nextOffset;
+    }
+    private int addPromotions(
+            int[] moves, int from, int toExclusive)
+    {
+        int nextOffset = from;
+        for (int f = KNIGHTS; f < KING; f++) {
+            for (int i = from; i < toExclusive; i++) {
+                moves[ nextOffset++ ] =
+                        Move.setPromotion(moves[i], f);
+            }
+        }
+        return nextOffset;
+    }
 
-        castles         = prevCastles;
+
+    //--------------------------------------------------------------------
+    public void pushPromote(int from, int to, int promotion)
+    {
+        System.out.println("pushPromote");
+        pushPromoteBB(nextToAct, from, to, promotion);
+
+        nextToAct           = nextToAct.invert();
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
+    }
+    public void pushPromoteBB(
+            Colour colour, int from, int to, int promotion) {
+        long fromBB = BitLoc.locationToBitBoard(from);
+        long toBB   = BitLoc.locationToBitBoard(to);
+        if (colour == Colour.WHITE) {
+            wPieces[ PAWNS     ] ^= fromBB;
+            wPieces[ promotion ] ^= toBB;
+            whiteBB              ^= fromBB ^ toBB;
+        } else {
+            bPieces[ PAWNS     ] ^= fromBB;
+            bPieces[ promotion ] ^= toBB;
+            blackBB              ^= fromBB ^ toBB;
+        }
+    }
+
+    public int capturePromote(int from, int to, int promotion)
+    {
+        System.out.println("capturePromote");
+        long toBB     = BitLoc.locationToBitBoard(to);
+        int  captured = figureAt(toBB, nextToAct.invert());
+
+        capturePromoteBB(nextToAct, from, toBB, promotion, captured);
+
+        nextToAct           = nextToAct.invert();
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
+        return captured;
+    }
+    public void capturePromoteBB(Colour colour,
+            int from, long toBB, int promotion, int captured)
+    {
+        long fromBB = BitLoc.locationToBitBoard(from);
+
+        if (colour == Colour.WHITE) {
+            wPieces[ PAWNS     ] ^= fromBB;
+            wPieces[ promotion ] ^= toBB;
+            whiteBB              ^= fromBB ^ toBB;
+            bPieces[ captured  ] ^= toBB;
+            blackBB              ^= toBB;
+        } else {
+            bPieces[ PAWNS     ] ^= fromBB;
+            bPieces[ promotion ] ^= toBB;
+            blackBB              ^= fromBB ^ toBB;
+            wPieces[ captured  ] ^= toBB;
+            whiteBB              ^= toBB;
+        }
+    }
+
+
+    //--------------------------------------------------------------------
+    public void unPushPromote(int from, int to, int promotion)
+    {
+        System.out.println("unPushPromote");
+        nextToAct       = nextToAct.invert();
         reversibleMoves = prevReversibleMoves;
+
+        pushPromoteBB(nextToAct, from, to, promotion);
+    }
+
+    public void unCapturePromote(
+            int from, int to, int promotion, int captured)
+    {
+        System.out.println("unCapturePromote");
+        nextToAct       = nextToAct.invert();
+        reversibleMoves = prevReversibleMoves;
+
+        long toBB = BitLoc.locationToBitBoard(to);
+        capturePromoteBB(nextToAct, from, toBB, promotion, captured);
     }
 
 
     //--------------------------------------------------------------------
     public void mobalize(
-            Figure figure,
-            int    fromSquareIndex,
-            int    toSquareIndex)
+            int figure,
+            int fromSquareIndex,
+            int toSquareIndex)
     {
-        prevCastles         = castles;
-        prevReversibleMoves = reversibleMoves;
-        doMobalize(figure, fromSquareIndex, toSquareIndex);
-    }
-    private void doMobalize(
-            Figure  figure,
-            int     fromSquareIndex,
-            int     toSquareIndex)
-    {
-        mobalize(nextToAct, figure,
+        mobalizeBB(nextToAct, figure,
                  BitLoc.locationToBitBoard(fromSquareIndex),
                  BitLoc.locationToBitBoard(toSquareIndex));
 
+        prevCastles         = castles;
+        prevReversibleMoves = reversibleMoves;
+
         updateCasltingRights(
                 figure, fromSquareIndex);
-
-        if (figure == Figure.PAWN) {
+        if (figure == PAWNS) {
             reversibleMoves = 0;
         } else {
             reversibleMoves++;
         }
     }
-    private void mobalize(
+    private void mobalizeBB(
             Colour colour,
-            Figure figure,
+            int    figure,
             long   from,
             long   to)
     {
         long fromTo = from ^ to;
 
         if (colour == Colour.WHITE) {
-            wPieces[ figure.ordinal() ] ^= fromTo;
-            whiteBB ^= fromTo;
+            wPieces[ figure ] ^= fromTo;
+            whiteBB           ^= fromTo;
         } else {
-            bPieces[ figure.ordinal() ] ^= fromTo;
-            blackBB ^= fromTo;
+            bPieces[ figure ] ^= fromTo;
+            blackBB           ^= fromTo;
         }
 
         nextToAct = nextToAct.invert();
     }
 
     private void updateCasltingRights(
-            Figure mover, int from)
+            int figure, int from)
     {
-        if (castles == 0) return;
-        if (mover == Figure.KING) {
+        if (figure == KING) {
+            if (castles == 0) return;
             castles &= ~((nextToAct == Colour.WHITE)
                          ? WHITE_CASTLE : BLACK_CASTLE);
-        } else if (mover == Figure.ROOK) {
+        } else if (figure == ROOKS) {
+            if (castles == 0) return;
             if (nextToAct == Colour.WHITE) {
                 if (from == 0) {
                     castles &= ~WHITE_Q_CASTLE;
@@ -320,46 +416,29 @@ public class State
 
 
     //--------------------------------------------------------------------
-    public void unCapture(
-            Figure attacker,
-            Figure captured,
-            int    fromSquareIndex,
-            int    toSquareIndex)
+    public void unMobalize(
+            int figure,
+            int fromSquareIndex,
+            int toSquareIndex)
     {
-        long from   = BitLoc.locationToBitBoard(fromSquareIndex);
-        long to     = BitLoc.locationToBitBoard(  toSquareIndex);
-        long fromTo = from ^ to;
+        mobalizeBB(nextToAct.invert(), figure,
+                   BitLoc.locationToBitBoard(fromSquareIndex),
+                   BitLoc.locationToBitBoard(toSquareIndex));
 
-        if (nextToAct == Colour.WHITE) {
-            // black is the attacher
-            bPieces[ attacker.ordinal() ] ^= fromTo;
-            wPieces[ captured.ordinal() ] ^= to;
-
-            blackBB ^= fromTo;
-            whiteBB ^= to;
-        } else {
-            wPieces[ attacker.ordinal() ] ^= fromTo;
-            bPieces[ captured.ordinal() ] ^= to;
-
-            whiteBB ^= fromTo;
-            blackBB ^= to;
-        }
-
-        nextToAct       = nextToAct.invert();
         castles         = prevCastles;
         reversibleMoves = prevReversibleMoves;
     }
 
 
     //--------------------------------------------------------------------
-    public Figure capture(
-            Figure attacker,
-            int    fromSquareIndex,
-            int    toSquareIndex)
+    public int capture(
+            int attacker,
+            int fromSquareIndex,
+            int toSquareIndex)
     {
-        long toBB = BitLoc.locationToBitBoard(toSquareIndex);
-        Figure captured = figureAt(toBB, nextToAct.invert());
-        capture(attacker.ordinal(), captured.ordinal(),
+        long toBB     = BitLoc.locationToBitBoard(toSquareIndex);
+        int  captured = figureAt(toBB, nextToAct.invert());
+        capture(attacker, captured,
                 BitLoc.locationToBitBoard(fromSquareIndex),
                 BitLoc.locationToBitBoard(toSquareIndex));
 
@@ -397,10 +476,42 @@ public class State
 
 
     //--------------------------------------------------------------------
+    public void unCapture(
+            int attacker,
+            int captured,
+            int fromSquareIndex,
+            int toSquareIndex)
+    {
+        long from   = BitLoc.locationToBitBoard(fromSquareIndex);
+        long to     = BitLoc.locationToBitBoard(  toSquareIndex);
+        long fromTo = from ^ to;
+
+        if (nextToAct == Colour.WHITE) {
+            // black is the attacher
+            bPieces[ attacker ] ^= fromTo;
+            wPieces[ captured ] ^= to;
+
+            blackBB ^= fromTo;
+            whiteBB ^= to;
+        } else {
+            wPieces[ attacker ] ^= fromTo;
+            bPieces[ captured ] ^= to;
+
+            whiteBB ^= fromTo;
+            blackBB ^= to;
+        }
+
+        nextToAct       = nextToAct.invert();
+        castles         = prevCastles;
+        reversibleMoves = prevReversibleMoves;
+    }
+
+
+    //--------------------------------------------------------------------
     public boolean isInCheck(Colour colour)
     {
-        long   occupied    = whiteBB | blackBB;
-        long   notOccupied = ~occupied;
+        long occupied    = whiteBB | blackBB;
+        long notOccupied = ~occupied;
 
         long attacker, attacked, targetKing, attackingPieces[];
         if (colour == Colour.BLACK) {
@@ -547,39 +658,53 @@ public class State
         return null;
     }
 
-    private Figure figureAt(long location, Colour ofColour)
+    private int figureAt(long location, Colour ofColour)
     {
         long[] pieces = (ofColour == Colour.WHITE)
                         ? wPieces : bPieces;
 
-        for (Figure f : Figure.VALUES)
+        for (int f = 0; f < Figure.VALUES.length; f++)
         {
-            long occupied = pieces[ f.ordinal() ];
+            long occupied = pieces[ f ];
             if ((occupied & location) != 0) return f;
         }
-        return null;
+        return -1;
     }
 
 
     //--------------------------------------------------------------------
     public State prototype()
     {
-        return new State(wPieces.clone(), bPieces.clone(),
+        return new State(wPieces.clone(),
+                         bPieces.clone(),
                          enPassants,
                          castles,
                          reversibleMoves,
                          nextToAct,
-                         whiteBB, blackBB,
-                         prevCastles, prevReversibleMoves);
+                         whiteBB,
+                         blackBB,
+                         prevCastles,
+                         prevReversibleMoves);
     }
 
 
     public boolean checkPieces()
     {
-        return whiteBB == calcPieces(Colour.WHITE) &&
-               blackBB == calcPieces(Colour.BLACK);
+        if (!(whiteBB == calcPieces(Colour.WHITE) &&
+              blackBB == calcPieces(Colour.BLACK))) {
+            System.out.println("checkPieces: colourBB failed");
+            return false;
+        }
+
+        if (Long.bitCount(wPieces[ KING ]) != 1 ||
+            Long.bitCount(bPieces[ KING ]) != 1) {
+            System.out.println("checkPieces: not exactly one king");
+            return false;
+        }
+
+        return true;
     }
-    public long calcPieces(Colour c)
+    private long calcPieces(Colour c)
     {
         long[] pieces = (c == Colour.WHITE)
                         ? wPieces : bPieces;
@@ -599,10 +724,9 @@ public class State
 
         str.append("Reversible Moves: ").append(reversibleMoves);
 
-        str.append("\nCastles Available: ");
-        if (castles == 0) {
-            str.append("none");
-        } else {
+        if (castles != 0) {
+            str.append("\nCastles Available: ");
+
             if ((castles & WHITE_CASTLE) != 0) {
                 str.append("[white: ");
                 if ((castles & WHITE_CASTLE) == WHITE_CASTLE) {
@@ -627,10 +751,8 @@ public class State
             }
         }
 
-        str.append("\nEn Passants: ");
-        if (enPassants == 0) {
-            str.append("none");
-        } else {
+        if (enPassants != 0) {
+            str.append("\nEn Passants: ");
 //            if (whiteEnPassants != 0) {
 //                str.append("white ")
 //                   .append(Long.lowestOneBit(whiteEnPassants))

@@ -34,7 +34,7 @@ public class Move
 //                colourMask( Colour.WHITE )));
 //
 //        System.out.println(Integer.toBinaryString(
-//                typeMask( MoveType.MOBILITY )));
+//                typeBits( MoveType.MOBILITY )));
 //
 //        System.out.println(Integer.toBinaryString(
 //                figureMask( Figure.QUEEN )));
@@ -75,20 +75,17 @@ public class Move
      *    en passant file (if en passant)
      *      lg 8 = 3  |
      *
-     *    promotion to figure {knight, bishop, rook, queen}
-     *      lg 4 = 2  |
+     *    promotion to figure {nil, knight, bishop, rook, queen}
+     *      lg 5 = 2  |
      *
      *    castle type (if castle)
      *      lg 2 = 1  |
-     * 
-     *    castling rights (for undo)
-     *      lg 16 = 4
      *
      *    extra
-     *      2 bits
+     *      5 bits
      *  ]
      *
-     * totalling 30 bits.
+     * totalling 31 bits.
      */
 
     // making this final raises annoying suggestions
@@ -126,9 +123,10 @@ public class Move
             mask(EN_PASS_SIZE) << EN_PASS_SHIFT;
 
     private static final int PROMO_SHIFT = EN_PASS_SHIFT + EN_PASS_SIZE;
-    private static final int PROMO_SIZE  = 2;
+    private static final int PROMO_SIZE  = 3;
     private static final int PROMO_MASK  =
             mask(PROMO_SIZE) << PROMO_SHIFT;
+    private static final int PROMO_MASK_NOT = ~PROMO_MASK;
 
     private static final int CASTLE_SHIFT = PROMO_SHIFT + PROMO_SIZE;
     private static final int CASTLE_SIZE  = 1;
@@ -159,29 +157,32 @@ public class Move
 //    private static int colourMask(Colour colour) {
 //        return colour.ordinal();
 //    }
-    private static int typeMask(MoveType moveType) {
+    private static int typeBits(MoveType moveType) {
         return moveType.ordinal() << TYPE_SHIFT;
     }
-    private static int fromMask(int squareIndex) {
+    private static int fromBits(int squareIndex) {
         return squareIndex << FROM_SHIFT;
     }
-    private static int toMask(int squareIndex) {
+    private static int toBits(int squareIndex) {
         return squareIndex << TO_SHIFT;
     }
-    private static int figureMask(Figure figure) {
+    private static int figureBits(Figure figure) {
         
         return figure.ordinal() << FIGURE_SHIFT;
     }
-    private static int capturedMask(Figure captured) {
-        return captured.ordinal() << CAPTURE_SHIFT;
-    }
-    private static int enPassantMask(int enPassantFile) {
+//    private static int capturedBits(Figure captured) {
+//        return captured.ordinal() << CAPTURE_SHIFT;
+//    }
+    private static int enPassantBits(int enPassantFile) {
         return enPassantFile << EN_PASS_SHIFT;
     }
-    private static int promotionMask(Figure promotingTo) {
-        return (promotingTo.ordinal() - 1) << PROMO_SHIFT;
+    private static int promotionBits(int promotingTo) {
+        return promotingTo << PROMO_SHIFT;
     }
-    private static int castleMask(CastleType castle) {
+//    private static int promotionBits(Figure promotingTo) {
+//        return promotionBits(promotingTo.ordinal());
+//    }
+    private static int castleBits(CastleType castle) {
         return castle.ordinal() << CASTLE_SHIFT;
     }
 //    private static int availCastleMask(byte availeableCastles) {
@@ -197,7 +198,7 @@ public class Move
 //        int index = (move & COLOUR_MASK) >>> COLOUR_SHIFT;
 //        return Colour.VALUES[ index ];
 //    }
-    private static MoveType moveType(int move) {
+    public static MoveType moveType(int move) {
         int index = (move & TYPE_MASK) >>> TYPE_SHIFT;
         return MoveType.VALUES[ index ];
     }
@@ -207,20 +208,23 @@ public class Move
     private static int toSquareIndex(int move) {
         return (move & TO_MASK) >>> TO_SHIFT;
     }
-    private static Figure figure(int move) {
-        int index = (move & FIGURE_MASK) >>> FIGURE_SHIFT;
-        return Figure.VALUES[ index ];
+    private static int figure(int move) {
+        return (move & FIGURE_MASK) >>> FIGURE_SHIFT;
+//        int index = (move & FIGURE_MASK) >>> FIGURE_SHIFT;
+//        return Figure.VALUES[ index ];
     }
-    private static Figure captured(int move) {
-        int index = (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
-        return Figure.VALUES[ index ];
+    private static int captured(int move) {
+        return (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
+//        int index = (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
+//        return Figure.VALUES[ index ];
     }
     private static int enPassantRank(int move) {
         return (move & EN_PASS_MASK) >>> EN_PASS_SHIFT;
     }
-    private static Figure promotion(int move) {
-        int index = (move & PROMO_MASK) >>> PROMO_SHIFT;
-        return Figure.VALUES[ index + 1 ];
+    private static int promotion(int move) {
+        return (move & PROMO_MASK) >>> PROMO_SHIFT;
+//        int index = (move & PROMO_MASK) >>> PROMO_SHIFT;
+//        return Figure.VALUES[ index ];
     }
     private static CastleType castleType(int move) {
         int index = (move & CASTLE_MASK) >>> CASTLE_SHIFT;
@@ -236,39 +240,45 @@ public class Move
 
     //--------------------------------------------------------------------
     private static int addCaptured(
-            int toMove, Figure captured) {
-        return toMove | (captured.ordinal() << CAPTURE_SHIFT);
-//        FigurePair fp = figures(toMove);
-//        return (toMove & FIGURE_MASK_NOT) |
-//                figureMask(fp.withCaptured(captured));
+            int toMove, int captured) {
+        return toMove | (captured << CAPTURE_SHIFT);
+    }
+
+    public static int setPromotion(
+            int toMove, int toFigure) {
+        return (toMove & PROMO_MASK_NOT) | promotionBits(toFigure);
+    }
+//    public static int setPromotion(
+//            int toMove, Figure toFigure) {
+//        return setPromotion(toMove, toFigure.ordinal());
+//    }
+
+    public static boolean isCapture(int move) {
+        return moveType(move) == MoveType.CAPTURE;
     }
 
 
     //--------------------------------------------------------------------
     public static int mobility(
-//            Colour colour,
             Figure moving,
             int    fromSquareIndex,
             int    toSquareIndex)
     {
-        return   typeMask( MoveType.MOBILITY ) |
-//               colourMask( colour            ) |
-               figureMask( moving            ) |
-                 fromMask( fromSquareIndex   ) |
-                   toMask( toSquareIndex     );
+        return   typeBits( MoveType.MOBILITY ) |
+               figureBits( moving            ) |
+                 fromBits( fromSquareIndex   ) |
+                   toBits( toSquareIndex     );
     }
 
     public static int capture(
-//            Colour colour,
             Figure attacker,
             int    fromSquareIndex,
             int    toSquareIndex)
     {
-        return   typeMask( MoveType.CAPTURE  ) |
-//               colourMask( colour            ) |
-               figureMask( attacker          ) |
-                 fromMask( fromSquareIndex   ) |
-                   toMask( toSquareIndex     );
+        return   typeBits( MoveType.CAPTURE  ) |
+               figureBits( attacker          ) |
+                 fromBits( fromSquareIndex   ) |
+                   toBits( toSquareIndex     );
     }
 
     public static int enPassant()
@@ -281,11 +291,6 @@ public class Move
         return 0;
     }
 
-    public static int promotion()
-    {
-        return 0;
-    }
-
 
     //--------------------------------------------------------------------
     public static int apply(int move, State toState)
@@ -294,20 +299,33 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figure(move);
-                int    from   = fromSquareIndex(move);
-                int    to     = toSquareIndex(move);
+                int figure = figure(move);
+                int from   = fromSquareIndex(move);
+                int to     = toSquareIndex(move);
 
-                toState.mobalize(figure, from, to);
+                int promoteTo;
+                if (figure == 0 &&
+                        (promoteTo = promotion(move)) != 0) {
+                    toState.pushPromote(from, to, promoteTo);
+                } else {
+                    toState.mobalize(figure, from, to);
+                }
                 return move;
             }
 
             case CAPTURE: {
-                Figure attacker = figure(move);
-                int    from     = fromSquareIndex(move);
-                int    to       = toSquareIndex(move);
+                int figure = figure(move);
+                int from   = fromSquareIndex(move);
+                int to     = toSquareIndex(move);
 
-                Figure captured = toState.capture(attacker, from, to);
+                int promoteTo;
+                int captured =
+                        (figure == 0 &&
+                          (promoteTo = promotion(move)) != 0)
+                       ? toState.capturePromote(
+                            from, to, promoteTo)
+                       : toState.capture(figure(move), from, to);
+
                 return addCaptured(move, captured);
             }
         }
@@ -323,21 +341,34 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figure(move);
-                int    from   = fromSquareIndex(move);
-                int    to     = toSquareIndex(move);
+                int figure = figure(move);
+                int from   = fromSquareIndex(move);
+                int to     = toSquareIndex(move);
 
-                toState.unMobalize(figure, from, to);
+                int promoteTo;
+                if (figure == 0 &&
+                        (promoteTo = promotion(move)) != 0) {
+                    toState.unPushPromote(from, to, promoteTo);
+                } else {
+                    toState.unMobalize(figure, from, to);
+                }
                 return;
             }
 
             case CAPTURE: {
-                Figure attacker = figure(move);
-                Figure captured = captured(move);
-                int    from     = fromSquareIndex(move);
-                int    to       = toSquareIndex(move);
+                int figure   = figure(move);
+                int captured = captured(move);
+                int from     = fromSquareIndex(move);
+                int to       = toSquareIndex(move);
 
-                toState.unCapture(attacker, captured, from, to);
+                int promoteTo;
+                if (figure == 0 &&
+                        (promoteTo = promotion(move)) != 0) {
+                    toState.unCapturePromote(
+                            from, to, promoteTo, captured);
+                } else {
+                    toState.unCapture(figure, captured, from, to);
+                }
                 return;
             }
         }
@@ -351,23 +382,29 @@ public class Move
         switch (moveType(move))
         {
             case MOBILITY: {
-                Figure figure = figure(move);
-                int    from   = fromSquareIndex(move);
-                int    to     = toSquareIndex(move);
+                int figure = figure(move);
+                int from   = fromSquareIndex(move);
+                int to     = toSquareIndex(move);
+                int promo  = promotion(move);
 
-                return "mobility with " + figure +
+                return "mobility with " + Figure.VALUES[figure] +
                          " from " + Location.toString(from) + " to " +
-                                    Location.toString(to);
+                                    Location.toString(to) +
+                         (promo != 0
+                          ? " promo " + Figure.VALUES[figure] : "");
             }
 
             case CAPTURE: {
-                Figure attacker = figure(move);
-                int    from     = fromSquareIndex(move);
-                int    to       = toSquareIndex(move);
+                int figure = figure(move);
+                int from   = fromSquareIndex(move);
+                int to     = toSquareIndex(move);
+                int promo  = promotion(move);
 
-                return "capture with " + attacker +
-                        " from " + Location.toString(from) + " to " +
-                                   Location.toString(to);
+                return "capture with " + Figure.VALUES[figure] +
+                         " from " + Location.toString(from) + " to " +
+                                   Location.toString(to) +
+                         (promo != 0
+                          ? " promo " + Figure.VALUES[figure] : "");
             }
         }
 
