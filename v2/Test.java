@@ -25,9 +25,10 @@ public class Test
         for (int i = 0; i < 15001; i++)
         {
             playOutRandom( new State() );
+//            playOutMediocre();
         }
 
-        int  count  = 100000;
+        int  count  = 50000;
         long before = System.currentTimeMillis();
         for (int i = 0; i < count; i++)
         {

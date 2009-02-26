@@ -9,6 +9,8 @@ import v2.piece.Piece;
 /**
  * Date: Feb 6, 2009
  * Time: 2:07:25 AM
+ *
+ * NOTE: can only undo ONE move, after that the state is undefined.
  */
 public class State
 {
@@ -23,32 +25,30 @@ public class State
     private static final byte BLACK_CASTLE = BLACK_K_CASTLE |
                                              BLACK_Q_CASTLE;
 
-    private static final byte BLACK_CASTLE_SHIFT = 2;
-
-    private static final int WHITE_PAWNS   = Piece.WHITE_PAWN.ordinal();
-    private static final int BLACK_PAWNS   = Piece.BLACK_PAWN.ordinal();
-    private static final int WHITE_KNIGHTS = Piece.WHITE_KNIGHT.ordinal();
-    private static final int BLACK_KNIGHTS = Piece.BLACK_KNIGHT.ordinal();
-    private static final int WHITE_BISHOPS = Piece.WHITE_BISHOP.ordinal();
-    private static final int BLACK_BISHOPS = Piece.BLACK_BISHOP.ordinal();
-    private static final int WHITE_ROOKS   = Piece.WHITE_ROOK.ordinal();
-    private static final int BLACK_ROOKS   = Piece.BLACK_ROOK.ordinal();
-    private static final int WHITE_QUEENS  = Piece.WHITE_QUEEN.ordinal();
-    private static final int BLACK_QUEENS  = Piece.BLACK_QUEEN.ordinal();
-    private static final int WHITE_KING    = Piece.WHITE_KING.ordinal();
-    private static final int BLACK_KING    = Piece.BLACK_KING.ordinal();
+//    private static final byte BLACK_CASTLE_SHIFT = 2;
 
 
     //--------------------------------------------------------------------
-    private long[] pieces;
+    private static final int PAWNS   = Figure.PAWN  .ordinal();
+    private static final int KNIGHTS = Figure.KNIGHT.ordinal();
+    private static final int BISHOPS = Figure.BISHOP.ordinal();
+    private static final int ROOKS   = Figure.ROOK  .ordinal();
+    private static final int QUEENS  = Figure.QUEEN .ordinal();
+    private static final int KING    = Figure.KING  .ordinal();
 
-    private long whitePieces;
-    private long blackPieces;
 
-    private byte whiteEnPassants; // En Passant available
-    private byte blackEnPassants; // En Passant available
+    //--------------------------------------------------------------------
+    private long[] wPieces;
+    private long[] bPieces;
+
+    private long whiteBB;
+    private long blackBB;
+
+    private byte enPassants; // avaiable to take for nextToAct
 
     private byte castles;
+    private byte prevCastles;
+
     private byte reversibleMoves;
     private byte prevReversibleMoves;
 
@@ -58,117 +58,100 @@ public class State
     //--------------------------------------------------------------------
     public State()
     {
-        pieces = new long[ Piece.VALUES.length ];
+        wPieces = new long[ Figure.VALUES.length ];
+        bPieces = new long[ Figure.VALUES.length ];
 
         for (int p = 0; p < 8; p++) {
-            pieces[ WHITE_PAWNS ] |= BitLoc.locationToBitBoard(1, p);
-            pieces[ BLACK_PAWNS ] |= BitLoc.locationToBitBoard(6, p);
+            wPieces[ PAWNS ] |=  BitLoc.locationToBitBoard(1, p);
+            bPieces[ PAWNS ] |=  BitLoc.locationToBitBoard(6, p);
         }
 
-        pieces[ WHITE_ROOKS ] = BitLoc.locationToBitBoard(0, 0) |
-                                BitLoc.locationToBitBoard(0, 7);
-        pieces[ BLACK_ROOKS ] = BitLoc.locationToBitBoard(7, 0) |
-                                BitLoc.locationToBitBoard(7, 7);
+        wPieces[ ROOKS ] = BitLoc.locationToBitBoard(0, 0) |
+                           BitLoc.locationToBitBoard(0, 7);
+        bPieces[ ROOKS ] = BitLoc.locationToBitBoard(7, 0) |
+                           BitLoc.locationToBitBoard(7, 7);
 
-        pieces[ WHITE_KNIGHTS ] = BitLoc.locationToBitBoard(0, 1) |
-                                  BitLoc.locationToBitBoard(0, 6);
-        pieces[ BLACK_KNIGHTS ] = BitLoc.locationToBitBoard(7, 1) |
-                                  BitLoc.locationToBitBoard(7, 6);
+        wPieces[ KNIGHTS ] = BitLoc.locationToBitBoard(0, 1) |
+                             BitLoc.locationToBitBoard(0, 6);
+        bPieces[ KNIGHTS ] = BitLoc.locationToBitBoard(7, 1) |
+                             BitLoc.locationToBitBoard(7, 6);
 
-        pieces[ WHITE_BISHOPS ] = BitLoc.locationToBitBoard(0, 2) |
-                                  BitLoc.locationToBitBoard(0, 5);
-        pieces[ BLACK_BISHOPS ] = BitLoc.locationToBitBoard(7, 2) |
-                                  BitLoc.locationToBitBoard(7, 5);
+        wPieces[ BISHOPS ] = BitLoc.locationToBitBoard(0, 2) |
+                             BitLoc.locationToBitBoard(0, 5);
+        bPieces[ BISHOPS ] = BitLoc.locationToBitBoard(7, 2) |
+                             BitLoc.locationToBitBoard(7, 5);
 
-        pieces[ WHITE_QUEENS ] = BitLoc.locationToBitBoard(0, 3);
-        pieces[ BLACK_QUEENS ] = BitLoc.locationToBitBoard(7, 3);
+        wPieces[ QUEENS ] = BitLoc.locationToBitBoard(0, 3);
+        bPieces[ QUEENS ] = BitLoc.locationToBitBoard(7, 3);
 
-        pieces[ WHITE_KING ] = BitLoc.locationToBitBoard(0, 4);
-        pieces[ BLACK_KING ] = BitLoc.locationToBitBoard(7, 4);
+        wPieces[ KING ] = BitLoc.locationToBitBoard(0, 4);
+        bPieces[ KING ] = BitLoc.locationToBitBoard(7, 4);
 
-        whiteEnPassants = 0;
-        blackEnPassants = 0;
+        enPassants = 0;
+        castles    = WHITE_CASTLE | BLACK_CASTLE;
 
-        castles = WHITE_K_CASTLE |
-                  WHITE_Q_CASTLE |
-                  BLACK_K_CASTLE |
-                  BLACK_Q_CASTLE;
+        reversibleMoves = 0;
+        nextToAct       = Colour.WHITE;
 
-        reversibleMoves     = 0;
-        prevReversibleMoves = 0;
-        nextToAct           = Colour.WHITE;
-
-        for (Piece p : Piece.VALUES) {
-            if (p.isWhite()) {
-                whitePieces |= pieces[ p.ordinal() ];
-            } else {
-                blackPieces |= pieces[ p.ordinal() ];
-            }
+        for (Figure f : Figure.VALUES) {
+            whiteBB |= wPieces[ f.ordinal() ];
+            blackBB |= bPieces[ f.ordinal() ];
         }
+
+        prevCastles         = castles;
+        prevReversibleMoves = reversibleMoves;
     }
 
-
-    private State(long[] copyPieces,
-                  byte   copyWhiteEnPassants,
-                  byte   copyBlackEnPassants,
+    private State(long[] copyWPieces,
+                  long[] copyBPieces,
+                  byte   copyEnPassants,
                   byte   copyCastles,
                   byte   copyReversibleMoves,
                   Colour copyNextToAct,
-                  long   copyWhitePieces,
-                  long   copyBlackPieces)
+                  long   copyWhiteBB,
+                  long   copyBlackBB,
+                  byte   copyPrevCastles,
+                  byte   copyPrevReversibleMoves)
     {
-        pieces = copyPieces;
+        wPieces = copyWPieces;
+        bPieces = copyBPieces;
 
-        whiteEnPassants = copyWhiteEnPassants;
-        blackEnPassants = copyBlackEnPassants;
-
+        enPassants      = copyEnPassants;
         castles         = copyCastles;
         reversibleMoves = copyReversibleMoves;
         nextToAct       = copyNextToAct;
 
-        whitePieces = copyWhitePieces;
-        blackPieces = copyBlackPieces;
-    }
+        whiteBB = copyWhiteBB;
+        blackBB = copyBlackBB;
 
-
-    //--------------------------------------------------------------------
-    private byte decodeCastles(int rights, Colour forSide)
-    {
-        return (byte)((forSide == Colour.WHITE)
-               ? castles & BLACK_CASTLE | rights
-               : castles & WHITE_CASTLE |
-                 rights << BLACK_CASTLE_SHIFT);
-    }
-
-    private byte encodeCastles(Colour forSide)
-    {
-        return (byte) ((forSide == Colour.WHITE)
-               ? castles & WHITE_CASTLE
-               : (castles & BLACK_CASTLE) >> BLACK_CASTLE_SHIFT);
+        prevCastles         = copyPrevCastles;
+        prevReversibleMoves = copyPrevReversibleMoves;
     }
 
 
     //--------------------------------------------------------------------
     /**
-     * generate all legal moves from this position
+     * generate all pseudo-legal moves from this position
      *
      * @param moves generate moves into
-     * @return number of moves generated
+     * @return number of moves generated, or -1 if mate is possible
      */
     public int moves(int[] moves)
     {
-        long occupied      = whitePieces | blackPieces;
+        long occupied      = whiteBB | blackBB;
         long notOccupied   = ~occupied;
 
-        long proponent, opponent, oppKing;
+        long proponent, opponent, oppKing, pieces[];
         if (nextToAct == Colour.WHITE) {
-            proponent = whitePieces;
-            opponent  = blackPieces;
-            oppKing   = pieces[ Piece.BLACK_KING.ordinal() ];
+            proponent = whiteBB;
+            opponent  = blackBB;
+            oppKing   = bPieces[ KING ];
+            pieces    = wPieces;
         } else {
-            proponent = blackPieces;
-            opponent  = whitePieces;
-            oppKing   = pieces[ Piece.WHITE_KING.ordinal() ];
+            proponent = blackBB;
+            opponent  = whiteBB;
+            oppKing   = wPieces[ KING ];
+            pieces    = bPieces;
         }
         long notProponent = ~proponent;
         long notOpponent  = ~opponent;
@@ -176,20 +159,17 @@ public class State
         int offset = 0;
         for (Figure f : Figure.VALUES)
         {
-            Piece p  = Piece.valueOf(nextToAct, f);
-            long  bb = pieces[ p.ordinal() ];
+            long  bb = pieces[ f.ordinal() ];
             while (bb != 0)
             {
                 long pieceBoard  = BitBoard.lowestOneBit(bb);
-                long pseudoMoves = p.moves(
+                long pseudoMoves = Piece.valueOf(nextToAct, f).moves(
                         pieceBoard, occupied, notOccupied,
                         proponent, notProponent, opponent);
                 if ((oppKing & pseudoMoves) != 0) return -1;
 
-//                prevActGenMoves |= pseudoMoves;
-
                 offset = addMoves(
-                        p, pieceBoard, moves, offset,
+                        f, pieceBoard, moves, offset,
                         pseudoMoves, opponent, notOpponent);
 
                 // reset LS1B
@@ -200,54 +180,52 @@ public class State
     }
     
     private int addMoves(
-            Piece piece,
-            long  fromBB,
-            int[] moves,
-            int   offset,
-            long  movesBB,
-            long  opponent,
-            long  notOpponent)
+            Figure figure,
+            long   fromBB,
+            int[]  moves,
+            int    offset,
+            long   movesBB,
+            long   opponent,
+            long   notOpponent)
     {
         int from = BitLoc.bitBoardToLocation(fromBB);
         int off = addMobility(
-                piece, from, moves, offset, movesBB & notOpponent);
+                figure, from, moves, offset, movesBB & notOpponent);
         return addCaptures(
-                piece, from, moves, off, movesBB & opponent);
+                figure, from, moves, off, movesBB & opponent);
     }
 
     private int addMobility(
-            Piece piece,
-            int   from,
-            int[] moves,
-            int   offset,
-            long  moveBB)
+            Figure figure,
+            int    from,
+            int[]  moves,
+            int    offset,
+            long   moveBB)
     {
         if (moveBB == 0) return offset;
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
-            moves[ offset++ ] = Move.mobility(
-                    piece, from, BitLoc.bitBoardToLocation(moveBoard),
-                    encodeCastles(piece.colour()));
+            moves[ offset++ ] = Move.mobility(//nextToAct,
+                    figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
         return offset;
     }
 
     private int addCaptures(
-            Piece piece,
-            int   from,
-            int[] moves,
-            int   offset,
-            long  moveBB)
+            Figure figure,
+            int    from,
+            int[]  moves,
+            int    offset,
+            long   moveBB)
     {
         if (moveBB == 0) return offset;
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
-            moves[ offset++ ] = Move.capture(
-                    piece, from, BitLoc.bitBoardToLocation(moveBoard),
-                    encodeCastles(piece.colour()));
+            moves[ offset++ ] = Move.capture(//nextToAct,
+                    figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -256,58 +234,62 @@ public class State
 
     //--------------------------------------------------------------------
     public void unMobalize(
-            Piece piece,
-            int   fromSquareIndex,
-            int   toSquareIndex,
-            int   castlingRights)
+            Figure figure,
+            int    fromSquareIndex,
+            int    toSquareIndex)
     {
-        mobalize(piece, toSquareIndex, fromSquareIndex, false);
-        castles         = decodeCastles(castlingRights, piece.colour());
+        mobalize(nextToAct.invert(), figure,
+                 BitLoc.locationToBitBoard(fromSquareIndex),
+                 BitLoc.locationToBitBoard(toSquareIndex));
+
+        castles         = prevCastles;
         reversibleMoves = prevReversibleMoves;
     }
 
 
     //--------------------------------------------------------------------
     public void mobalize(
-            Piece   piece,
+            Figure figure,
+            int    fromSquareIndex,
+            int    toSquareIndex)
+    {
+        prevCastles         = castles;
+        prevReversibleMoves = reversibleMoves;
+        doMobalize(figure, fromSquareIndex, toSquareIndex);
+    }
+    private void doMobalize(
+            Figure  figure,
             int     fromSquareIndex,
             int     toSquareIndex)
     {
-        prevReversibleMoves = reversibleMoves;
-        mobalize(piece, fromSquareIndex, toSquareIndex, true);
-    }
-    private void mobalize(
-            Piece   piece,
-            int     fromSquareIndex,
-            int     toSquareIndex,
-            boolean conciderCaslingAndReversibles)
-    {
-        mobalize(piece,
+        mobalize(nextToAct, figure,
                  BitLoc.locationToBitBoard(fromSquareIndex),
                  BitLoc.locationToBitBoard(toSquareIndex));
 
-        if (conciderCaslingAndReversibles) {
-            updateCasltingRights(
-                    piece.figure(), fromSquareIndex);
+        updateCasltingRights(
+                figure, fromSquareIndex);
 
-            if (piece.figure() == Figure.PAWN) {
-                reversibleMoves = 0;
-            } else {
-                reversibleMoves++;
-            }
+        if (figure == Figure.PAWN) {
+            reversibleMoves = 0;
+        } else {
+            reversibleMoves++;
         }
     }
     private void mobalize(
-            Piece piece,
-            long  from,
-            long  to)
+            Colour colour,
+            Figure figure,
+            long   from,
+            long   to)
     {
         long fromTo = from ^ to;
-        pieces[ piece.ordinal() ] ^= fromTo;
 
-        // update white or black color bitboard
-        if (piece.colour() == Colour.WHITE) whitePieces ^=  fromTo;
-        else                                blackPieces ^=  fromTo;
+        if (colour == Colour.WHITE) {
+            wPieces[ figure.ordinal() ] ^= fromTo;
+            whiteBB ^= fromTo;
+        } else {
+            bPieces[ figure.ordinal() ] ^= fromTo;
+            blackBB ^= fromTo;
+        }
 
         nextToAct = nextToAct.invert();
     }
@@ -339,53 +321,54 @@ public class State
 
     //--------------------------------------------------------------------
     public void unCapture(
-            Piece attacker,
-            Piece captured,
-            int   fromSquareIndex,
-            int   toSquareIndex,
-            int   availCastles)
+            Figure attacker,
+            Figure captured,
+            int    fromSquareIndex,
+            int    toSquareIndex)
     {
         long from   = BitLoc.locationToBitBoard(fromSquareIndex);
         long to     = BitLoc.locationToBitBoard(  toSquareIndex);
         long fromTo = from ^ to;
 
-        pieces[ attacker.ordinal() ] ^= fromTo;
-        pieces[ captured.ordinal() ] ^= to;     //reset the captured piece
-
         if (nextToAct == Colour.WHITE) {
-            // black did the capture
-            blackPieces ^= fromTo;
-            whitePieces ^= to;
+            // black is the attacher
+            bPieces[ attacker.ordinal() ] ^= fromTo;
+            wPieces[ captured.ordinal() ] ^= to;
+
+            blackBB ^= fromTo;
+            whiteBB ^= to;
         } else {
-            whitePieces ^= fromTo;
-            blackPieces ^= to;
+            wPieces[ attacker.ordinal() ] ^= fromTo;
+            bPieces[ captured.ordinal() ] ^= to;
+
+            whiteBB ^= fromTo;
+            blackBB ^= to;
         }
 
         nextToAct       = nextToAct.invert();
-        castles         = decodeCastles(availCastles, attacker.colour());
+        castles         = prevCastles;
         reversibleMoves = prevReversibleMoves;
     }
 
 
     //--------------------------------------------------------------------
     public Figure capture(
-            Piece   attacker,
-            int     fromSquareIndex,
-            int     toSquareIndex)
+            Figure attacker,
+            int    fromSquareIndex,
+            int    toSquareIndex)
     {
         long toBB = BitLoc.locationToBitBoard(toSquareIndex);
-        Piece captured =
-                pieceAt(toBB, attacker.colour().invert());
-        capture(attacker.ordinal(),
-                captured.ordinal(),
+        Figure captured = figureAt(toBB, nextToAct.invert());
+        capture(attacker.ordinal(), captured.ordinal(),
                 BitLoc.locationToBitBoard(fromSquareIndex),
                 BitLoc.locationToBitBoard(toSquareIndex));
 
+        prevCastles = castles;
         updateCasltingRights(
-                attacker.figure(), fromSquareIndex);
+                attacker, fromSquareIndex);
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        return captured.figure();
+        return captured;
     }
     private void capture(
             int  attacker,
@@ -393,17 +376,20 @@ public class State
             long from,
             long to)
     {
-        long fromTo = from ^ to; // |+
-
-        pieces[attacker] ^= fromTo;   // update piece bitboard
-        pieces[captured] ^= to;       // reset the captured piece
+        long fromTo = from ^ to;
 
         if (nextToAct == Colour.WHITE) {
-            whitePieces ^= fromTo;
-            blackPieces ^= to;
+            wPieces[attacker] ^= fromTo;
+            bPieces[captured] ^= to;
+
+            whiteBB ^= fromTo;
+            blackBB ^= to;
         } else {
-            blackPieces ^= fromTo;
-            whitePieces ^= to;
+            bPieces[attacker] ^= fromTo;
+            wPieces[captured] ^= to;
+
+            blackBB ^= fromTo;
+            whiteBB ^= to;
         }
 
         nextToAct = nextToAct.invert();
@@ -413,33 +399,35 @@ public class State
     //--------------------------------------------------------------------
     public boolean isInCheck(Colour colour)
     {
-        Colour prop          = colour.invert();
-        long   occupied      = whitePieces | blackPieces;
-        long   notOccupied   = ~occupied;
+        long   occupied    = whiteBB | blackBB;
+        long   notOccupied = ~occupied;
 
-        long proponent, opponent, oppKing;
-        if (prop == Colour.WHITE) {
-            proponent = whitePieces;
-            opponent  = blackPieces;
-            oppKing   = pieces[ BLACK_KING ];
+        long attacker, attacked, targetKing, attackingPieces[];
+        if (colour == Colour.BLACK) {
+            attacker        = whiteBB;
+            attacked        = blackBB;
+            targetKing      = bPieces[ KING ];
+            attackingPieces = wPieces;
         } else {
-            proponent = blackPieces;
-            opponent  = whitePieces;
-            oppKing   = pieces[ WHITE_KING ];
+            attacker        = blackBB;
+            attacked        = whiteBB;
+            targetKing      = wPieces[ KING ];
+            attackingPieces = bPieces;
         }
-        long notProponent = ~proponent;
+        long notProponent = ~attacker;
 
+        Colour attackColour = colour.invert();
         for (Figure f : Figure.VALUES)
         {
-            Piece p  = Piece.valueOf(prop, f);
-            long  bb = pieces[ p.ordinal() ];
+            Piece p  = Piece.valueOf(attackColour, f);
+            long  bb = attackingPieces[ f.ordinal() ];
             while (bb != 0)
             {
                 long pieceBoard  = BitBoard.lowestOneBit(bb);
                 long pseudoMoves = p.moves(
                         pieceBoard, occupied, notOccupied,
-                        proponent, notProponent, opponent);
-                if ((oppKing & pseudoMoves) != 0) return true;
+                        attacker, notProponent, attacked);
+                if ((targetKing & pseudoMoves) != 0) return true;
                 bb &= bb - 1;
             }
         }
@@ -460,24 +448,24 @@ public class State
         if (reversibleMoves > 100) return Status.DRAW;
 
         // no major pieces
-        if (pieces[ WHITE_ROOKS  ] != 0 ||
-            pieces[ BLACK_ROOKS  ] != 0 ||
-            pieces[ WHITE_QUEENS ] != 0 ||
-            pieces[ BLACK_QUEENS ] != 0) return Status.IN_PROGRESS;
+        if (wPieces[ ROOKS  ] != 0 ||
+            bPieces[ ROOKS  ] != 0 ||
+            wPieces[ QUEENS ] != 0 ||
+            bPieces[ QUEENS ] != 0) return Status.IN_PROGRESS;
 
         boolean whiteBishops, blackBishops;
         boolean whiteKnights, blackKnights;
 
-        boolean whitePawns = (pieces[ WHITE_PAWNS ] != 0);
-        boolean blackPawns = (pieces[ BLACK_PAWNS ] != 0);
+        boolean whitePawns = (wPieces[ PAWNS ] != 0);
+        boolean blackPawns = (bPieces[ PAWNS ] != 0);
         if (whitePawns && blackPawns) {
             return Status.IN_PROGRESS;
         } else {
-            whiteBishops = (pieces[ WHITE_BISHOPS ] != 0);
-            blackBishops = (pieces[ BLACK_BISHOPS ] != 0);
+            whiteBishops = (wPieces[ BISHOPS ] != 0);
+            blackBishops = (bPieces[ BISHOPS ] != 0);
 
-            whiteKnights = (pieces[ WHITE_KNIGHTS ] != 0);
-            blackKnights = (pieces[ BLACK_KNIGHTS ] != 0);
+            whiteKnights = (wPieces[ KNIGHTS ] != 0);
+            blackKnights = (bPieces[ KNIGHTS ] != 0);
 
             if (whitePawns || blackPawns) {
                 // at least one side has at least a minor pawn
@@ -487,12 +475,12 @@ public class State
                 } else {
                     if (whitePawns) {
                         int nWhitePawns =
-                                Long.bitCount(pieces[ WHITE_PAWNS ]);
+                                Long.bitCount(wPieces[ PAWNS ]);
                         return (nWhitePawns == 1)
                                ? Status.DRAW : Status.IN_PROGRESS;
                     } else {
                         int nBlackPawns =
-                                Long.bitCount(pieces[ BLACK_PAWNS ]);
+                                Long.bitCount(bPieces[ PAWNS ]);
                         return (nBlackPawns == 1)
                                ? Status.DRAW : Status.IN_PROGRESS;
                     }
@@ -508,14 +496,14 @@ public class State
 
             // both sides have a king and a bishop,
             //   the bishops being the same color
-            int nWhiteBishops = Long.bitCount(pieces[ WHITE_BISHOPS ]);
+            int nWhiteBishops = Long.bitCount(wPieces[ BISHOPS ]);
             if (nWhiteBishops > 1) return Status.IN_PROGRESS;
 
-            int nBlackBishops = Long.bitCount(pieces[ WHITE_BISHOPS ]);
+            int nBlackBishops = Long.bitCount(wPieces[ BISHOPS ]);
             if (nBlackBishops > 1) return Status.IN_PROGRESS;
 
-            return (BitBoard.isDark(pieces[ WHITE_BISHOPS ]) ==
-                    BitBoard.isDark(pieces[ BLACK_BISHOPS ]))
+            return (BitBoard.isDark(wPieces[ BISHOPS ]) ==
+                    BitBoard.isDark(bPieces[ BISHOPS ]))
                    ? Status.DRAW : Status.IN_PROGRESS;
         }
         else if (whiteBishops || blackBishops)
@@ -530,14 +518,14 @@ public class State
         if (whiteKnights && blackKnights) return Status.IN_PROGRESS;
         if (whiteKnights) {
             int nWhiteKnights =
-                    Long.bitCount(pieces[ WHITE_KNIGHTS ]);
+                    Long.bitCount(wPieces[ KNIGHTS ]);
 
             //one side has two knights against the bare king
             return (nWhiteKnights <= 2)
                     ? Status.DRAW : Status.IN_PROGRESS;
         } else if (blackKnights) {
             int nBlackKnights =
-                    Long.bitCount(pieces[ BLACK_KNIGHTS ]);
+                    Long.bitCount(bPieces[ KNIGHTS ]);
             return (nBlackKnights <= 2)
                     ? Status.DRAW : Status.IN_PROGRESS;
         }
@@ -549,19 +537,25 @@ public class State
     private Piece pieceAt(int rankIndex, int fileIndex)
     {
         long loc = BitLoc.locationToBitBoard(rankIndex, fileIndex);
-        for (Piece p : Piece.VALUES) {
-            if ((pieces[ p.ordinal() ] & loc) != 0) return p;
+        for (Figure f : Figure.VALUES) {
+            if ((wPieces[ f.ordinal() ] & loc) != 0)
+                return Piece.valueOf(Colour.WHITE, f);
+
+            if ((bPieces[ f.ordinal() ] & loc) != 0)
+                return Piece.valueOf(Colour.BLACK, f);
         }
         return null;
     }
 
-    private Piece pieceAt(long location, Colour ofColour)
+    private Figure figureAt(long location, Colour ofColour)
     {
+        long[] pieces = (ofColour == Colour.WHITE)
+                        ? wPieces : bPieces;
+
         for (Figure f : Figure.VALUES)
         {
-            Piece p        = Piece.valueOf(ofColour, f);
-            long  occupied = pieces[ p.ordinal() ];
-            if ((occupied & location) != 0) return p;
+            long occupied = pieces[ f.ordinal() ];
+            if ((occupied & location) != 0) return f;
         }
         return null;
     }
@@ -570,25 +564,30 @@ public class State
     //--------------------------------------------------------------------
     public State prototype()
     {
-        return new State(pieces.clone(),
-                         whiteEnPassants, blackEnPassants,
-                         castles,         reversibleMoves,
+        return new State(wPieces.clone(), bPieces.clone(),
+                         enPassants,
+                         castles,
+                         reversibleMoves,
                          nextToAct,
-                         whitePieces,     blackPieces);
+                         whiteBB, blackBB,
+                         prevCastles, prevReversibleMoves);
     }
 
 
     public boolean checkPieces()
     {
-        return whitePieces == calcPieces(Colour.WHITE) &&
-               blackPieces == calcPieces(Colour.BLACK); 
+        return whiteBB == calcPieces(Colour.WHITE) &&
+               blackBB == calcPieces(Colour.BLACK);
     }
     public long calcPieces(Colour c)
     {
+        long[] pieces = (c == Colour.WHITE)
+                        ? wPieces : bPieces;
+
         long bb = 0;
         for (Figure f : Figure.VALUES)
         {
-            bb |= pieces[ Piece.valueOf(c, f).ordinal() ];
+            bb |= pieces[ f.ordinal() ];
         }
         return bb;
     }
@@ -629,18 +628,18 @@ public class State
         }
 
         str.append("\nEn Passants: ");
-        if (whiteEnPassants == 0 && blackEnPassants == 0) {
+        if (enPassants == 0) {
             str.append("none");
         } else {
-            if (whiteEnPassants != 0) {
-                str.append("white ")
-                   .append(Long.lowestOneBit(whiteEnPassants))
-                   .append(" ");
-            }
-            if (blackEnPassants != 0) {
-                str.append("black ")
-                   .append(Long.lowestOneBit(blackEnPassants));
-            }
+//            if (whiteEnPassants != 0) {
+//                str.append("white ")
+//                   .append(Long.lowestOneBit(whiteEnPassants))
+//                   .append(" ");
+//            }
+//            if (blackEnPassants != 0) {
+//                str.append("black ")
+//                   .append(Long.lowestOneBit(blackEnPassants));
+//            }
         }
 
         for (int rank = 7; rank >= 0; rank--)
