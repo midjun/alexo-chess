@@ -3,12 +3,12 @@ package v2;
 import ao.Node;
 import ao.Position;
 import model.Board;
+import v2.data.MovePicker;
 import v2.state.Move;
 import v2.state.Outcome;
 import v2.state.State;
 import v2.state.Status;
 
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +42,8 @@ public class Test
                (count / (delta / 1000)) + " per second");
     }
 
+
+    //--------------------------------------------------------------------
     private static final Map<Position, Node>
             transposition = new HashMap<Position, Node>();
     private static void playOutMediocre()
@@ -56,46 +58,40 @@ public class Test
                 false);
     }
 
+
+    //--------------------------------------------------------------------
     private static Outcome playOutRandom(State state)
     {
         Status status;
-        int    nextCount;
+        int    nextCount = 0;
         int[]  nextMoves = new int[ 256 ];
         int[]  moves     = new int[ 256 ];
         int    nMoves    = state.moves(moves);
-        BitSet seen      = new BitSet(nMoves);
 
         while ((status = state.knownStatus()) == Status.IN_PROGRESS)
         {
             int     move;
-            boolean allFailed = false;
-            do
-            {
-                // apply new random move
-                int random;
-                do {
-                    random = (int)(Math.random() * nMoves);
-                } while (seen.get(random));
-                seen.set(random);
+            boolean madeMove = false;
 
-                move = moves[ random ];
-                move = Move.apply(move, state);
+            int[] moveOrder = MovePicker.pick(nMoves);
+            for (int moveIndex : moveOrder)
+            {
+                move = Move.apply(moves[ moveIndex ], state);
 
                 // generate opponent moves
                 nextCount = state.moves(nextMoves);
                 if (nextCount < 0) { // it lead to mate
 //                    System.out.println("Unmaking" + Move.toString(move));
                     Move.unApply(move, state);
-                    allFailed = (seen.cardinality() == nMoves);
-                } else break;
+                } else {
+                    madeMove = true;
+                    break;
+                }
             }
-            while (! allFailed);
-            if (allFailed) {
+            if (! madeMove) {
                 return state.isInCheck(state.nextToAct())
                        ? Outcome.loses(state.nextToAct())
                        : Outcome.DRAW;
-            } else {
-                seen.clear();
             }
 
 //            System.out.println(Move.toString(move));
