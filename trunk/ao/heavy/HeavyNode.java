@@ -1,7 +1,7 @@
 package ao.heavy;
 
 import ao.AlexoChess;
-import ao.Outcome;
+import ao.FullOutcome;
 import ao.RandomBot;
 import ao.Reward;
 import model.Board;
@@ -176,7 +176,7 @@ public class HeavyNode
     {
         int legalMoves[] = new int[256];
 
-        Outcome out;
+        FullOutcome out;
         Board   rollout = state.prototype();
         do
         {
@@ -207,7 +207,7 @@ public class HeavyNode
                     RandomBot.random(legalMoves, moveCount));
         }
         while ((out = AlexoChess.outcome(rollout, null, 0))
-                   != Outcome.UNDECIDED );
+                   != FullOutcome.UNDECIDED );
 
 //        Io.display(out);
         return out.isDraw()

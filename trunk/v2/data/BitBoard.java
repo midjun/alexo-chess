@@ -31,6 +31,9 @@ public class BitBoard
     public static final long RANK_7 = 0x00FF000000000000L;
     public static final long RANK_8 = 0xFF00000000000000L;
 
+    public static final long NOT_RANK_1 = ~RANK_1;
+    public static final long NOT_RANK_8 = ~RANK_8;
+
 
     //--------------------------------------------------------------------
     public static long offset(long b, int deltaRank, int deltaFile) {
@@ -41,16 +44,16 @@ public class BitBoard
         return b;
     }
 
-    public static long soutOne(long b) {return  b >>> 8;}
-    public static long northOne(long b) {return  b <<  8;}
-
     private static final long notAFile = 0xfefefefefefefefeL;
     private static final long notHFile = 0x7f7f7f7f7f7f7f7fL;
 
+    public static long northOne(long b) {return (b <<  8) & NOT_RANK_1;}
+    public static long soutOne (long b) {return (b >>> 8) & NOT_RANK_8;}
     public static long eastOne (long b) {return (b <<  1) & notAFile;}
+    public static long westOne (long b) {return (b >>> 1) & notHFile;}
+
     public static long noEaOne (long b) {return (b <<  9) & notAFile;}
     public static long soEaOne (long b) {return (b >>> 7) & notAFile;}
-    public static long westOne (long b) {return (b >>> 1) & notHFile;}
     public static long soWeOne (long b) {return (b >>> 9) & notHFile;}
     public static long noWeOne (long b) {return (b <<  7) & notHFile;}
 

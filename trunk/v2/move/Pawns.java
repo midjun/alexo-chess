@@ -85,14 +85,17 @@ public class Pawns
                           long proponent,
                           long notProponent,
                           long opponent) {
-            long mobility = BitBoard.soutOne(blackPawn);
-            if ((blackPawn & BitBoard.RANK_7) != 0) {
-                mobility |= BitBoard.soutOne(mobility);
+            long mobility =
+                    BitBoard.soutOne(blackPawn) & notOccupied;
+            if (mobility != 0 &&
+                (blackPawn & BitBoard.RANK_7) != 0) {
+                mobility |=
+                        BitBoard.soutOne(mobility) & notOccupied;
             }
 
             long captures = BitBoard.soEaOne(blackPawn) |
                             BitBoard.soWeOne(blackPawn);
-            return mobility & notOccupied |
+            return mobility |
                    captures & opponent;
         }
     };

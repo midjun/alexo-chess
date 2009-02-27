@@ -78,8 +78,8 @@ public enum Piece implements BoardPiece
                       long notProponent,
                       long opponent) {
         return MOVES.moves(
-                pieceLocation, occupied, notOccupied,
-                proponent, notProponent, opponent);
+                    pieceLocation, occupied, notOccupied,
+                    proponent, notProponent, opponent);
     }
 
     public Colour colour()
