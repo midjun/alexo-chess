@@ -28,10 +28,6 @@ public class Kings implements BoardPiece
         }
     }
 
-    public static long attacks(int loc) {
-        return CACHE[ loc ];
-    }
-
 
     //--------------------------------------------------------------------
     public static long attacks(long king) {
@@ -54,6 +50,11 @@ public class Kings implements BoardPiece
                       long notProponent,
                       long opponent)
     {
-        return attacks(king) & notProponent;
+        return moves(BitLoc.bitBoardToLocation(king))
+                & notProponent;
+    }
+
+    public long moves(int pieceLocation) {
+        return CACHE[ pieceLocation ];
     }
 }

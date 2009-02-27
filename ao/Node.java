@@ -253,7 +253,7 @@ public class Node
 
         boolean reachedPieceCountGoal = false;
 
-        Outcome out;
+        FullOutcome out;
         do
         {
             int moveCount = state.generateMoves(false, legalMoves, 0);
@@ -270,7 +270,7 @@ public class Node
             }
         }
         while ((out = AlexoChess.outcome(state, null, 0))
-                   == Outcome.UNDECIDED );
+                   == FullOutcome.UNDECIDED );
 
 //        if (reachedPieceCountGoal) {
 //            System.out.println("monte carlo pieces count goal reached");
@@ -295,10 +295,10 @@ public class Node
     {
 //        populateKids(state, transposition);
 
-        Outcome out =
+        FullOutcome out =
                 AlexoChess.outcome(
                         state, state.history, state.historyIndex);
-        if (out != Outcome.UNDECIDED)
+        if (out != FullOutcome.UNDECIDED)
         {
 //            Io.display(out);
             return out.isDraw()

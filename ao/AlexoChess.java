@@ -235,8 +235,8 @@ public class AlexoChess
                                 (int)(board.zobristKey >> 32);
 					}
 
-                    Outcome outcome = outcome(board, history, historyIndex);
-					if(outcome != Outcome.UNDECIDED)
+                    FullOutcome outcome = outcome(board, history, historyIndex);
+					if(outcome != FullOutcome.UNDECIDED)
 					{
 						Io.write(outcome);
 					}
@@ -245,7 +245,7 @@ public class AlexoChess
         }
     }
 
-    public static Outcome outcome(
+    public static FullOutcome outcome(
             Board board,
             int   history[],
             int   historyIndex)
@@ -257,22 +257,22 @@ public class AlexoChess
 			{
 				if(board.toMove == Board.WHITE_TO_MOVE)
 				{
-					return Outcome.BLACK_MATES;
+					return FullOutcome.BLACK_MATES;
 				}
 				else
 				{
-					return Outcome.WHITE_MATES;
+					return FullOutcome.WHITE_MATES;
 				}
 			}
 			else
 			{
-				return Outcome.STALE_MATE;
+				return FullOutcome.STALE_MATE;
 			}
 		}
 
 		if(board.movesFifty >= 100)
 		{
-			return Outcome.FIFTY_MOVES;
+			return FullOutcome.FIFTY_MOVES;
 		}
 
         if (historyIndex > 1)
@@ -286,7 +286,7 @@ public class AlexoChess
                     repetitions++;
                     if (repetitions == 2)
                     {
-                        return Outcome.REPETITION;
+                        return FullOutcome.REPETITION;
                     }
                 }
             }
@@ -294,9 +294,9 @@ public class AlexoChess
 
 		if(Evaluation.drawByMaterial(board, 0))
 		{
-			return Outcome.MATERIAL;
+			return FullOutcome.MATERIAL;
 		}
 
-		return Outcome.UNDECIDED;
+		return FullOutcome.UNDECIDED;
     }
 }

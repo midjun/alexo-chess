@@ -3,7 +3,7 @@ package ao;
 /**
  *
  */
-public enum Outcome
+public enum FullOutcome
 {
     //--------------------------------------------------------------------
     BLACK_MATES(false, true,  "0-1 (Black mates)"),
@@ -22,7 +22,7 @@ public enum Outcome
 
 
     //--------------------------------------------------------------------
-    private Outcome(boolean whiteScores,
+    private FullOutcome(boolean whiteScores,
                     boolean blackScores,
                     String  display)
     {

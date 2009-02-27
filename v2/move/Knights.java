@@ -38,7 +38,11 @@ public class Knights implements BoardPiece
         return BitBoard.offset(knight,  2,  1) |
                BitBoard.offset(knight,  2, -1) |
                BitBoard.offset(knight, -2,  1) |
-               BitBoard.offset(knight, -2, -1);
+               BitBoard.offset(knight, -2, -1) |
+               BitBoard.offset(knight,  1,  2) |
+               BitBoard.offset(knight,  1, -2) |
+               BitBoard.offset(knight, -1,  2) |
+               BitBoard.offset(knight, -1, -2);
     }
 
 
@@ -50,6 +54,11 @@ public class Knights implements BoardPiece
                       long notProponent,
                       long opponent)
     {
-        return attacks(knight) & notProponent;
+        return attacks(BitLoc.bitBoardToLocation(knight))
+                & notProponent;
     }
+
+//    public long moves(int pieceLocation) {
+//        return CACHE[ pieceLocation ];
+//    }
 }

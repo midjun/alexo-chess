@@ -55,6 +55,7 @@ public class State
     private byte prevReversibleMoves;
 
     private Colour nextToAct;
+//    private int    fullMoves;
 
 
     //--------------------------------------------------------------------
@@ -100,6 +101,7 @@ public class State
             blackBB |= bPieces[ f.ordinal() ];
         }
 
+//        fullMoves           = 1;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
     }
@@ -113,7 +115,9 @@ public class State
                   long   copyWhiteBB,
                   long   copyBlackBB,
                   byte   copyPrevCastles,
-                  byte   copyPrevReversibleMoves)
+                  byte   copyPrevReversibleMoves//,
+//                  int    copyFullMoves
+            )
     {
         wPieces = copyWPieces;
         bPieces = copyBPieces;
@@ -126,12 +130,35 @@ public class State
         whiteBB = copyWhiteBB;
         blackBB = copyBlackBB;
 
+//        fullMoves           = copyFullMoves;
         prevCastles         = copyPrevCastles;
         prevReversibleMoves = copyPrevReversibleMoves;
     }
 
 
     //--------------------------------------------------------------------
+    public int legalMoves(int[] moves)
+    {
+//        int nextMoves[]   = new int[ 256 ];
+        int pseudoMoves[] = new int[ 256 ];
+        int nPseudoMoves  = moves(pseudoMoves);
+        if (nPseudoMoves == -1) return -1;
+
+        int nextMoveIndex = 0;
+        for (int i = 0; i < nPseudoMoves; i++)
+        {
+            int pseudoMove = pseudoMoves[ i ];
+            int undoable   = Move.apply(pseudoMove, this);
+
+            if (! isInCheck(nextToAct.invert())) {
+                moves[ nextMoveIndex++ ] = pseudoMove;
+            }
+
+            Move.unApply(undoable, this);
+        }
+        return nextMoveIndex;
+    }
+
     /**
      * generate all pseudo-legal moves from this position
      *
@@ -277,8 +304,9 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
+//        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
     }
-    public void pushPromoteBB(
+    private void pushPromoteBB(
             Colour colour, int from, int to, int promotion) {
         long fromBB = BitLoc.locationToBitBoard(from);
         long toBB   = BitLoc.locationToBitBoard(to);
@@ -301,6 +329,7 @@ public class State
 
         capturePromoteBB(nextToAct, from, toBB, promotion, captured);
 
+//        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
@@ -333,6 +362,7 @@ public class State
         System.out.println("unPushPromote");
         nextToAct       = nextToAct.invert();
         reversibleMoves = prevReversibleMoves;
+//        fullMoves      -= (nextToAct == Colour.WHITE ? 1 : 0);
 
         pushPromoteBB(nextToAct, from, to, promotion);
     }
@@ -525,7 +555,7 @@ public class State
             targetKing      = wPieces[ KING ];
             attackingPieces = bPieces;
         }
-        long notProponent = ~attacker;
+        long notAttacker = ~attacker;
 
         Colour attackColour = colour.invert();
         for (Figure f : Figure.VALUES)
@@ -537,7 +567,7 @@ public class State
                 long pieceBoard  = BitBoard.lowestOneBit(bb);
                 long pseudoMoves = p.moves(
                         pieceBoard, occupied, notOccupied,
-                        attacker, notProponent, attacked);
+                        attacker, notAttacker, attacked);
                 if ((targetKing & pseudoMoves) != 0) return true;
                 bb &= bb - 1;
             }
@@ -775,5 +805,61 @@ public class State
         }
 
         return str.toString();
+    }
+
+
+    //--------------------------------------------------------------------
+    public String toFen()
+    {
+        StringBuilder str = new StringBuilder();
+
+        for (int rank = 7; rank >= 0; rank--) {
+            int emptySquares = 0;
+            for (int file = 0; file < 8; file++) {
+                Piece p = pieceAt(rank, file);
+                if (p == null) {
+                    emptySquares++;
+                } else {
+                    if (emptySquares > 0) {
+                        str.append(emptySquares);
+                        emptySquares = 0;
+                    }
+                    str.append(p.toString());
+                }
+            }
+            if (emptySquares > 0) {
+                str.append(emptySquares);
+            }
+
+            if (rank != 0 ) {
+                str.append("/");
+            }
+        }
+
+        str.append(" ");
+        str.append(nextToAct == Colour.WHITE
+                   ? "w" : "b");
+        str.append(" ");
+
+        if (castles == 0) {
+            str.append("-");
+        } else {
+            if ((castles & WHITE_K_CASTLE) != 0) str.append("K");
+            if ((castles & WHITE_Q_CASTLE) != 0) str.append("Q");
+
+            if ((castles & BLACK_K_CASTLE) != 0) str.append("k");
+            if ((castles & BLACK_Q_CASTLE) != 0) str.append("q");
+        }
+        str.append(" ");
+
+		// En passant square
+        str.append("-"); // [a .. h] + " " + {3, 6}
+        str.append(" ");
+
+        str.append(reversibleMoves);
+        str.append(" ");
+        str.append("n"); // full moves since start of game
+
+		return str.toString();
     }
 }
