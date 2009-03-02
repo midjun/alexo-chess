@@ -218,10 +218,18 @@ public class State
             long   notOpponent)
     {
         int from = BitLoc.bitBoardToLocation(fromBB);
-        int off = addMobility(
+
+        int nextOffset;
+        nextOffset = addMobility(
                 figure, from, moves, offset, movesBB & notOpponent);
-        return addCaptures(
-                figure, from, moves, off, movesBB & opponent);
+        nextOffset = addCaptures(
+                figure, from, moves, nextOffset, movesBB & opponent);
+
+        if (canPromote(figure, from)) {
+            nextOffset = addPromotions(
+                    moves, nextOffset - offset, nextOffset);
+        }
+        return nextOffset;
     }
 
     private int addMobility(
@@ -231,8 +239,6 @@ public class State
             int    offset,
             long   moveBB)
     {
-        if (moveBB == 0) return offset;
-
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
@@ -240,9 +246,7 @@ public class State
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
-
-        return handlePromotions(
-                figure, moves, from, offset);
+        return offset;
     }
 
     private int addCaptures(
@@ -252,7 +256,6 @@ public class State
             int    offset,
             long   moveBB)
     {
-        if (moveBB == 0) return offset;
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
@@ -260,45 +263,47 @@ public class State
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
-        return handlePromotions(
-                figure, moves, from, offset);
+        return offset;
     }
 
 
     //--------------------------------------------------------------------
-    private int handlePromotions(
-            Figure active, int[] moves, int from, int nextOffset)
+    private boolean canPromote(Figure active, int from)
     {
         if (active == Figure.PAWN) {
             int fromRank = Location.rankIndex(from);
             if (nextToAct == Colour.WHITE) {
                 if (fromRank == 6) {
-                    nextOffset = addPromotions(moves, from, nextOffset);
+                    return true;
                 }
             } else if (fromRank == 1) {
-                nextOffset = addPromotions(moves, from, nextOffset);
+                return true;
             }
         }
-        return nextOffset;
+        return false;
     }
     private int addPromotions(
-            int[] moves, int from, int toExclusive)
+            int[] moves, int nMoves, int addAt)
     {
-        int nextOffset = from;
+        if (nMoves == 0) return addAt;
+
+        int addFrom   = addAt - nMoves;
+        int nextAddAt = addFrom;
         for (int f = KNIGHTS; f < KING; f++) {
-            for (int i = from; i < toExclusive; i++) {
-                moves[ nextOffset++ ] =
-                        Move.setPromotion(moves[i], f);
+            for (int i = 0; i < nMoves; i++) {
+                moves[ nextAddAt++ ] =
+                        Move.setPromotion(
+                                moves[addFrom + i], f);
             }
         }
-        return nextOffset;
+        return nextAddAt;
     }
 
 
     //--------------------------------------------------------------------
     public void pushPromote(int from, int to, int promotion)
     {
-        System.out.println("pushPromote");
+//        System.out.println("pushPromote");
         pushPromoteBB(nextToAct, from, to, promotion);
 
         nextToAct           = nextToAct.invert();
@@ -323,7 +328,7 @@ public class State
 
     public int capturePromote(int from, int to, int promotion)
     {
-        System.out.println("capturePromote");
+//        System.out.println("capturePromote");
         long toBB     = BitLoc.locationToBitBoard(to);
         int  captured = figureAt(toBB, nextToAct.invert());
 
@@ -359,7 +364,7 @@ public class State
     //--------------------------------------------------------------------
     public void unPushPromote(int from, int to, int promotion)
     {
-        System.out.println("unPushPromote");
+//        System.out.println("unPushPromote");
         nextToAct       = nextToAct.invert();
         reversibleMoves = prevReversibleMoves;
 //        fullMoves      -= (nextToAct == Colour.WHITE ? 1 : 0);
@@ -370,7 +375,7 @@ public class State
     public void unCapturePromote(
             int from, int to, int promotion, int captured)
     {
-        System.out.println("unCapturePromote");
+//        System.out.println("unCapturePromote");
         nextToAct       = nextToAct.invert();
         reversibleMoves = prevReversibleMoves;
 
@@ -386,8 +391,8 @@ public class State
             int toSquareIndex)
     {
         mobalizeBB(nextToAct, figure,
-                 BitLoc.locationToBitBoard(fromSquareIndex),
-                 BitLoc.locationToBitBoard(toSquareIndex));
+                   BitLoc.locationToBitBoard(fromSquareIndex),
+                   BitLoc.locationToBitBoard(toSquareIndex));
 
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
@@ -747,6 +752,13 @@ public class State
         return bb;
     }
 
+    public boolean check(int move)
+    {
+        State proto = prototype();
+        Move.apply(move, proto);
+        return proto.checkPieces();
+    }
+
 
     //--------------------------------------------------------------------
     public String toString() {
@@ -800,7 +812,7 @@ public class State
             for (int file = 0; file < 8; file++)
             {
                 Piece p = pieceAt(rank, file);
-                str.append((p == null) ? " " : p);
+                str.append((p == null) ? "." : p);
             }
         }
 
