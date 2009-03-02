@@ -22,24 +22,24 @@ public class Test
 
     public static void main(String[] args)
     {
-        int nodesA = buildTree(new State(), 4, fenA);
-//        int nodesB = buildMediocreTree(3, fenB);
+//        int nodesA = buildTree(new State(), 4, fenA);
+////        int nodesB = buildMediocreTree(3, fenB);
+//
+//        System.out.println("nodesA "  + nodesA);
+////        System.out.println("nodesB "  + nodesB);
+//
+////        System.out.println("mobs  "  + mobs);
+//        System.out.println("caps  "  + caps);
+//        System.out.println("mates "  + mates);
+//        System.out.println("draws "  + draws);
+//        System.out.println("checks " + checks);
+//
+////        System.out.println(fenA.equals( fenB ));
+////        System.out.println(fenB.delta(  fenA ));
+////        System.out.println(fenA);
 
-        System.out.println("nodesA "  + nodesA);
-//        System.out.println("nodesB "  + nodesB);
 
-//        System.out.println("mobs  "  + mobs);
-        System.out.println("caps  "  + caps);
-        System.out.println("mates "  + mates);
-        System.out.println("draws "  + draws);
-        System.out.println("checks " + checks);
-
-//        System.out.println(fenA.equals( fenB ));
-//        System.out.println(fenB.delta(  fenA ));
-//        System.out.println(fenA);
-
-
-        //testRandom();
+        testRandom();
     }
 
 
@@ -220,7 +220,7 @@ public class Test
                 // generate opponent moves
                 nextCount = state.moves(nextMoves);
                 if (nextCount < 0) { // it lead to mate
-                    System.out.println("Unmaking" + Move.toString(move));
+//                    System.out.println("Unmaking " + Move.toString(move));
                     Move.unApply(move, state);
                 } else {
                     madeMove = true;
@@ -233,8 +233,8 @@ public class Test
                        : Outcome.DRAW;
             }
 
-            System.out.println(Move.toString(move));
-            System.out.println(state);
+//            System.out.println(Move.toString(move));
+//            System.out.println(state);
 
             {
                 int[] tempMoves = nextMoves;

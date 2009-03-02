@@ -25,6 +25,9 @@ public class Kings implements BoardPiece
         for (int loc = 0; loc < 64; loc++) {
             CACHE[ loc ] = attacks(
                     BitLoc.locationToBitBoard(loc));
+//            System.out.println(
+//                    loc + "\n" +
+//                    BitBoard.toString(CACHE[loc]) + "\n\n");
         }
     }
 
@@ -41,6 +44,10 @@ public class Kings implements BoardPiece
                BitBoard.offset(king, -1, -1);
     }
 
+    public long attacks(int pieceLocation) {
+        return CACHE[ pieceLocation ];
+    }
+
 
     //--------------------------------------------------------------------
     public long moves(long king,
@@ -50,11 +57,8 @@ public class Kings implements BoardPiece
                       long notProponent,
                       long opponent)
     {
-        return moves(BitLoc.bitBoardToLocation(king))
+        return attacks(BitLoc.bitBoardToLocation(king))
+               //attacks(king)
                 & notProponent;
-    }
-
-    public long moves(int pieceLocation) {
-        return CACHE[ pieceLocation ];
     }
 }
