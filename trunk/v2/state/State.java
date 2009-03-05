@@ -31,6 +31,13 @@ public class State
 
 
     //--------------------------------------------------------------------
+    private static final byte EP_NONE = 1 << 4;
+    private static byte enPassant(int file) {
+        return (byte) file;
+    }
+
+
+    //--------------------------------------------------------------------
     private static final int PAWNS   = Figure.PAWN  .ordinal();
     private static final int KNIGHTS = Figure.KNIGHT.ordinal();
     private static final int BISHOPS = Figure.BISHOP.ordinal();
@@ -225,9 +232,13 @@ public class State
         nextOffset = addCaptures(
                 figure, from, moves, nextOffset, movesBB & opponent);
 
-        if (canPromote(figure, from)) {
-            nextOffset = addPromotions(
-                    moves, nextOffset - offset, nextOffset);
+        if (figure == Figure.PAWN) {
+            if (canPromote(from)) {
+                nextOffset = addPromotions(
+                        moves, nextOffset - offset, nextOffset);
+            } else if () {
+
+            }
         }
         return nextOffset;
     }
@@ -242,7 +253,7 @@ public class State
         while (moveBB != 0)
         {
             long moveBoard = BitBoard.lowestOneBit(moveBB);
-            moves[ offset++ ] = Move.mobility(//nextToAct,
+            moves[ offset++ ] = Move.mobility(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
             moveBB &= moveBB - 1;
         }
@@ -268,9 +279,21 @@ public class State
 
 
     //--------------------------------------------------------------------
-    private boolean canPromote(Figure active, int from)
+    private boolean canEnPassant(int from)
     {
-        if (active == Figure.PAWN) {
+        return false;
+    }
+
+    public int addEnPassant(int from)
+    {
+
+    }
+    
+
+    //--------------------------------------------------------------------
+    private boolean canPromote(int from)
+    {
+//        if (active == Figure.PAWN) {
             int fromRank = Location.rankIndex(from);
             if (nextToAct == Colour.WHITE) {
                 if (fromRank == 6) {
@@ -279,7 +302,7 @@ public class State
             } else if (fromRank == 1) {
                 return true;
             }
-        }
+//        }
         return false;
     }
     private int addPromotions(
@@ -394,6 +417,7 @@ public class State
                    BitLoc.locationToBitBoard(fromSquareIndex),
                    BitLoc.locationToBitBoard(toSquareIndex));
 
+        enPassants          = EP_NONE;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
 
@@ -401,6 +425,10 @@ public class State
                 figure, fromSquareIndex);
         if (figure == PAWNS) {
             reversibleMoves = 0;
+
+            updateEnPassantRights(
+                    fromSquareIndex,
+                    toSquareIndex);
         } else {
             reversibleMoves++;
         }
@@ -449,6 +477,15 @@ public class State
         }
     }
 
+    // requires that a Figure.PAWN is moving
+    public void updateEnPassantRights(int from, int to)
+    {
+        if (Math.abs(Location.rankIndex(from) -
+                     Location.rankIndex(to  )) > 1) {
+            enPassants = (byte) Location.fileIndex(from);
+        }
+    }
+
 
     //--------------------------------------------------------------------
     public void unMobalize(
@@ -461,6 +498,7 @@ public class State
                    BitLoc.locationToBitBoard(toSquareIndex));
 
         castles         = prevCastles;
+//        enPassants      = EP_NONE;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -481,6 +519,7 @@ public class State
         updateCasltingRights(
                 attacker, fromSquareIndex);
         prevReversibleMoves = reversibleMoves;
+        enPassants          = EP_NONE;
         reversibleMoves     = 0;
         return captured;
     }
