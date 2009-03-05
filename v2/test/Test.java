@@ -53,7 +53,7 @@ public class Test
 //            playOutMediocre();
         }
 
-        int  count  = 50000;
+        int  count  = 10000000;
         long before = System.currentTimeMillis();
         for (int i = 0; i < count; i++)
         {
