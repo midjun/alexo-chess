@@ -236,8 +236,9 @@ public class State
             if (canPromote(from)) {
                 nextOffset = addPromotions(
                         moves, nextOffset - offset, nextOffset);
-            } else if () {
-
+            } else if (canEnPassant(from)) {
+                nextOffset = addEnPassant(
+                        moves, );
             }
         }
         return nextOffset;
@@ -281,13 +282,28 @@ public class State
     //--------------------------------------------------------------------
     private boolean canEnPassant(int from)
     {
-        return false;
+        if (enPassants == EP_NONE) return false;
+
+        int rank = Location.rankIndex(from);
+        if (nextToAct == Colour.WHITE) {
+            if (rank != 4) return false;
+        }
+        if (nextToAct == Colour.BLACK) {
+            if (rank != 3) return false;
+        }
+
+        int file = Location.fileIndex(from);
+        return enPassants == (file - 1) ||
+               enPassants == (file - 1);
     }
 
     public int addEnPassant(int from)
     {
 
     }
+
+//    p
+    
     
 
     //--------------------------------------------------------------------
