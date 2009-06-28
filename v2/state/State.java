@@ -341,12 +341,23 @@ public class State
         }
     }
 
+    public void capturePromote(
+            int from, int to, int promotion, int captured)
+    {
+        long toBB = BitLoc.locationToBitBoard(to);
+        capturePromote(from, toBB, promotion, captured);
+    }
     public int capturePromote(int from, int to, int promotion)
     {
-//        System.out.println("capturePromote");
-        long toBB     = BitLoc.locationToBitBoard(to);
+        long toBB = BitLoc.locationToBitBoard(to);
         int  captured = figureAt(toBB, nextToAct.invert());
-
+        capturePromote(from, toBB, promotion, captured);
+        return captured;
+    }
+    private void capturePromote(
+            int from, long toBB, int promotion, int captured)
+    {
+//        System.out.println("capturePromote");
         capturePromoteBB(nextToAct, from, toBB, promotion, captured);
 
 //        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
@@ -355,9 +366,8 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
-        return captured;
     }
-    public void capturePromoteBB(Colour colour,
+    private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
     {
         long fromBB = BitLoc.locationToBitBoard(from);
@@ -499,9 +509,26 @@ public class State
     {
         long toBB     = BitLoc.locationToBitBoard(toSquareIndex);
         int  captured = figureAt(toBB, nextToAct.invert());
+        capture(attacker, fromSquareIndex, toBB, captured);
+        return captured;
+    }
+    public void capture(
+            int attacker,
+            int fromSquareIndex,
+            int toSquareIndex,
+            int captured)
+    {
+        long toBB = BitLoc.locationToBitBoard(toSquareIndex);
+        capture(attacker, fromSquareIndex, toBB, captured);
+    }
+    public void capture(
+            int  attacker,
+            int  fromSquareIndex,
+            long toBB,
+            int  captured)
+    {
         capture(attacker, captured,
-                BitLoc.locationToBitBoard(fromSquareIndex),
-                BitLoc.locationToBitBoard(toSquareIndex));
+                BitLoc.locationToBitBoard(fromSquareIndex), toBB);
 
         prevCastles = castles;
         updateCasltingRights(
@@ -510,7 +537,6 @@ public class State
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         reversibleMoves     = 0;
-        return captured;
     }
     private void capture(
             int  attacker,

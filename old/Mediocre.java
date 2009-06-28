@@ -169,21 +169,21 @@ public class Mediocre implements Definitions
 				if(moves != null) // There are moves to be played
 				{
 					openingLine = ""; // Get ready for new input
-					for(int i = 0; i < moves.length; i++)
-					{
+                    for (String move : moves)
+                    {
 
-						int moveToMake = receiveMove(moves[i], board);
-						if(moveToMake == 0)
-						{
-							System.out.println("Error in position string. Move " + moves[i] + " could not be found.");
-						}
-						else
-						{
-							board.makeMove(moveToMake); // Make the move on the board
-							repTable.recordRep(board.zobristKey);
-							if(useBook) openingLine += moves[i]; // Update opening line
-						}						
-					}
+                        int moveToMake = receiveMove(move, board);
+                        if (moveToMake == 0)
+                        {
+                            System.out.println("Error in position string. Move " + move + " could not be found.");
+                        }
+                        else
+                        {
+                            board.makeMove(moveToMake); // Make the move on the board
+                            repTable.recordRep(board.zobristKey);
+                            if (useBook) openingLine += move; // Update opening line
+                        }
+                    }
 				}
 
 
@@ -213,7 +213,7 @@ public class Mediocre implements Definitions
 					{
 						searchDepth = Integer.parseInt(command.substring(9));
 					}
-					catch(NumberFormatException ex) {}
+					catch(NumberFormatException ignored) {}
 				}
 				else if("movetime".equals( command.substring(3,11) ))
 				{
@@ -221,7 +221,7 @@ public class Mediocre implements Definitions
 					{
 						movetime = Integer.parseInt(command.substring(12));
 					}
-					catch(NumberFormatException ex) {}
+					catch(NumberFormatException ignored) {}
 				}
 				else // Extract the times since it's not infinite time controls
 				{
@@ -243,8 +243,8 @@ public class Mediocre implements Definitions
 
 						// Catch possible errors so the engine doesn't crash
 						// if the go command is flawed
-						catch(ArrayIndexOutOfBoundsException ex) {}
-						catch(NumberFormatException ex) {}
+						catch(ArrayIndexOutOfBoundsException ignored) {}
+						catch(NumberFormatException ignored) {}
 					}
 				}
 				
@@ -459,11 +459,11 @@ public class Mediocre implements Definitions
 					// Winboard reports increment in full seconds, transform to milliseconds
 					increment = Integer.parseInt(splitString[3]) *1000;
 				}
-				catch(ArrayIndexOutOfBoundsException ex)
+				catch(ArrayIndexOutOfBoundsException ignored)
 				{
 					increment = 0; // If something is wrong with the level string, make increment = 0
 				}
-				catch(NumberFormatException ex) {}
+				catch(NumberFormatException ignored) {}
 			}
 
 			// In force mode the engine should only register and make the moves

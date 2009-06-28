@@ -108,8 +108,8 @@ public class Move implements Definitions
 	 */
 	public static int createMove(int pieceMoving, int fromIndex, int toIndex, int capture, int type, int ordering)
 	{
-		int move = 0
-		    | fromIndex	// from
+		int move =
+		      fromIndex	// from
 			| (toIndex << TO_SHIFT) // to
 			| ((pieceMoving + 7) << PIECE_SHIFT) // piece moving (offset 7)
 			| ((capture + 7) << CAPTURE_SHIFT) //piece captured (offset 7)
@@ -224,8 +224,8 @@ public class Move implements Definitions
 		int toIndex = ((move >> TO_SHIFT) & SQUARE_MASK);
 		int moveType = ((move >> TYPE_SHIFT) & TYPE_MASK);
 		
-		String inputNotation = new String();
-		switch(fromIndex%16)
+		String inputNotation = "";
+		switch(fromIndex % 16)
 		{
 			case 0: inputNotation += "a"; break;
 			case 1: inputNotation += "b"; break;

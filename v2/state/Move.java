@@ -58,6 +58,8 @@ public class Move
      * Layout of move int is:
      *  [
      *    type {mobility, capture, en passant, castle}
+     *      if mobility of capture lead to promotion, then
+     *          the promoted to figure will be > 0
      *      lg 4  = 2 |
      *
      *    from index
@@ -69,17 +71,20 @@ public class Move
      *    Figure
      *      lg 6 = 3  |
      *
-     *    Capture (no king)
-     *      lg 5 = 3  |
+     *    Capture {nil, pawn, knight, bishop, rook, queen}
+     *          nill is auto inserted by offsetting the given figure
+     *          value, used to indicate lack of capture figure info
+     *      lg 6 = 3  |
      *
-     *    promotion to figure {knight, bishop, rook, queen}
-     *      lg 4 = 2  |
+     *    promotion to figure {nil, knight, bishop, rook, queen}
+     *          extra nil is used to indicate that this is not a promotion
+     *      lg 5 = 3  |
      *
      *    castle type (if castle)
      *      lg 2 = 1  |
      *
      *    extra
-     *      5 bits
+     *      8 bits
      *  ]
      *
      * totalling 31 bits.
@@ -207,7 +212,7 @@ public class Move
 //        return Figure.VALUES[ index ];
     }
     private static int captured(int move) {
-        return (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
+        return ((move & CAPTURE_MASK) >>> CAPTURE_SHIFT) - 1;
 //        int index = (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
 //        return Figure.VALUES[ index ];
     }
@@ -240,7 +245,7 @@ public class Move
     //--------------------------------------------------------------------
     private static int addCaptured(
             int toMove, int captured) {
-        return toMove | (captured << CAPTURE_SHIFT);
+        return toMove | ((captured + 1) << CAPTURE_SHIFT);
     }
 
     public static int setPromotion(
@@ -285,8 +290,7 @@ public class Move
 
     public static int enPassant(
             int fromSquareIndex,
-            int   toSquareIndex
-    )
+            int   toSquareIndex)
     {
         return typeBits( MoveType.EN_PASSANT ) |
                fromBits( fromSquareIndex     ) |
@@ -325,15 +329,25 @@ public class Move
                 int from   = fromSquareIndex(move);
                 int to     = toSquareIndex(move);
 
-                int promoteTo;
-                int captured =
-                        (figure == 0 &&
-                          (promoteTo = promotion(move)) != 0)
+                int promoteTo = promotion(move);
+                int captured  = captured(move);
+                if (captured == -1) {
+                    captured =
+                        (promoteTo != 0)
                        ? toState.capturePromote(
                             from, to, promoteTo)
                        : toState.capture(figure, from, to);
-
-                return addCaptured(move, captured);
+                    return addCaptured(move, captured);
+                } else {
+                    if (promoteTo != 0) {
+                        toState.capturePromote(
+                            from, to, promoteTo, captured);
+                    } else {
+                        toState.capture(
+                            figure, from, to, captured);
+                    }
+                    return move;
+                }
             }
 
             case EN_PASSANT: {

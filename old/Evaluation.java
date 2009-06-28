@@ -184,7 +184,7 @@ public class Evaluation implements Definitions
 			// Add it to the pawn array for more pawn evaluation later
 			if(w_pawnPos[file + 1] == 0) // No pawn on this file so far, so add it as both most forward and most backward pawn on the file
 			{
-				w_pawnPos[file+1] = 0 | rank | (rank << 16); 
+				w_pawnPos[file+1] = rank | (rank << 16);
 			}
 			else if((w_pawnPos[file+1] & 0xFFFF) > rank) // The new pawn is more backward then the old most backward pawn so add it
 			{
@@ -224,7 +224,7 @@ public class Evaluation implements Definitions
 			file = board.row(index);
 			if(b_pawnPos[file + 1] == 0)
 			{
-				b_pawnPos[file+1] = 0 | rank | (rank<<16); 
+				b_pawnPos[file+1] = rank | (rank<<16);
 			}
 			else if((b_pawnPos[file+1] & 0xFFFF) < rank)
 			{
