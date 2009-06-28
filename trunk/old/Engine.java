@@ -282,7 +282,7 @@ public class Engine implements Definitions
 			if((splitTime / 1000) < 1) nps = nodesSearched;
 			else
 			{
-				Double decimalTime = new Double(nodesSearched/(splitTime/1000D));
+				Double decimalTime = nodesSearched/(splitTime/1000D);
 				nps = decimalTime.intValue();
 			}
 
@@ -1124,7 +1124,7 @@ public class Engine implements Definitions
 				movesSort[i] += Move.orderingValue(moves[i]) - 31;
 				movesSort[i] += historyMoves[Move.fromIndex(moves[i])][Move.toIndex(moves[i])];
 			}
-			catch(ArrayIndexOutOfBoundsException ex){}
+			catch (ArrayIndexOutOfBoundsException ignored){}
 
 		}		
 		bubbleSortMoves(moves, startIndex, endIndex); // Order the moves according to their ordering values

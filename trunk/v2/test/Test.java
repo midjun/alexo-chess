@@ -22,18 +22,21 @@ public class Test
 
     public static void main(String[] args)
     {
-//        int nodesA = buildTree(new State(), 5, fenA);
-        int nodesB = buildMediocreTree(5, fenB);
+        int nodesA = buildTree(new State(), 5, fenA);
+//        int nodesB = buildMediocreTree(5, fenB);
 //
-//        System.out.println("nodesA "  + nodesA);
-        System.out.println("nodesB "  + nodesB);
+        System.out.println("nodesA "  + nodesA);
+//        System.out.println("nodesB "  + nodesB);
 //
 //        System.out.println("mobs  "  + mobs);
         System.out.println("caps  "  + caps);
+        System.out.println("en passants " + enPassants);
+        System.out.println("castles 0");
+        System.out.println("promotions 0");
+        System.out.println("checks " + checks);
         System.out.println("mates "  + mates);
         System.out.println("draws "  + draws);
-        System.out.println("checks " + checks);
-        System.out.println("en passants " + enPassants);
+
 
 ////        System.out.println(fenA.equals( fenB ));
 ////        System.out.println(fenB.delta(  fenA ));

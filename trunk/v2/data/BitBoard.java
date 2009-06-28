@@ -38,7 +38,7 @@ public class BitBoard
     //--------------------------------------------------------------------
     public static long offset(long b, int deltaRank, int deltaFile) {
         for (; deltaRank > 0; deltaRank--) b = northOne(b);
-        for (; deltaRank < 0; deltaRank++) b = soutOne(b);
+        for (; deltaRank < 0; deltaRank++) b = southOne(b);
         for (; deltaFile > 0; deltaFile--) b = eastOne(b);
         for (; deltaFile < 0; deltaFile++) b = westOne(b);
         return b;
@@ -48,7 +48,7 @@ public class BitBoard
     private static final long notHFile = 0x7f7f7f7f7f7f7f7fL;
 
     public static long northOne(long b) {return (b <<  8) & NOT_RANK_1;}
-    public static long soutOne (long b) {return (b >>> 8) & NOT_RANK_8;}
+    public static long southOne(long b) {return (b >>> 8) & NOT_RANK_8;}
     public static long eastOne (long b) {return (b <<  1) & notAFile;}
     public static long westOne (long b) {return (b >>> 1) & notHFile;}
 

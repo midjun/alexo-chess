@@ -58,7 +58,7 @@ public class Perft
 		for(int i = 0; i < totalMoves; i++)
 		{
 			board.makeMove(moves[i]);
-			children[i] = new Long(miniMax(board, depth-1));
+			children[i] = miniMax(board, depth-1);
 			board.unmakeMove(moves[i]);
 		}
 
@@ -66,8 +66,8 @@ public class Perft
 		for(int i = 0; i < totalMoves; i++)
 		{
 			System.out.print(Move.inputNotation(moves[i]) + " ");
-			System.out.println(((Long)children[i]).longValue());
-			nodes += ((Long)children[i]).longValue();
+			System.out.println(children[i]);
+			nodes += children[i];
 		}
 		
 		System.out.println("Moves: " + totalMoves);
