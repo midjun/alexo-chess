@@ -72,11 +72,8 @@ public class Move
      *    Capture (no king)
      *      lg 5 = 3  |
      *
-     *    en passant file (if en passant)
-     *      lg 8 = 3  |
-     *
-     *    promotion to figure {nil, knight, bishop, rook, queen}
-     *      lg 5 = 2  |
+     *    promotion to figure {knight, bishop, rook, queen}
+     *      lg 4 = 2  |
      *
      *    castle type (if castle)
      *      lg 2 = 1  |
@@ -89,12 +86,7 @@ public class Move
      */
 
     // making this final raises annoying suggestions
-//    private static       int COLOUR_SHIFT = 0;
-//    private static final int COLOUR_SIZE  = 1;
-//    private static final int COLOUR_MASK  =
-//            mask(COLOUR_SIZE) << COLOUR_SHIFT;
-
-    private static       int TYPE_SHIFT = 0; // COLOUR_SHIFT + COLOUR_SIZE;
+    private static       int TYPE_SHIFT = 0;
     private static final int TYPE_SIZE  = 2;
     private static final int TYPE_MASK  = mask(TYPE_SIZE) << TYPE_SHIFT;
 
@@ -117,12 +109,13 @@ public class Move
             mask(CAPTURE_SIZE) << CAPTURE_SHIFT;
     //private static final int FIGURE_MASK_NOT = ~FIGURE_MASK;
 
-    private static final int EN_PASS_SHIFT = CAPTURE_SHIFT + CAPTURE_SIZE;
-    private static final int EN_PASS_SIZE  = 3;
-    private static final int EN_PASS_MASK  =
-            mask(EN_PASS_SIZE) << EN_PASS_SHIFT;
+//    private static final int EN_PASS_SHIFT = CAPTURE_SHIFT + CAPTURE_SIZE;
+//    private static final int EN_PASS_SIZE  = 3;
+//    private static final int EN_PASS_MASK  =
+//            mask(EN_PASS_SIZE) << EN_PASS_SHIFT;
 
-    private static final int PROMO_SHIFT = EN_PASS_SHIFT + EN_PASS_SIZE;
+    //private static final int PROMO_SHIFT = EN_PASS_SHIFT + EN_PASS_SIZE;
+    private static final int PROMO_SHIFT = CAPTURE_SHIFT + CAPTURE_SIZE;
     private static final int PROMO_SIZE  = 3;
     private static final int PROMO_MASK  =
             mask(PROMO_SIZE) << PROMO_SHIFT;
@@ -173,9 +166,9 @@ public class Move
 //    private static int capturedBits(Figure captured) {
 //        return captured.ordinal() << CAPTURE_SHIFT;
 //    }
-    private static int enPassantBits(int enPassantFile) {
-        return enPassantFile << EN_PASS_SHIFT;
-    }
+//    private static int enPassantBits(int enPassantFile) {
+//        return enPassantFile << EN_PASS_SHIFT;
+//    }
     private static int promotionBits(int promotingTo) {
         return promotingTo << PROMO_SHIFT;
     }
@@ -218,9 +211,15 @@ public class Move
 //        int index = (move & CAPTURE_MASK) >>> CAPTURE_SHIFT;
 //        return Figure.VALUES[ index ];
     }
-    private static int enPassantRank(int move) {
-        return (move & EN_PASS_MASK) >>> EN_PASS_SHIFT;
+//    private static int enPassantRank(int move) {
+//        return (move & EN_PASS_MASK) >>> EN_PASS_SHIFT;
+//    }
+    private static int enPassantCapture(int move) {
+        return Location.squareIndex(
+                Location.rankIndex(fromSquareIndex(move)),
+                Location.fileIndex(  toSquareIndex(move)));
     }
+
     private static int promotion(int move) {
         return (move & PROMO_MASK) >>> PROMO_SHIFT;
 //        int index = (move & PROMO_MASK) >>> PROMO_SHIFT;
@@ -256,13 +255,16 @@ public class Move
     public static boolean isCapture(int move) {
         return moveType(move) == MoveType.CAPTURE;
     }
+    public static boolean isEnPassant(int move) {
+        return moveType(move) == MoveType.EN_PASSANT;
+    }
 
 
     //--------------------------------------------------------------------
     public static int mobility(
             Figure moving,
             int    fromSquareIndex,
-            int    toSquareIndex)
+            int      toSquareIndex)
     {
         return   typeBits( MoveType.MOBILITY ) |
                figureBits( moving            ) |
@@ -273,7 +275,7 @@ public class Move
     public static int capture(
             Figure attacker,
             int    fromSquareIndex,
-            int    toSquareIndex)
+            int      toSquareIndex)
     {
         return   typeBits( MoveType.CAPTURE  ) |
                figureBits( attacker          ) |
@@ -281,9 +283,14 @@ public class Move
                    toBits( toSquareIndex     );
     }
 
-    public static int enPassant()
+    public static int enPassant(
+            int fromSquareIndex,
+            int   toSquareIndex
+    )
     {
-        return 0;
+        return   typeBits( MoveType.EN_PASSANT ) |
+                 fromBits( fromSquareIndex   )   |
+                   toBits( toSquareIndex     );
     }
 
     public static int castle()
@@ -328,6 +335,15 @@ public class Move
 
                 return addCaptured(move, captured);
             }
+
+            case EN_PASSANT: {
+                int from =  fromSquareIndex(move);
+                int to   =    toSquareIndex(move);
+                int cap  = enPassantCapture(move);
+
+                toState.enPassantCapture(from, to, cap);
+                return move;
+            }
         }
         System.out.println("unable to handle move");
         return move;
@@ -371,6 +387,15 @@ public class Move
                 }
                 return;
             }
+
+            case EN_PASSANT: {
+                int from =  fromSquareIndex(move);
+                int to   =    toSquareIndex(move);
+                int cap  = enPassantCapture(move);
+
+                toState.enPassantCapture(from, to, cap);
+                return;
+            }
         }
         System.out.println("unable to handle move");
     }
@@ -402,9 +427,20 @@ public class Move
 
                 return "capture with " + Figure.VALUES[figure] +
                          " from " + Location.toString(from) + " to " +
-                                   Location.toString(to) +
+                                    Location.toString(to)   +
                          (promo != 0
                           ? " promo " + Figure.VALUES[figure] : "");
+            }
+
+            case EN_PASSANT: {
+                int from =  fromSquareIndex(move);
+                int to   =    toSquareIndex(move);
+                int cap  = enPassantCapture(move);
+
+                return "en passant capture from " +
+                        Location.toString(from) + " to " +
+                        Location.toString(to  ) + " capturing " +
+                        Location.toString(cap );
             }
         }
 

@@ -70,10 +70,11 @@ public class Test
 
     //--------------------------------------------------------------------
 //    private static int mobs   = 0;
-    private static int caps   = 0;
-    private static int checks = 0;
-    private static int draws  = 0;
-    private static int mates  = 0;
+    private static int caps       = 0;
+    private static int checks     = 0;
+    private static int draws      = 0;
+    private static int mates      = 0;
+    private static int enPassants = 0;
 
     private static int buildTree(
             State state, int ply, GameBranch check)
@@ -101,6 +102,9 @@ public class Test
                 }
                 if (Move.isCapture(move)) {
                     caps++;
+                }
+                if (Move.isEnPassant(move)) {
+                    enPassants++;
                 }
             }
 

@@ -32,9 +32,9 @@ public class State
 
     //--------------------------------------------------------------------
     private static final byte EP_NONE = 1 << 4;
-    private static byte enPassant(int file) {
-        return (byte) file;
-    }
+//    private static byte enPassant(int file) {
+//        return (byte) file;
+//    }
 
 
     //--------------------------------------------------------------------
@@ -174,8 +174,8 @@ public class State
      */
     public int moves(int[] moves)
     {
-        long occupied      = whiteBB | blackBB;
-        long notOccupied   = ~occupied;
+        long occupied    = whiteBB | blackBB;
+        long notOccupied = ~occupied;
 
         long proponent, opponent, oppKing, pieces[];
         if (nextToAct == Colour.WHITE) {
@@ -195,14 +195,14 @@ public class State
         int offset = 0;
         for (Figure f : Figure.VALUES)
         {
-            long  bb = pieces[ f.ordinal() ];
+            long bb = pieces[ f.ordinal() ];
             while (bb != 0)
             {
                 long pieceBoard  = BitBoard.lowestOneBit(bb);
                 long pseudoMoves = Piece.valueOf(nextToAct, f).moves(
                         pieceBoard, occupied, notOccupied,
                         proponent, notProponent, opponent);
-                if ((oppKing & pseudoMoves) != 0) return -1;
+                if ((oppKing & pseudoMoves) != 0) return -1; // can mate
 
                 offset = addMoves(
                         f, pieceBoard, moves, offset,
@@ -236,9 +236,11 @@ public class State
             if (canPromote(from)) {
                 nextOffset = addPromotions(
                         moves, nextOffset - offset, nextOffset);
-            } else if (canEnPassant(from)) {
+            }
+            else if (canEnPassant(from))
+            {
                 nextOffset = addEnPassant(
-                        moves, );
+                        from, moves, nextOffset);
             }
         }
         return nextOffset;
@@ -286,39 +288,89 @@ public class State
 
         int rank = Location.rankIndex(from);
         if (nextToAct == Colour.WHITE) {
-            if (rank != 4) return false;
+             if (rank != 4) return false;
         }
-        if (nextToAct == Colour.BLACK) {
-            if (rank != 3) return false;
-        }
+        else if (rank != 3) return false;
 
         int file = Location.fileIndex(from);
         return enPassants == (file - 1) ||
-               enPassants == (file - 1);
+               enPassants == (file + 1);
     }
 
-    public int addEnPassant(int from)
+    private int addEnPassant(
+            int from, int moves[], int nextOffset)
     {
-
+        int file = Location.fileIndex(from);
+        if (enPassants == (file - 1)) {
+            if (nextToAct == Colour.BLACK) {
+                moves[nextOffset] = Move.enPassant(from,
+                        Location.squareIndex(5, file - 1));
+            } else {
+                moves[nextOffset] = Move.enPassant(from,
+                        Location.squareIndex(5, file + 1));
+            }
+        } else /*if (enPassants == (file + 1))*/ {
+             if (nextToAct == Colour.BLACK) {
+                moves[nextOffset] = Move.enPassant(from,
+                        Location.squareIndex(2, file - 1));
+            } else {
+                moves[nextOffset] = Move.enPassant(from,
+                        Location.squareIndex(2, file + 1));
+            }
+        }
+        return nextOffset + 1;
     }
 
-//    p
-    
-    
+    public void enPassantCapture(
+            int from, int to, int captured)
+    {
+        enPassantSwaps(from, to, captured);
+
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
+    }
+    public void unEnPassantCapture(
+            int from, int to, int captured)
+    {
+        enPassantSwaps(from, to, captured);
+
+        reversibleMoves = prevReversibleMoves;
+    }
+    private void enPassantSwaps(
+            int from, int to, int captured)
+    {
+        long fromBB = BitLoc.locationToBitBoard(from);
+        long toBB   = BitLoc.locationToBitBoard(to);
+        long capBB  = BitLoc.locationToBitBoard(captured);
+
+        long fromToBB = fromBB ^ toBB;
+        if (nextToAct == Colour.WHITE) {
+            wPieces[ PAWNS ] ^= fromToBB;
+            whiteBB          ^= fromToBB;
+            bPieces[ PAWNS ] ^= capBB;
+            blackBB          ^= capBB;
+        } else {
+            bPieces[ PAWNS ] ^= fromToBB;
+            blackBB          ^= fromToBB;
+            wPieces[ PAWNS ] ^= capBB;
+            whiteBB          ^= capBB;
+        }
+
+        nextToAct = nextToAct.invert();
+    }
+
 
     //--------------------------------------------------------------------
     private boolean canPromote(int from)
     {
-//        if (active == Figure.PAWN) {
-            int fromRank = Location.rankIndex(from);
-            if (nextToAct == Colour.WHITE) {
-                if (fromRank == 6) {
-                    return true;
-                }
-            } else if (fromRank == 1) {
+        int fromRank = Location.rankIndex(from);
+        if (nextToAct == Colour.WHITE) {
+            if (fromRank == 6) {
                 return true;
             }
-//        }
+        } else if (fromRank == 1) {
+            return true;
+        }
         return false;
     }
     private int addPromotions(

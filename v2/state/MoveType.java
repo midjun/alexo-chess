@@ -11,7 +11,8 @@ public enum MoveType
     CAPTURE,
     EN_PASSANT,
     CASTLE,
-    PROMOTION;
+//    PROMOTION
+    ;
 
 
     //--------------------------------------------------------------------
