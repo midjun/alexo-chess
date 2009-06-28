@@ -31,10 +31,9 @@ public class State
 
 
     //--------------------------------------------------------------------
-    private static final byte EP_NONE = 1 << 4;
-//    private static byte enPassant(int file) {
-//        return (byte) file;
-//    }
+    private static final byte EP_NONE       = -1;
+    private static final byte EP_WHITE_DEST = 5;
+    private static final byte EP_BLACK_DEST = 2;
 
 
     //--------------------------------------------------------------------
@@ -54,6 +53,7 @@ public class State
     private long blackBB;
 
     private byte enPassants; // avaiable to take for nextToAct
+    private byte prevEnPassants;
 
     private byte castles;
     private byte prevCastles;
@@ -97,7 +97,7 @@ public class State
         wPieces[ KING ] = BitLoc.locationToBitBoard(0, 4);
         bPieces[ KING ] = BitLoc.locationToBitBoard(7, 4);
 
-        enPassants = 0;
+        enPassants = EP_NONE;
         castles    = WHITE_CASTLE | BLACK_CASTLE;
 
         reversibleMoves = 0;
@@ -122,23 +122,25 @@ public class State
                   long   copyWhiteBB,
                   long   copyBlackBB,
                   byte   copyPrevCastles,
-                  byte   copyPrevReversibleMoves//,
+                  byte   copyPrevReversibleMoves,
+                  byte   copyPrevEnPassants//,
 //                  int    copyFullMoves
             )
     {
         wPieces = copyWPieces;
         bPieces = copyBPieces;
 
-        enPassants      = copyEnPassants;
         castles         = copyCastles;
-        reversibleMoves = copyReversibleMoves;
         nextToAct       = copyNextToAct;
+        enPassants      = copyEnPassants;
+        reversibleMoves = copyReversibleMoves;
 
         whiteBB = copyWhiteBB;
         blackBB = copyBlackBB;
 
 //        fullMoves           = copyFullMoves;
         prevCastles         = copyPrevCastles;
+        prevEnPassants      = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
     }
 
@@ -146,7 +148,6 @@ public class State
     //--------------------------------------------------------------------
     public int legalMoves(int[] moves)
     {
-//        int nextMoves[]   = new int[ 256 ];
         int pseudoMoves[] = new int[ 256 ];
         int nPseudoMoves  = moves(pseudoMoves);
         if (nPseudoMoves == -1) return -1;
@@ -282,85 +283,6 @@ public class State
 
 
     //--------------------------------------------------------------------
-    private boolean canEnPassant(int from)
-    {
-        if (enPassants == EP_NONE) return false;
-
-        int rank = Location.rankIndex(from);
-        if (nextToAct == Colour.WHITE) {
-             if (rank != 4) return false;
-        }
-        else if (rank != 3) return false;
-
-        int file = Location.fileIndex(from);
-        return enPassants == (file - 1) ||
-               enPassants == (file + 1);
-    }
-
-    private int addEnPassant(
-            int from, int moves[], int nextOffset)
-    {
-        int file = Location.fileIndex(from);
-        if (enPassants == (file - 1)) {
-            if (nextToAct == Colour.BLACK) {
-                moves[nextOffset] = Move.enPassant(from,
-                        Location.squareIndex(5, file - 1));
-            } else {
-                moves[nextOffset] = Move.enPassant(from,
-                        Location.squareIndex(5, file + 1));
-            }
-        } else /*if (enPassants == (file + 1))*/ {
-             if (nextToAct == Colour.BLACK) {
-                moves[nextOffset] = Move.enPassant(from,
-                        Location.squareIndex(2, file - 1));
-            } else {
-                moves[nextOffset] = Move.enPassant(from,
-                        Location.squareIndex(2, file + 1));
-            }
-        }
-        return nextOffset + 1;
-    }
-
-    public void enPassantCapture(
-            int from, int to, int captured)
-    {
-        enPassantSwaps(from, to, captured);
-
-        prevReversibleMoves = reversibleMoves;
-        reversibleMoves     = 0;
-    }
-    public void unEnPassantCapture(
-            int from, int to, int captured)
-    {
-        enPassantSwaps(from, to, captured);
-
-        reversibleMoves = prevReversibleMoves;
-    }
-    private void enPassantSwaps(
-            int from, int to, int captured)
-    {
-        long fromBB = BitLoc.locationToBitBoard(from);
-        long toBB   = BitLoc.locationToBitBoard(to);
-        long capBB  = BitLoc.locationToBitBoard(captured);
-
-        long fromToBB = fromBB ^ toBB;
-        if (nextToAct == Colour.WHITE) {
-            wPieces[ PAWNS ] ^= fromToBB;
-            whiteBB          ^= fromToBB;
-            bPieces[ PAWNS ] ^= capBB;
-            blackBB          ^= capBB;
-        } else {
-            bPieces[ PAWNS ] ^= fromToBB;
-            blackBB          ^= fromToBB;
-            wPieces[ PAWNS ] ^= capBB;
-            whiteBB          ^= capBB;
-        }
-
-        nextToAct = nextToAct.invert();
-    }
-
-
-    //--------------------------------------------------------------------
     private boolean canPromote(int from)
     {
         int fromRank = Location.rankIndex(from);
@@ -400,6 +322,8 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
+        prevEnPassants      = enPassants;
+        enPassants          = EP_NONE;
 //        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
     }
     private void pushPromoteBB(
@@ -429,6 +353,8 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
+        prevEnPassants      = enPassants;
+        enPassants          = EP_NONE;
         return captured;
     }
     public void capturePromoteBB(Colour colour,
@@ -457,6 +383,7 @@ public class State
     {
 //        System.out.println("unPushPromote");
         nextToAct       = nextToAct.invert();
+        enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 //        fullMoves      -= (nextToAct == Colour.WHITE ? 1 : 0);
 
@@ -468,6 +395,7 @@ public class State
     {
 //        System.out.println("unCapturePromote");
         nextToAct       = nextToAct.invert();
+        enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 
         long toBB = BitLoc.locationToBitBoard(to);
@@ -485,6 +413,7 @@ public class State
                    BitLoc.locationToBitBoard(fromSquareIndex),
                    BitLoc.locationToBitBoard(toSquareIndex));
 
+        prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
@@ -538,19 +467,10 @@ public class State
             } else {
                 if (from == 56) {
                     castles &= ~BLACK_Q_CASTLE;
-                } else if (from == 7) {
+                } else if (from == 63) {
                     castles &= ~BLACK_K_CASTLE;
                 }
             }
-        }
-    }
-
-    // requires that a Figure.PAWN is moving
-    public void updateEnPassantRights(int from, int to)
-    {
-        if (Math.abs(Location.rankIndex(from) -
-                     Location.rankIndex(to  )) > 1) {
-            enPassants = (byte) Location.fileIndex(from);
         }
     }
 
@@ -566,7 +486,7 @@ public class State
                    BitLoc.locationToBitBoard(toSquareIndex));
 
         castles         = prevCastles;
-//        enPassants      = EP_NONE;
+        enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -587,6 +507,7 @@ public class State
         updateCasltingRights(
                 attacker, fromSquareIndex);
         prevReversibleMoves = reversibleMoves;
+        prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         reversibleMoves     = 0;
         return captured;
@@ -629,7 +550,7 @@ public class State
         long fromTo = from ^ to;
 
         if (nextToAct == Colour.WHITE) {
-            // black is the attacher
+            // black is the attacker
             bPieces[ attacker ] ^= fromTo;
             wPieces[ captured ] ^= to;
 
@@ -645,7 +566,88 @@ public class State
 
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
+        enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
+    }
+
+
+    //--------------------------------------------------------------------
+    private boolean canEnPassant(int from)
+    {
+        if (enPassants == EP_NONE) return false;
+
+        int rank = Location.rankIndex(from);
+        if (nextToAct == Colour.WHITE) {
+             if (rank != 4) return false;
+        }
+        else if (rank != 3) return false;
+
+        int file = Location.fileIndex(from);
+        return enPassants == (file - 1) ||
+               enPassants == (file + 1);
+    }
+
+    private int addEnPassant(
+            int from, int moves[], int nextOffset)
+    {
+        if (nextToAct == Colour.BLACK) {
+            moves[nextOffset] = Move.enPassant(from,
+                    Location.squareIndex(EP_BLACK_DEST, enPassants));
+        } else {
+            moves[nextOffset] = Move.enPassant(from,
+                    Location.squareIndex(EP_WHITE_DEST, enPassants));
+        }
+        return nextOffset + 1;
+    }
+
+    public void enPassantCapture(
+            int from, int to, int captured)
+    {
+        enPassantSwaps(from, to, captured);
+
+        nextToAct           = nextToAct.invert();
+        prevEnPassants      = enPassants;
+        enPassants          = EP_NONE;
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
+    }
+    public void unEnPassantCapture(
+            int from, int to, int captured)
+    {
+        nextToAct       = nextToAct.invert();
+        enPassants      = prevEnPassants;
+        reversibleMoves = prevReversibleMoves;
+
+        enPassantSwaps(from, to, captured);
+    }
+    private void enPassantSwaps(
+            int from, int to, int captured)
+    {
+        long fromBB = BitLoc.locationToBitBoard(from);
+        long toBB   = BitLoc.locationToBitBoard(to);
+        long capBB  = BitLoc.locationToBitBoard(captured);
+
+        long fromToBB = fromBB ^ toBB;
+        if (nextToAct == Colour.WHITE) {
+            wPieces[ PAWNS ] ^= fromToBB;
+            whiteBB          ^= fromToBB;
+            bPieces[ PAWNS ] ^= capBB;
+            blackBB          ^= capBB;
+        } else {
+            bPieces[ PAWNS ] ^= fromToBB;
+            blackBB          ^= fromToBB;
+            wPieces[ PAWNS ] ^= capBB;
+            whiteBB          ^= capBB;
+        }
+    }
+
+    // requires that a Figure.PAWN is moving
+    public void updateEnPassantRights(int from, int to)
+    {
+        if (Math.abs(Location.rankIndex(from) -
+                     Location.rankIndex(to  )) > 1) {
+            enPassants = (byte) Location.fileIndex(from);
+        }
     }
 
 
@@ -826,7 +828,8 @@ public class State
                          whiteBB,
                          blackBB,
                          prevCastles,
-                         prevReversibleMoves);
+                         prevReversibleMoves,
+                         prevEnPassants);
     }
 
 
@@ -871,7 +874,8 @@ public class State
     public String toString() {
         StringBuffer str = new StringBuffer();
 
-        str.append("Reversible Moves: ").append(reversibleMoves);
+        str.append("Next to Act: ").append(nextToAct);
+        str.append("\nReversible Moves: ").append(reversibleMoves);
 
         if (castles != 0) {
             str.append("\nCastles Available: ");
@@ -902,15 +906,9 @@ public class State
 
         if (enPassants != 0) {
             str.append("\nEn Passants: ");
-//            if (whiteEnPassants != 0) {
-//                str.append("white ")
-//                   .append(Long.lowestOneBit(whiteEnPassants))
-//                   .append(" ");
-//            }
-//            if (blackEnPassants != 0) {
-//                str.append("black ")
-//                   .append(Long.lowestOneBit(blackEnPassants));
-//            }
+            if (enPassants != EP_NONE) {
+                str.append(enPassants);
+            }
         }
 
         for (int rank = 7; rank >= 0; rank--)

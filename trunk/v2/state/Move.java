@@ -288,9 +288,9 @@ public class Move
             int   toSquareIndex
     )
     {
-        return   typeBits( MoveType.EN_PASSANT ) |
-                 fromBits( fromSquareIndex   )   |
-                   toBits( toSquareIndex     );
+        return typeBits( MoveType.EN_PASSANT ) |
+               fromBits( fromSquareIndex     ) |
+                 toBits( toSquareIndex       );
     }
 
     public static int castle()
@@ -331,7 +331,7 @@ public class Move
                           (promoteTo = promotion(move)) != 0)
                        ? toState.capturePromote(
                             from, to, promoteTo)
-                       : toState.capture(figure(move), from, to);
+                       : toState.capture(figure, from, to);
 
                 return addCaptured(move, captured);
             }
@@ -393,7 +393,7 @@ public class Move
                 int to   =    toSquareIndex(move);
                 int cap  = enPassantCapture(move);
 
-                toState.enPassantCapture(from, to, cap);
+                toState.unEnPassantCapture(from, to, cap);
                 return;
             }
         }

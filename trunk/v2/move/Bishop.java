@@ -6,12 +6,12 @@ import static v2.move.SlidingPieces.slide;
  * Date: Feb 6, 2009
  * Time: 4:34:58 AM
  */
-public class Bishops implements BoardPiece
+public class Bishop implements BoardPiece
 {
     //--------------------------------------------------------------------
-    private Bishops() {}
+    private Bishop() {}
 
-    public static final Bishops MOVES = new Bishops();
+    public static final Bishop MOVES = new Bishop();
 
 
     //--------------------------------------------------------------------

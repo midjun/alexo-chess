@@ -10,18 +10,18 @@ public enum Piece implements BoardPiece
 {
     //--------------------------------------------------------------------
     WHITE_PAWN  (Colour.WHITE, Figure.PAWN,   Pawns.WHITE_MOVES),
-    WHITE_KNIGHT(Colour.WHITE, Figure.KNIGHT, Knights.MOVES),
-    WHITE_BISHOP(Colour.WHITE, Figure.BISHOP, Bishops.MOVES),
-    WHITE_ROOK  (Colour.WHITE, Figure.ROOK,   Rooks.MOVES),
-    WHITE_QUEEN (Colour.WHITE, Figure.QUEEN,  Queens.MOVES),
-    WHITE_KING  (Colour.WHITE, Figure.KING,   Kings.MOVES),
+    WHITE_KNIGHT(Colour.WHITE, Figure.KNIGHT, Knight.MOVES),
+    WHITE_BISHOP(Colour.WHITE, Figure.BISHOP, Bishop.MOVES),
+    WHITE_ROOK  (Colour.WHITE, Figure.ROOK,   Rook.MOVES),
+    WHITE_QUEEN (Colour.WHITE, Figure.QUEEN,  Queen.MOVES),
+    WHITE_KING  (Colour.WHITE, Figure.KING,   King.MOVES),
 
     BLACK_PAWN  (Colour.BLACK, Figure.PAWN,   Pawns.BLACK_MOVES),
-    BLACK_KNIGHT(Colour.BLACK, Figure.KNIGHT, Knights.MOVES),
-    BLACK_BISHOP(Colour.BLACK, Figure.BISHOP, Bishops.MOVES),
-    BLACK_ROOK  (Colour.BLACK, Figure.ROOK,   Rooks.MOVES),
-    BLACK_QUEEN (Colour.BLACK, Figure.QUEEN,  Queens.MOVES),
-    BLACK_KING  (Colour.BLACK, Figure.KING,   Kings.MOVES);
+    BLACK_KNIGHT(Colour.BLACK, Figure.KNIGHT, Knight.MOVES),
+    BLACK_BISHOP(Colour.BLACK, Figure.BISHOP, Bishop.MOVES),
+    BLACK_ROOK  (Colour.BLACK, Figure.ROOK,   Rook.MOVES),
+    BLACK_QUEEN (Colour.BLACK, Figure.QUEEN,  Queen.MOVES),
+    BLACK_KING  (Colour.BLACK, Figure.KING,   King.MOVES);
 
 
     //--------------------------------------------------------------------
