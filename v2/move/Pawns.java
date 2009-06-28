@@ -16,28 +16,28 @@ public class Pawns
 
 
     //--------------------------------------------------------------------
-    private static final long[] WHITE;
-    private static final long[] BLACK;
+    private static final long WHITE_ATTACKS[];
+    private static final long BLACK_ATTACKS[];
 
     static
     {
-        WHITE = new long[64];
-        BLACK = new long[64];
+        WHITE_ATTACKS = new long[64];
+        BLACK_ATTACKS = new long[64];
 
         for (int loc = 0; loc < 64; loc++) {
-            WHITE[ loc ] = whiteAttacks(
+            WHITE_ATTACKS[ loc ] = whiteAttacks(
                                 BitLoc.locationToBitBoard(loc));
 
-            BLACK[ loc ] = blackAttacks(
+            BLACK_ATTACKS[ loc ] = blackAttacks(
                                 BitLoc.locationToBitBoard(loc));
         }
     }
 
     public static long whiteAttacks(int loc) {
-        return WHITE[ loc ];
+        return WHITE_ATTACKS[ loc ];
     }
     public static long blackAttacks(int loc) {
-        return BLACK[ loc ];
+        return BLACK_ATTACKS[ loc ];
     }
 
 
@@ -61,6 +61,11 @@ public class Pawns
                           long proponent,
                           long notProponent,
                           long opponent) {
+//            long mobility;
+//            mobility  = BitBoard.northOne(whitePawn) & notOccupied;
+//            mobility |= BitBoard.northOne(mobility)
+//                        & notOccupied & BitBoard.RANK_4;
+
             long mobility =
                     BitBoard.northOne(whitePawn) & notOccupied;
             if (mobility != 0 &&

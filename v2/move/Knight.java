@@ -7,12 +7,12 @@ import v2.data.BitLoc;
  * Date: Feb 6, 2009
  * Time: 3:17:06 AM
  */
-public class Knights implements BoardPiece
+public class Knight implements BoardPiece
 {
     //----------------------------------------------------------
-    private Knights() {}
+    private Knight() {}
 
-    public static final BoardPiece MOVES = new Knights();
+    public static final BoardPiece MOVES = new Knight();
 
 
     //--------------------------------------------------------------------

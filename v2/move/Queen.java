@@ -4,12 +4,12 @@ package v2.move;
  * Date: Feb 6, 2009
  * Time: 4:37:00 AM
  */
-public class Queens implements BoardPiece
+public class Queen implements BoardPiece
 {
     //--------------------------------------------------------------------
-    private Queens() {}
+    private Queen() {}
 
-    public static final BoardPiece MOVES = new Queens();
+    public static final BoardPiece MOVES = new Queen();
 
 
     //--------------------------------------------------------------------
@@ -20,10 +20,10 @@ public class Queens implements BoardPiece
                       long notProponent,
                       long opponent)
     {
-        return   Rooks.MOVES.moves(
+        return   Rook.MOVES.moves(
                     queen, occupied, notOccupied,
                     proponent, notProponent, opponent) |
-               Bishops.MOVES.moves(
+               Bishop.MOVES.moves(
                     queen, occupied, notOccupied,
                     proponent, notProponent, opponent);
     }
