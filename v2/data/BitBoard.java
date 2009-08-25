@@ -17,8 +17,8 @@ public class BitBoard
 
 
     //--------------------------------------------------------------------
-    public static final long EMPTY    = 0;
-    public static final long UNIVERSE = ~EMPTY;
+    public static final long NIL = 0;
+    public static final long ALL = ~NIL;
 
 
     //--------------------------------------------------------------------
