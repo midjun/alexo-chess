@@ -3,6 +3,7 @@ package v2.state;
 import v2.data.BitBoard;
 import v2.data.BitLoc;
 import v2.data.Location;
+import v2.move.SlidingPieces;
 import v2.piece.Colour;
 import v2.piece.Figure;
 import v2.piece.Piece;
@@ -27,7 +28,73 @@ public class State
     private static final byte BLACK_CASTLE = BLACK_K_CASTLE |
                                              BLACK_Q_CASTLE;
 
-//    private static final byte BLACK_CASTLE_SHIFT = 2;
+    private static final long WHITE_KING_START =
+            BitLoc.locationToBitBoard(0, 4);
+    private static final long BLACK_KING_START =
+            BitLoc.locationToBitBoard(7, 4);
+
+    private static final long WHITE_K_CASTLE_PATH =
+            SlidingPieces.slide(WHITE_KING_START, 0,  2);
+    private static final long WHITE_Q_CASTLE_PATH =
+            SlidingPieces.slide(WHITE_KING_START, 0, -2);
+    private static final long BLACK_K_CASTLE_PATH =
+            SlidingPieces.slide(BLACK_KING_START, 0,  2);
+    private static final long BLACK_Q_CASTLE_PATH =
+            SlidingPieces.slide(BLACK_KING_START, 0, -2);
+
+    private static final long WHITE_K_CASTLE_END =
+            BitLoc.locationToBitBoard(0, 6);
+    private static final long WHITE_Q_CASTLE_END =
+            BitLoc.locationToBitBoard(0, 2);
+    private static final long BLACK_K_CASTLE_END =
+            BitLoc.locationToBitBoard(7, 6);
+    private static final long BLACK_Q_CASTLE_END =
+            BitLoc.locationToBitBoard(7, 2);
+
+    private static final long WHITE_K_CASTLE_MOVE =
+            WHITE_KING_START ^ WHITE_K_CASTLE_END;
+    private static final long WHITE_Q_CASTLE_MOVE =
+            WHITE_KING_START ^ WHITE_Q_CASTLE_END;
+    private static final long BLACK_K_CASTLE_MOVE =
+            BLACK_KING_START ^ BLACK_K_CASTLE_END;
+    private static final long BLACK_Q_CASTLE_MOVE =
+            BLACK_KING_START ^ BLACK_Q_CASTLE_END;
+
+    private static final long WHITE_K_ROOK_START =
+            BitLoc.locationToBitBoard(0, 7);
+    private static final long WHITE_Q_ROOK_START =
+            BitLoc.locationToBitBoard(0, 0);
+    private static final long BLACK_K_ROOK_START =
+            BitLoc.locationToBitBoard(7, 7);
+    private static final long BLACK_Q_ROOK_START =
+            BitLoc.locationToBitBoard(7, 0);
+
+    private static final long WHITE_K_CASTLE_ROOK_END =
+            BitBoard.offset(WHITE_K_CASTLE_END, 0,  1);
+    private static final long WHITE_Q_CASTLE_ROOK_END =
+            BitBoard.offset(WHITE_Q_CASTLE_END, 0, -1);
+    private static final long BLACK_K_CASTLE_ROOK_END =
+            BitBoard.offset(BLACK_K_CASTLE_END, 0,  1);
+    private static final long BLACK_Q_CASTLE_ROOK_END =
+            BitBoard.offset(BLACK_Q_CASTLE_END, 0, -1);
+
+    private static final long WHITE_K_CASTLE_ROOK_MOVE =
+            WHITE_K_ROOK_START ^ WHITE_K_CASTLE_ROOK_END;
+    private static final long WHITE_Q_CASTLE_ROOK_MOVE =
+            WHITE_Q_ROOK_START ^ WHITE_Q_CASTLE_ROOK_END;
+    private static final long BLACK_K_CASTLE_ROOK_MOVE =
+            BLACK_K_ROOK_START ^ BLACK_K_CASTLE_ROOK_END;
+    private static final long BLACK_Q_CASTLE_ROOK_MOVE =
+            BLACK_Q_ROOK_START ^ BLACK_Q_CASTLE_ROOK_END;
+
+    private static final long WHITE_K_CASTLE_ALL_MOVES =
+            WHITE_K_CASTLE_MOVE ^ WHITE_K_CASTLE_ROOK_MOVE;
+    private static final long WHITE_Q_CASTLE_ALL_MOVES =
+            WHITE_Q_CASTLE_MOVE ^ WHITE_Q_CASTLE_ROOK_MOVE;
+    private static final long BLACK_K_CASTLE_ALL_MOVES =
+            BLACK_K_CASTLE_MOVE ^ BLACK_K_CASTLE_ROOK_MOVE;
+    private static final long BLACK_Q_CASTLE_ALL_MOVES =
+            BLACK_Q_CASTLE_MOVE ^ BLACK_Q_CASTLE_ROOK_MOVE;
 
 
     //--------------------------------------------------------------------
@@ -49,23 +116,28 @@ public class State
     private long[] wPieces;
     private long[] bPieces;
 
-    private long whiteBB;
-    private long blackBB;
+    private long   whiteBB;
+    private long   blackBB;
 
-    private byte enPassants; // avaiable to take for nextToAct
-    private byte prevEnPassants;
+    private byte   enPassants; // avaiable to take for nextToAct
+    private byte   prevEnPassants;
 
-    private byte castles;
-    private byte prevCastles;
+    private byte   castles;
+    private byte   prevCastles;
+    private long   castlePath;
 
-    private byte reversibleMoves;
-    private byte prevReversibleMoves;
+    private byte   reversibleMoves;
+    private byte   prevReversibleMoves;
 
     private Colour nextToAct;
-//    private int    fullMoves;
 
 
     //--------------------------------------------------------------------
+    public State(String fen)
+    {
+        wPieces = new long[ Figure.VALUES.length ];
+        bPieces = new long[ Figure.VALUES.length ];
+    }
     public State()
     {
         wPieces = new long[ Figure.VALUES.length ];
@@ -108,7 +180,7 @@ public class State
             blackBB |= bPieces[ f.ordinal() ];
         }
 
-//        fullMoves           = 1;
+        castlePath = 0;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
     }
@@ -123,8 +195,8 @@ public class State
                   long   copyBlackBB,
                   byte   copyPrevCastles,
                   byte   copyPrevReversibleMoves,
-                  byte   copyPrevEnPassants//,
-//                  int    copyFullMoves
+                  byte   copyPrevEnPassants,
+                  long   copyCastlePath
             )
     {
         wPieces = copyWPieces;
@@ -138,7 +210,7 @@ public class State
         whiteBB = copyWhiteBB;
         blackBB = copyBlackBB;
 
-//        fullMoves           = copyFullMoves;
+        castlePath          = copyCastlePath;
         prevCastles         = copyPrevCastles;
         prevEnPassants      = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
@@ -169,6 +241,7 @@ public class State
 
     /**
      * generate all pseudo-legal moves from this position
+     *  i.e. moves at the end of which you might have your king in check
      *
      * @param moves generate moves into
      * @return number of moves generated, or -1 if mate is possible
@@ -190,6 +263,11 @@ public class State
             oppKing   = wPieces[ KING ];
             pieces    = bPieces;
         }
+
+        if (castlePath != 0) {
+            oppKing = castlePath;
+        }
+
         long notProponent = ~proponent;
         long notOpponent  = ~opponent;
 
@@ -203,7 +281,13 @@ public class State
                 long pseudoMoves = Piece.valueOf(nextToAct, f).moves(
                         pieceBoard, occupied, notOccupied,
                         proponent, notProponent, opponent);
-                if ((oppKing & pseudoMoves) != 0) return -1; // can mate
+                if ((oppKing & pseudoMoves) != 0) {
+                    // can mate opponent's king, so either the opponent
+                    //  left his king in check (i.e. made a pseudo-legal
+                    //  move which has to be undone), or the game
+                    //  is over with nextToAct being the winner
+                    return -1;
+                }
 
                 offset = addMoves(
                         f, pieceBoard, moves, offset,
@@ -213,9 +297,11 @@ public class State
                 bb &= bb - 1;
             }
         }
-        return offset;
+
+        return addCastles(moves, offset,
+                proponent, opponent);
     }
-    
+
     private int addMoves(
             Figure figure,
             long   fromBB,
@@ -283,6 +369,102 @@ public class State
 
 
     //--------------------------------------------------------------------
+    private int addCastles(
+            int[] moves, int offset,
+            long proponent, long opponent)
+    {
+        long kingCastle , kingPath;
+        long queenCastle, queenPath;
+        if (nextToAct == Colour.WHITE) {
+            if ((castles & WHITE_CASTLE) == 0) return offset;
+            kingCastle  = WHITE_K_CASTLE;
+            queenCastle = WHITE_Q_CASTLE;
+            kingPath    = WHITE_K_CASTLE_PATH;
+            queenPath   = WHITE_Q_CASTLE_PATH;
+        } else {
+            if ((castles & BLACK_CASTLE) == 0) return offset;
+            kingCastle  = BLACK_K_CASTLE;
+            queenCastle = BLACK_Q_CASTLE;
+            kingPath    = BLACK_K_CASTLE_PATH;
+            queenPath   = BLACK_Q_CASTLE_PATH;
+        }
+
+        int  newOffset = offset;
+        long allPieces = proponent | opponent;
+
+        if ((castles & kingCastle) != 0 &&
+                (allPieces & kingPath) == 0) {
+            moves[ newOffset++ ] = Move.castle(CastleType.KING_SIDE);
+        }
+        if ((castles & queenCastle) != 0 &&
+                (allPieces & queenPath) == 0) {
+            moves[ newOffset++ ] = Move.castle(CastleType.QUEEN_SIDE);
+        }
+
+        return newOffset;
+    }
+
+    public void castle(CastleType type)
+    {
+        if (nextToAct == Colour.WHITE) {
+            if (type == CastleType.KING_SIDE) {
+                wPieces[ KING  ] ^= WHITE_K_CASTLE_MOVE;
+                wPieces[ ROOKS ] ^= WHITE_K_CASTLE_ROOK_MOVE;
+                whiteBB          ^= WHITE_K_CASTLE_ALL_MOVES;
+                castlePath        = WHITE_K_CASTLE_PATH;
+            } else {
+                wPieces[ KING  ] ^= WHITE_Q_CASTLE_MOVE;
+                wPieces[ ROOKS ] ^= WHITE_Q_CASTLE_ROOK_MOVE;
+                whiteBB          ^= WHITE_Q_CASTLE_ALL_MOVES;
+                castlePath        = WHITE_Q_CASTLE_PATH;
+            }
+        } else {
+            if (type == CastleType.KING_SIDE) {
+                bPieces[ KING  ] ^= BLACK_K_CASTLE_MOVE;
+                bPieces[ ROOKS ] ^= BLACK_K_CASTLE_ROOK_MOVE;
+                blackBB          ^= BLACK_K_CASTLE_ALL_MOVES;
+                castlePath        = BLACK_K_CASTLE_PATH;
+            } else {
+                bPieces[ KING  ] ^= BLACK_Q_CASTLE_MOVE;
+                bPieces[ ROOKS ] ^= BLACK_Q_CASTLE_ROOK_MOVE;
+                blackBB          ^= BLACK_Q_CASTLE_ALL_MOVES;
+                castlePath        = BLACK_Q_CASTLE_PATH;
+            }
+        }
+    }
+
+    public void unCastle(CastleType type)
+    {
+
+    }
+
+    private void updateCastlingRights(
+            int figure, int from)
+    {
+        if (figure == KING) {
+            if (castles == 0) return;
+            castles &= ~((nextToAct == Colour.WHITE)
+                         ? WHITE_CASTLE : BLACK_CASTLE);
+        } else if (figure == ROOKS) {
+            if (castles == 0) return;
+            if (nextToAct == Colour.WHITE) {
+                if (from == 0) {
+                    castles &= ~WHITE_Q_CASTLE;
+                } else if (from == 7) {
+                    castles &= ~WHITE_K_CASTLE;
+                }
+            } else {
+                if (from == 56) {
+                    castles &= ~BLACK_Q_CASTLE;
+                } else if (from == 63) {
+                    castles &= ~BLACK_K_CASTLE;
+                }
+            }
+        }
+    }
+
+
+    //--------------------------------------------------------------------
     private boolean canPromote(int from)
     {
         int fromRank = Location.rankIndex(from);
@@ -324,7 +506,7 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
-//        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
+        castlePath = 0;
     }
     private void pushPromoteBB(
             Colour colour, int from, int to, int promotion) {
@@ -366,6 +548,7 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
+        castlePath = 0;
     }
     private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
@@ -426,9 +609,10 @@ public class State
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         prevCastles         = castles;
+        castlePath = 0;
         prevReversibleMoves = reversibleMoves;
 
-        updateCasltingRights(
+        updateCastlingRights(
                 figure, fromSquareIndex);
         if (figure == PAWNS) {
             reversibleMoves = 0;
@@ -457,31 +641,6 @@ public class State
         }
 
         nextToAct = nextToAct.invert();
-    }
-
-    private void updateCasltingRights(
-            int figure, int from)
-    {
-        if (figure == KING) {
-            if (castles == 0) return;
-            castles &= ~((nextToAct == Colour.WHITE)
-                         ? WHITE_CASTLE : BLACK_CASTLE);
-        } else if (figure == ROOKS) {
-            if (castles == 0) return;
-            if (nextToAct == Colour.WHITE) {
-                if (from == 0) {
-                    castles &= ~WHITE_Q_CASTLE;
-                } else if (from == 7) {
-                    castles &= ~WHITE_K_CASTLE;
-                }
-            } else {
-                if (from == 56) {
-                    castles &= ~BLACK_Q_CASTLE;
-                } else if (from == 63) {
-                    castles &= ~BLACK_K_CASTLE;
-                }
-            }
-        }
     }
 
 
@@ -531,12 +690,13 @@ public class State
                 BitLoc.locationToBitBoard(fromSquareIndex), toBB);
 
         prevCastles = castles;
-        updateCasltingRights(
+        updateCastlingRights(
                 attacker, fromSquareIndex);
         prevReversibleMoves = reversibleMoves;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         reversibleMoves     = 0;
+        castlePath = 0;
     }
     private void capture(
             int  attacker,
@@ -695,6 +855,11 @@ public class State
             targetKing      = wPieces[ KING ];
             attackingPieces = bPieces;
         }
+
+        if (colour != nextToAct && castlePath != 0) {
+            targetKing = castlePath;
+        }
+
         long notAttacker = ~attacker;
 
         Colour attackColour = colour.invert();
@@ -723,12 +888,12 @@ public class State
 
     //--------------------------------------------------------------------
     // see http://chessprogramming.wikispaces.com/Draw+evaluation
-    // can later be substituted with tablebase
+    // can later be substituted with a tablebase
     public Status knownStatus()
     {
         if (reversibleMoves > 100) return Status.DRAW;
 
-        // no major pieces
+        // at least one major piece (i.e. rook or queen)
         if (wPieces[ ROOKS  ] != 0 ||
             bPieces[ ROOKS  ] != 0 ||
             wPieces[ QUEENS ] != 0 ||
@@ -768,7 +933,7 @@ public class State
                 }
             }
         }
-        // no pawns
+        // only knights and bishops present, no pawns, queens, or rooks
 
         if (whiteBishops && blackBishops) {
             if (whiteKnights || blackKnights){
@@ -801,7 +966,7 @@ public class State
             int nWhiteKnights =
                     Long.bitCount(wPieces[ KNIGHTS ]);
 
-            //one side has two knights against the bare king
+            //one side has two or more knights against the bare king
             return (nWhiteKnights <= 2)
                     ? Status.DRAW : Status.IN_PROGRESS;
         } else if (blackKnights) {
@@ -855,9 +1020,9 @@ public class State
                          blackBB,
                          prevCastles,
                          prevReversibleMoves,
-                         prevEnPassants);
+                         prevEnPassants,
+                         castlePath);
     }
-
 
     public boolean checkPieces()
     {

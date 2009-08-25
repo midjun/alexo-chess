@@ -297,9 +297,11 @@ public class Move
                  toBits( toSquareIndex       );
     }
 
-    public static int castle()
+    public static int castle(
+            CastleType type)
     {
-        return 0;
+        return   typeBits( MoveType.CASTLE ) |
+               castleBits( type            );
     }
 
 
@@ -358,6 +360,11 @@ public class Move
                 toState.enPassantCapture(from, to, cap);
                 return move;
             }
+
+            case CASTLE: {
+                toState.castle(castleType(move));
+                return move;
+            }
         }
         System.out.println("unable to handle move");
         return move;
@@ -408,6 +415,11 @@ public class Move
                 int cap  = enPassantCapture(move);
 
                 toState.unEnPassantCapture(from, to, cap);
+                return;
+            }
+
+            case CASTLE: {
+                toState.unCastle(castleType(move));
                 return;
             }
         }

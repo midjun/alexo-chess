@@ -1,5 +1,6 @@
 package v2.move;
 
+import v2.data.BitBoard;
 import static v2.data.BitBoard.offset;
 
 /**
@@ -13,6 +14,14 @@ public class SlidingPieces
 
 
     //--------------------------------------------------------------------
+    public static long slide(long piece,
+                             int  deltaRanks,
+                             int  deltaFiles)
+    {
+        return slide(piece, deltaRanks, deltaFiles,
+                     BitBoard.ALL, BitBoard.NIL);
+    }
+
     public static long slide(long piece,
                              int  deltaRanks,
                              int  deltaFiles,
