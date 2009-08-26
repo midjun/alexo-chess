@@ -42,4 +42,21 @@ public class SlidingPieces
 
         return trail;
     }
+
+
+    //--------------------------------------------------------------------
+    public static long castFiles(
+            long piece,
+            int  deltaFiles)
+    {
+        int  offset = deltaFiles / Math.abs(deltaFiles);
+        long trail  = 0;
+        long cursor = piece;
+        while (deltaFiles != 0) {
+            cursor = offset(cursor, 0, offset);
+            trail |= cursor;
+            deltaFiles -= offset;
+        }
+        return trail;
+    }
 }

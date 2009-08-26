@@ -22,40 +22,41 @@ public class Test
 
     public static void main(String[] args)
     {
-        int nodesA = buildTree(new State(), 5, fenA);
-        int nodesB = buildMediocreTree(5, fenB);
+//        int nodesA = buildTree(new State(), 5, fenA);
+//        int nodesB = buildMediocreTree(5, fenB);
+////
+////        System.out.println("nodesA "  + nodesA);
+////        System.out.println("nodesB "  + nodesB);
+////
+////        System.out.println("mobs  "  + mobs);
+//        System.out.println("caps  "  + caps);
+//        System.out.println("en passants " + enPassants);
+//        System.out.println("castles 0");
+//        System.out.println("promotions 0");
+//        System.out.println("checks " + checks);
+//        System.out.println("mates "  + mates);
+//        System.out.println("draws "  + draws);
 //
-//        System.out.println("nodesA "  + nodesA);
-//        System.out.println("nodesB "  + nodesB);
 //
-//        System.out.println("mobs  "  + mobs);
-        System.out.println("caps  "  + caps);
-        System.out.println("en passants " + enPassants);
-        System.out.println("castles 0");
-        System.out.println("promotions 0");
-        System.out.println("checks " + checks);
-        System.out.println("mates "  + mates);
-        System.out.println("draws "  + draws);
+////        System.out.println(fenA.equals( fenB ));
+//        System.out.println(fenB.delta(  fenA ));
+////        System.out.println(fenA);
 
 
-//        System.out.println(fenA.equals( fenB ));
-        System.out.println(fenB.delta(  fenA ));
-//        System.out.println(fenA);
-
-
-//        testRandom();
+        testRandom();
     }
 
 
     //--------------------------------------------------------------------
     public static void testRandom()
     {
-        // warmup
+        System.out.println("warming up");
         for (int i = 0; i < 15001; i++)
         {
             playOutRandom( new State() );
 //            playOutMediocre();
         }
+        System.out.println("done warm-up");
 
         int  count  = 10000000;
         long before = System.currentTimeMillis();
@@ -217,16 +218,28 @@ public class Test
 
         while ((status = state.knownStatus()) == Status.IN_PROGRESS)
         {
+            state.checkPieces();
+
             int     move     = 0;
             boolean madeMove = false;
 
             int[] moveOrder = MovePicker.pick(nMoves);
             for (int moveIndex : moveOrder)
             {
+                if (! state.check(moves[ moveIndex ])) {
+                    state.check(moves[ moveIndex ]);
+                }
+
                 move = Move.apply(moves[ moveIndex ], state);
 
                 // generate opponent moves
                 nextCount = state.moves(nextMoves);
+                for (int i = 0; i < nextCount; i++) {
+                    if (! state.check(nextMoves[ i ])) {
+                        state.check(nextMoves[ i ]);
+                    }
+                }
+
                 if (nextCount < 0) { // it lead to mate
 //                    System.out.println("Unmaking " + Move.toString(move));
                     Move.unApply(move, state);
