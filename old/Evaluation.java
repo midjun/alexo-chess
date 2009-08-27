@@ -10,7 +10,7 @@ import model.Definitions;
  *  We have this in an own class to easily switch evaluation if needed
  *  
  *  Ideas and inspiration from the open source of Scorpio (Daniel Shawul) and Glaurung (Tord Romstad),
- *  and most of all Ed Schröder's fantastic guide
+ *  and most of all Ed Schrder's fantastic guide
  *  
  *  @author Jonatan Pettersson (mediocrechess@gmail.com)
  */
@@ -47,7 +47,7 @@ public class Evaluation implements Definitions
 	public static final int ROOK_ON_SEMI = 15;
 	public static final int HUNG_PIECE_PENALTY = 80;
 	public static final int TEMPO = 10;
-	public static final byte[] KING_ATTACK_PATTERN = { // Straight from Ed Schröder's site
+	public static final byte[] KING_ATTACK_PATTERN = { // Straight from Ed Schrder's site
 			  //      . P N N R R R R Q Q Q Q Q Q Q Q K K K K K K K K K K K K K K K K
 			  //            P   P N N   P N N R R R R   P N N R R R R Q Q Q Q Q Q Q Q
 			  //                    P       P   N N N       P   P N N   P N N R R R R
