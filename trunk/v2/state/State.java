@@ -133,6 +133,7 @@ public class State
 
     private byte   castles;
     private byte   prevCastles;
+    private byte   leastCastles = 127;
     private long   castlePath;
 
     private byte   reversibleMoves;
@@ -192,6 +193,7 @@ public class State
         castlePath          = 0;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
+        updateLeastCastles();
     }
 
     private State(long[] copyWPieces,
@@ -205,7 +207,8 @@ public class State
                   byte   copyPrevCastles,
                   byte   copyPrevReversibleMoves,
                   byte   copyPrevEnPassants,
-                  long   copyCastlePath
+                  long   copyCastlePath,
+                  byte   copyLeastCastles
             )
     {
         wPieces = copyWPieces;
@@ -223,6 +226,7 @@ public class State
         prevCastles         = copyPrevCastles;
         prevEnPassants      = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
+        leastCastles        = copyLeastCastles;
     }
 
 
@@ -441,6 +445,7 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
+        updateLeastCastles();
     }
 
     public void unCastle(CastleType type)
@@ -583,6 +588,7 @@ public class State
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         castlePath          = 0;
+        updateLeastCastles();
     }
     private void pushPromoteBB(
             Colour colour, int from, int to, int promotion) {
@@ -602,7 +608,13 @@ public class State
     public void capturePromote(
             int from, int to, int promotion, int captured)
     {
+        // todo need to add history of moves, and go back
+        //  one by one until i can track down the source of this wierd issue:
+        //  it seems to come up whenever a pawn captures a knight to promote
+        //  to a knight
+
         long toBB = BitLoc.locationToBitBoard(to);
+        updateCastlingRightsTo(captured, toBB);
         capturePromote(from, toBB, promotion, captured);
     }
     public int capturePromote(int from, int to, int promotion)
@@ -627,6 +639,7 @@ public class State
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         castlePath          = 0;
+        updateLeastCastles();
     }
     private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
@@ -703,6 +716,7 @@ public class State
         } else {
             reversibleMoves++;
         }
+        updateLeastCastles();
     }
     private void mobalizeBB(
             Colour colour,
@@ -783,6 +797,7 @@ public class State
         enPassants          = EP_NONE;
         reversibleMoves     = 0;
         castlePath          = 0;
+        updateLeastCastles();
     }
     private void capture(
             int  attacker,
@@ -882,6 +897,7 @@ public class State
         enPassants          = EP_NONE;
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
+        updateLeastCastles();
     }
     public void unEnPassantCapture(
             int from, int to, int captured)
@@ -1107,7 +1123,9 @@ public class State
                          prevCastles,
                          prevReversibleMoves,
                          prevEnPassants,
-                         castlePath);
+                         castlePath,
+                         leastCastles
+               );
     }
 
 
@@ -1123,6 +1141,12 @@ public class State
         if (Long.bitCount(wPieces[ KING ]) != 1 ||
             Long.bitCount(bPieces[ KING ]) != 1) {
             System.out.println("checkPieces: not exactly one king");
+            return false;
+        }
+
+        if (leastCastles != prevCastles &&
+                leastCastles != castles) {
+            System.out.println("castles are out of wack");
             return false;
         }
 
@@ -1161,6 +1185,12 @@ public class State
 
         return true;
     }
+
+    private void updateLeastCastles()
+    {
+        leastCastles &= prevCastles;
+    }
+
     private long calcPieces(Colour c)
     {
         long[] pieces = (c == Colour.WHITE)
