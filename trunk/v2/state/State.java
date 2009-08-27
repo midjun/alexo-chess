@@ -33,21 +33,21 @@ public class State
     private static final long BLACK_KING_START =
             BitLoc.locationToBitBoard(7, 4);
 
-    private static final long WHITE_K_CASTLE_PATH =
+    private static final long WHITE_K_CASTLE_PATH = WHITE_KING_START |
             SlidingPieces.castFiles(WHITE_KING_START,  2);
-    private static final long WHITE_Q_CASTLE_PATH =
+    private static final long WHITE_Q_CASTLE_PATH = WHITE_KING_START |
             SlidingPieces.castFiles(WHITE_KING_START, -2);
-    private static final long BLACK_K_CASTLE_PATH =
+    private static final long BLACK_K_CASTLE_PATH = BLACK_KING_START |
             SlidingPieces.castFiles(BLACK_KING_START,  2);
-    private static final long BLACK_Q_CASTLE_PATH =
+    private static final long BLACK_Q_CASTLE_PATH = BLACK_KING_START |
             SlidingPieces.castFiles(BLACK_KING_START, -2);
 
     private static final long WHITE_K_CASTLE_CORRIDOR =
-            WHITE_K_CASTLE_PATH;
+            SlidingPieces.castFiles(WHITE_KING_START,  2);
     private static final long WHITE_Q_CASTLE_CORRIDOR =
             SlidingPieces.castFiles(WHITE_KING_START, -3);
     private static final long BLACK_K_CASTLE_CORRIDOR =
-            BLACK_K_CASTLE_PATH;
+            SlidingPieces.castFiles(BLACK_KING_START,  2);
     private static final long BLACK_Q_CASTLE_CORRIDOR =
             SlidingPieces.castFiles(BLACK_KING_START, -3);
 
@@ -79,13 +79,13 @@ public class State
             BitLoc.locationToBitBoard(7, 0);
 
     private static final long WHITE_K_CASTLE_ROOK_END =
-            BitBoard.offset(WHITE_K_CASTLE_END, 0,  1);
+            BitBoard.offset(WHITE_K_CASTLE_END, 0, -1);
     private static final long WHITE_Q_CASTLE_ROOK_END =
-            BitBoard.offset(WHITE_Q_CASTLE_END, 0, -1);
+            BitBoard.offset(WHITE_Q_CASTLE_END, 0,  1);
     private static final long BLACK_K_CASTLE_ROOK_END =
-            BitBoard.offset(BLACK_K_CASTLE_END, 0,  1);
+            BitBoard.offset(BLACK_K_CASTLE_END, 0, -1);
     private static final long BLACK_Q_CASTLE_ROOK_END =
-            BitBoard.offset(BLACK_Q_CASTLE_END, 0, -1);
+            BitBoard.offset(BLACK_Q_CASTLE_END, 0,  1);
 
     private static final long WHITE_K_CASTLE_ROOK_MOVE =
             WHITE_K_ROOK_START ^ WHITE_K_CASTLE_ROOK_END;
@@ -128,7 +128,7 @@ public class State
     private long   whiteBB;
     private long   blackBB;
 
-    private byte   enPassants; // avaiable to take for nextToAct
+    private byte   enPassants; // available to take for nextToAct
     private byte   prevEnPassants;
 
     private byte   castles;
@@ -304,9 +304,9 @@ public class State
             }
         }
 
-        return offset;
-//        return addCastles(moves, offset,
-//                proponent, opponent);
+//        return offset;
+        return addCastles(moves, offset,
+                proponent, opponent);
     }
 
     private int addMoves(
@@ -352,6 +352,12 @@ public class State
             long moveBoard = BitBoard.lowestOneBit(moveBB);
             moves[ offset++ ] = Move.mobility(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
+
+            int move = moves[ offset - 1 ];
+            if (! check(move)) {
+                check(move);
+            }
+
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -369,6 +375,12 @@ public class State
             long moveBoard = BitBoard.lowestOneBit(moveBB);
             moves[ offset++ ] = Move.capture(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
+
+            int move = moves[ offset - 1 ];
+            if (! check(move)) {
+                check(move);
+            }
+
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -421,6 +433,29 @@ public class State
 
     public void castle(CastleType type)
     {
+        prevCastles = castles;
+        toggleCastle(type);
+
+        nextToAct           = nextToAct.invert();
+        prevReversibleMoves = reversibleMoves;
+        reversibleMoves     = 0;
+        prevEnPassants      = enPassants;
+        enPassants          = EP_NONE;
+    }
+
+    public void unCastle(CastleType type)
+    {
+        nextToAct = nextToAct.invert();
+        toggleCastle(type);
+
+        castles         = prevCastles;
+        enPassants      = prevEnPassants;
+        reversibleMoves = prevReversibleMoves;
+        castlePath      = 0;
+    }
+
+    private void toggleCastle(CastleType type)
+    {
         if (nextToAct == Colour.WHITE) {
             if (type == CastleType.KING_SIDE) {
                 wPieces[ KING  ] ^= WHITE_K_CASTLE_MOVE;
@@ -448,19 +483,6 @@ public class State
             }
             clearCastlingRights(BLACK_CASTLE);
         }
-
-        nextToAct           = nextToAct.invert();
-        prevReversibleMoves = reversibleMoves;
-        reversibleMoves     = 0;
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
-    }
-
-    public void unCastle(CastleType type)
-    {
-        nextToAct = nextToAct.invert();
-        castle(type);
-        castlePath = 0;
     }
 
     private void updateCastlingRightsFrom(
@@ -538,6 +560,11 @@ public class State
                 moves[ nextAddAt++ ] =
                         Move.setPromotion(
                                 moves[addFrom + i], f);
+
+                int move = moves[ nextAddAt - 1 ];
+                if (! check(move)) {
+                    check(move);
+                }
             }
         }
         return nextAddAt;
@@ -639,6 +666,7 @@ public class State
     {
 //        System.out.println("unCapturePromote");
         nextToAct       = nextToAct.invert();
+        castles         = prevCastles;
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 
