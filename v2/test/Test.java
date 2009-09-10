@@ -218,7 +218,7 @@ public class Test
 
         while ((status = state.knownStatus()) == Status.IN_PROGRESS)
         {
-            state.checkPieces();
+//            state.checkPieces();
 
             int     move     = 0;
             boolean madeMove = false;
@@ -226,19 +226,19 @@ public class Test
             int[] moveOrder = MovePicker.pick(nMoves);
             for (int moveIndex : moveOrder)
             {
-                if (! state.check(moves[ moveIndex ])) {
-                    state.check(moves[ moveIndex ]);
-                }
+//                if (! state.check(moves[ moveIndex ])) {
+//                    state.check(moves[ moveIndex ]);
+//                }
 
                 move = Move.apply(moves[ moveIndex ], state);
 
                 // generate opponent moves
                 nextCount = state.moves(nextMoves);
-                for (int i = 0; i < nextCount; i++) {
-                    if (! state.check(nextMoves[ i ])) {
-                        state.check(nextMoves[ i ]);
-                    }
-                }
+//                for (int i = 0; i < nextCount; i++) {
+//                    if (! state.check(nextMoves[ i ])) {
+//                        state.check(nextMoves[ i ]);
+//                    }
+//                }
 
                 if (nextCount < 0) { // it lead to mate
 //                    System.out.println("Unmaking " + Move.toString(move));
