@@ -86,8 +86,6 @@ public class Move
      *    extra
      *      8 bits
      *  ]
-     *
-     * totalling 31 bits.
      */
 
     // making this final raises annoying suggestions

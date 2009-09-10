@@ -133,9 +133,8 @@ public class State
 
     private byte   castles;
     private byte   prevCastles;
-    private byte   leastCastles = 127;
     private long   castlePath;
-
+    private long   prevCastlePath;
     private byte   reversibleMoves;
     private byte   prevReversibleMoves;
 
@@ -191,9 +190,9 @@ public class State
         }
 
         castlePath          = 0;
+        prevCastlePath      = 0;
         prevCastles         = castles;
         prevReversibleMoves = reversibleMoves;
-        updateLeastCastles();
     }
 
     private State(long[] copyWPieces,
@@ -208,7 +207,7 @@ public class State
                   byte   copyPrevReversibleMoves,
                   byte   copyPrevEnPassants,
                   long   copyCastlePath,
-                  byte   copyLeastCastles
+                  long   copyPrevCastlePath
             )
     {
         wPieces = copyWPieces;
@@ -216,17 +215,17 @@ public class State
 
         castles         = copyCastles;
         nextToAct       = copyNextToAct;
+        castlePath      = copyCastlePath;
         enPassants      = copyEnPassants;
         reversibleMoves = copyReversibleMoves;
 
         whiteBB = copyWhiteBB;
         blackBB = copyBlackBB;
 
-        castlePath          = copyCastlePath;
         prevCastles         = copyPrevCastles;
+        prevCastlePath      = copyPrevCastlePath;
         prevEnPassants      = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
-        leastCastles        = copyLeastCastles;
     }
 
 
@@ -358,9 +357,9 @@ public class State
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
 
             int move = moves[ offset - 1 ];
-            if (! check(move)) {
-                check(move);
-            }
+//            if (! check(move)) {
+//                check(move);
+//            }
 
             moveBB &= moveBB - 1;
         }
@@ -381,9 +380,9 @@ public class State
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
 
             int move = moves[ offset - 1 ];
-            if (! check(move)) {
-                check(move);
-            }
+//            if (! check(move)) {
+//                check(move);
+//            }
 
             moveBB &= moveBB - 1;
         }
@@ -418,17 +417,17 @@ public class State
         if ((castles & kingCastle) != 0 &&
                 (allPieces & kingCorridor) == 0) {
             int moveAddend = Move.castle(CastleType.KING_SIDE);
-            if (! check(moveAddend)) {
-                check(moveAddend);
-            }
+//            if (! check(moveAddend)) {
+//                check(moveAddend);
+//            }
             moves[ newOffset++ ] = Move.castle(CastleType.KING_SIDE);
         }
         if ((castles & queenCastle) != 0 &&
                 (allPieces & queenCorridor) == 0) {
             int moveAddend = Move.castle(CastleType.QUEEN_SIDE);
-            if (! check(moveAddend)) {
-                check(moveAddend);
-            }
+//            if (! check(moveAddend)) {
+//                check(moveAddend);
+//            }
             moves[ newOffset++ ] = Move.castle(CastleType.QUEEN_SIDE);
         }
 
@@ -437,7 +436,8 @@ public class State
 
     public void castle(CastleType type)
     {
-        prevCastles = castles;
+        prevCastles    = castles;
+        prevCastlePath = castlePath;
         toggleCastle(type);
 
         nextToAct           = nextToAct.invert();
@@ -445,7 +445,6 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
-        updateLeastCastles();
     }
 
     public void unCastle(CastleType type)
@@ -456,7 +455,7 @@ public class State
         castles         = prevCastles;
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
-        castlePath      = 0;
+        castlePath      = prevCastlePath;
     }
 
     private void toggleCastle(CastleType type)
@@ -567,9 +566,9 @@ public class State
                                 moves[addFrom + i], f);
 
                 int move = moves[ nextAddAt - 1 ];
-                if (! check(move)) {
-                    check(move);
-                }
+//                if (! check(move)) {
+//                    check(move);
+//                }
             }
         }
         return nextAddAt;
@@ -579,7 +578,6 @@ public class State
     //--------------------------------------------------------------------
     public void pushPromote(int from, int to, int promotion)
     {
-//        System.out.println("pushPromote");
         pushPromoteBB(nextToAct, from, to, promotion);
 
         nextToAct           = nextToAct.invert();
@@ -587,8 +585,9 @@ public class State
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
+        prevCastlePath      = castlePath;
         castlePath          = 0;
-        updateLeastCastles();
+        prevCastles         = castles;
     }
     private void pushPromoteBB(
             Colour colour, int from, int to, int promotion) {
@@ -614,7 +613,6 @@ public class State
         //  to a knight
 
         long toBB = BitLoc.locationToBitBoard(to);
-        updateCastlingRightsTo(captured, toBB);
         capturePromote(from, toBB, promotion, captured);
     }
     public int capturePromote(int from, int to, int promotion)
@@ -622,24 +620,24 @@ public class State
         long toBB = BitLoc.locationToBitBoard(to);
         int  captured = figureAt(toBB, nextToAct.invert());
 
-        updateCastlingRightsTo(captured, toBB);
         capturePromote(from, toBB, promotion, captured);
         return captured;
     }
     private void capturePromote(
             int from, long toBB, int promotion, int captured)
     {
-//        System.out.println("capturePromote");
         capturePromoteBB(nextToAct, from, toBB, promotion, captured);
 
-//        fullMoves          += (nextToAct == Colour.BLACK ? 1 : 0);
+        prevCastles         = castles;
+        updateCastlingRightsTo(captured, toBB);
+        prevCastlePath      = castlePath;
+        castlePath          = 0;
+
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
-        castlePath          = 0;
-        updateLeastCastles();
     }
     private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
@@ -665,11 +663,11 @@ public class State
     //--------------------------------------------------------------------
     public void unPushPromote(int from, int to, int promotion)
     {
-//        System.out.println("unPushPromote");
         nextToAct       = nextToAct.invert();
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
-//        fullMoves      -= (nextToAct == Colour.WHITE ? 1 : 0);
+        castles         = prevCastles;
+        castlePath      = prevCastlePath;
 
         pushPromoteBB(nextToAct, from, to, promotion);
     }
@@ -677,9 +675,9 @@ public class State
     public void unCapturePromote(
             int from, int to, int promotion, int captured)
     {
-//        System.out.println("unCapturePromote");
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
+        castlePath      = prevCastlePath;
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 
@@ -694,6 +692,7 @@ public class State
             int fromSquareIndex,
             int toSquareIndex)
     {
+        prevCastles = castles;
         updateCastlingRightsFrom(
                 figure, fromSquareIndex);
 
@@ -703,7 +702,7 @@ public class State
 
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
-        prevCastles         = castles;
+        prevCastlePath      = castlePath;
         castlePath          = 0;
         prevReversibleMoves = reversibleMoves;
 
@@ -716,7 +715,6 @@ public class State
         } else {
             reversibleMoves++;
         }
-        updateLeastCastles();
     }
     private void mobalizeBB(
             Colour colour,
@@ -749,6 +747,7 @@ public class State
                    BitLoc.locationToBitBoard(toSquareIndex));
 
         castles         = prevCastles;
+        castlePath      = prevCastlePath;
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
     }
@@ -796,8 +795,8 @@ public class State
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
         reversibleMoves     = 0;
+        prevCastlePath      = castlePath;
         castlePath          = 0;
-        updateLeastCastles();
     }
     private void capture(
             int  attacker,
@@ -897,7 +896,8 @@ public class State
         enPassants          = EP_NONE;
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        updateLeastCastles();
+        prevCastlePath      = castlePath;
+        castlePath          = 0;
     }
     public void unEnPassantCapture(
             int from, int to, int captured)
@@ -905,6 +905,7 @@ public class State
         nextToAct       = nextToAct.invert();
         enPassants      = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
+        castlePath      = prevCastlePath;
 
         enPassantSwaps(from, to, captured);
     }
@@ -1124,7 +1125,7 @@ public class State
                          prevReversibleMoves,
                          prevEnPassants,
                          castlePath,
-                         leastCastles
+                         prevCastlePath
                );
     }
 
@@ -1141,12 +1142,6 @@ public class State
         if (Long.bitCount(wPieces[ KING ]) != 1 ||
             Long.bitCount(bPieces[ KING ]) != 1) {
             System.out.println("checkPieces: not exactly one king");
-            return false;
-        }
-
-        if (leastCastles != prevCastles &&
-                leastCastles != castles) {
-            System.out.println("castles are out of wack");
             return false;
         }
 
@@ -1184,11 +1179,6 @@ public class State
         }
 
         return true;
-    }
-
-    private void updateLeastCastles()
-    {
-        leastCastles &= prevCastles;
     }
 
     private long calcPieces(Colour c)
