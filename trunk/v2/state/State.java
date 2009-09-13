@@ -8,6 +8,8 @@ import v2.piece.Colour;
 import v2.piece.Figure;
 import v2.piece.Piece;
 
+import java.util.Arrays;
+
 /**
  * Date: Feb 6, 2009
  * Time: 2:07:25 AM
@@ -111,6 +113,8 @@ public class State
     private static final byte EP_WHITE_DEST = 5;
     private static final byte EP_BLACK_DEST = 2;
 
+    private static final String FILES = "abcdefgh";
+
 
     //--------------------------------------------------------------------
     private static final int PAWNS   = Figure.PAWN  .ordinal();
@@ -144,55 +148,12 @@ public class State
     //--------------------------------------------------------------------
     public State(String fen)
     {
-        wPieces = new long[ Figure.VALUES.length ];
-        bPieces = new long[ Figure.VALUES.length ];
+        loadFen(fen);
     }
     public State()
     {
-        wPieces = new long[ Figure.VALUES.length ];
-        bPieces = new long[ Figure.VALUES.length ];
-
-        for (int p = 0; p < 8; p++) {
-            wPieces[ PAWNS ] |=  BitLoc.locationToBitBoard(1, p);
-            bPieces[ PAWNS ] |=  BitLoc.locationToBitBoard(6, p);
-        }
-
-        wPieces[ ROOKS ] = BitLoc.locationToBitBoard(0, 0) |
-                           BitLoc.locationToBitBoard(0, 7);
-        bPieces[ ROOKS ] = BitLoc.locationToBitBoard(7, 0) |
-                           BitLoc.locationToBitBoard(7, 7);
-
-        wPieces[ KNIGHTS ] = BitLoc.locationToBitBoard(0, 1) |
-                             BitLoc.locationToBitBoard(0, 6);
-        bPieces[ KNIGHTS ] = BitLoc.locationToBitBoard(7, 1) |
-                             BitLoc.locationToBitBoard(7, 6);
-
-        wPieces[ BISHOPS ] = BitLoc.locationToBitBoard(0, 2) |
-                             BitLoc.locationToBitBoard(0, 5);
-        bPieces[ BISHOPS ] = BitLoc.locationToBitBoard(7, 2) |
-                             BitLoc.locationToBitBoard(7, 5);
-
-        wPieces[ QUEENS ] = BitLoc.locationToBitBoard(0, 3);
-        bPieces[ QUEENS ] = BitLoc.locationToBitBoard(7, 3);
-
-        wPieces[ KING ] = BitLoc.locationToBitBoard(0, 4);
-        bPieces[ KING ] = BitLoc.locationToBitBoard(7, 4);
-
-        enPassants = EP_NONE;
-        castles    = WHITE_CASTLE | BLACK_CASTLE;
-
-        reversibleMoves = 0;
-        nextToAct       = Colour.WHITE;
-
-        for (Figure f : Figure.VALUES) {
-            whiteBB |= wPieces[ f.ordinal() ];
-            blackBB |= bPieces[ f.ordinal() ];
-        }
-
-        castlePath          = 0;
-        prevCastlePath      = 0;
-        prevCastles         = castles;
-        prevReversibleMoves = reversibleMoves;
+        loadFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR " +
+                    "w KQkq - 0 1");
     }
 
     private State(long[] copyWPieces,
@@ -226,6 +187,71 @@ public class State
         prevCastlePath      = copyPrevCastlePath;
         prevEnPassants      = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
+    }
+
+
+    //--------------------------------------------------------------------
+    public void loadFen(String fen)
+    {
+        wPieces    = new long[ Figure.VALUES.length ];
+        bPieces    = new long[ Figure.VALUES.length ];
+        castles    = 0;
+        enPassants = EP_NONE;
+        whiteBB    = 0;
+        blackBB    = 0;
+
+        String[] parts = fen.split(" ");
+        String[] ranks = parts[0].split("/");
+
+        for (int rank = 7; rank >= 0; rank--) {
+            int file = 0;
+            for (char fenPiece : ranks[7 - rank].toCharArray()) {
+                if (Character.isDigit(fenPiece)) {
+                    int emptyFiles = Character.digit(fenPiece, 10);
+                    file += emptyFiles;
+                } else {
+                    Piece piece = Piece.valueOf(fenPiece);
+
+                    (piece.isWhite()
+                     ? wPieces
+                     : bPieces)[ piece.figure().ordinal() ]
+                            |=  BitLoc.locationToBitBoard(
+                                    rank, file++);
+                }
+            }
+        }
+
+        nextToAct = parts[1].equals("w")
+                    ? Colour.WHITE : Colour.BLACK;
+
+        if (parts.length >= 3 && (! parts[2].equals("-"))) {
+            for (char castle : parts[2].toCharArray()) {
+                switch (castle) {
+                    case 'K': castles |= WHITE_K_CASTLE; break;
+                    case 'Q': castles |= WHITE_Q_CASTLE; break;
+                    case 'k': castles |= BLACK_K_CASTLE; break;
+                    case 'q': castles |= BLACK_Q_CASTLE; break;
+                }
+            }
+        }
+
+        if (parts.length >= 4 && (! parts[3].equals("-"))) {
+            enPassants = (byte) FILES.indexOf(parts[3].charAt(0));
+        }
+
+        if (parts.length >= 5 && (! parts[4].equals("-"))) {
+            reversibleMoves = Byte.parseByte(parts[4]);
+        }
+
+        for (Figure f : Figure.VALUES) {
+            whiteBB |= wPieces[ f.ordinal() ];
+            blackBB |= bPieces[ f.ordinal() ];
+        }
+
+        castlePath          = 0;
+        prevCastlePath      = 0;
+        prevCastles         = castles;
+        prevReversibleMoves = reversibleMoves;
     }
 
 
@@ -416,7 +442,7 @@ public class State
 
         if ((castles & kingCastle) != 0 &&
                 (allPieces & kingCorridor) == 0) {
-            int moveAddend = Move.castle(CastleType.KING_SIDE);
+//            int moveAddend = Move.castle(CastleType.KING_SIDE);
 //            if (! check(moveAddend)) {
 //                check(moveAddend);
 //            }
@@ -424,7 +450,7 @@ public class State
         }
         if ((castles & queenCastle) != 0 &&
                 (allPieces & queenCorridor) == 0) {
-            int moveAddend = Move.castle(CastleType.QUEEN_SIDE);
+//            int moveAddend = Move.castle(CastleType.QUEEN_SIDE);
 //            if (! check(moveAddend)) {
 //                check(moveAddend);
 //            }
@@ -1311,7 +1337,17 @@ public class State
         str.append(" ");
 
 		// En passant square
-        str.append("-"); // [a .. h] + " " + {3, 6}
+        if (enPassants == EP_NONE) {
+            str.append("-");
+        } else {
+            str.append(FILES.charAt(enPassants));
+//            str.append(" ");
+            if (nextToAct == Colour.WHITE) {
+                str.append(EP_BLACK_DEST + 1);
+            } else {
+                str.append(EP_WHITE_DEST + 1);
+            }
+        }
         str.append(" ");
 
         str.append(reversibleMoves);

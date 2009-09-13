@@ -54,6 +54,31 @@ public enum Piece implements BoardPiece
                                [ figure.ordinal() ];
     }
 
+    public static Piece valueOf(char fen)
+    {
+        switch (fen) {
+            case 'P': return valueOf(Colour.WHITE, Figure.PAWN);
+            case 'p': return valueOf(Colour.BLACK, Figure.PAWN);
+
+            case 'R': return valueOf(Colour.WHITE, Figure.ROOK);
+            case 'r': return valueOf(Colour.BLACK, Figure.ROOK);
+
+            case 'B': return valueOf(Colour.WHITE, Figure.BISHOP);
+            case 'b': return valueOf(Colour.BLACK, Figure.BISHOP);
+
+            case 'N': return valueOf(Colour.WHITE, Figure.KNIGHT);
+            case 'n': return valueOf(Colour.BLACK, Figure.KNIGHT);
+
+            case 'Q': return valueOf(Colour.WHITE, Figure.QUEEN);
+            case 'q': return valueOf(Colour.BLACK, Figure.QUEEN);
+
+            case 'K': return valueOf(Colour.WHITE, Figure.KING);
+            case 'k': return valueOf(Colour.BLACK, Figure.KING);
+
+            default: return null;
+        }
+    }
+
 
     //--------------------------------------------------------------------
     private final Colour     COLOUR;

@@ -261,8 +261,14 @@ public class Move
     public static boolean isEnPassant(int move) {
         return moveType(move) == MoveType.EN_PASSANT;
     }
+    public static boolean isCastle(int move) {
+        return moveType(move) == MoveType.CASTLE;
+    }
+    public static boolean isPromotion(int move) {
+        return promotion(move) != 0;
+    }
 
-
+    
     //--------------------------------------------------------------------
     public static int mobility(
             Figure moving,
