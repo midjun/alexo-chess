@@ -22,28 +22,30 @@ public class Test
 
     public static void main(String[] args)
     {
-//        int nodesA = buildTree(new State(), 5, fenA);
+        int nodesA = buildTree(new State(
+                "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
+                        "/PPPBBPPP/R3K2R w KQkq -"), 3, fenA);
 //        int nodesB = buildMediocreTree(5, fenB);
-////
-////        System.out.println("nodesA "  + nodesA);
-////        System.out.println("nodesB "  + nodesB);
-////
-////        System.out.println("mobs  "  + mobs);
-//        System.out.println("caps  "  + caps);
-//        System.out.println("en passants " + enPassants);
-//        System.out.println("castles 0");
-//        System.out.println("promotions 0");
-//        System.out.println("checks " + checks);
-//        System.out.println("mates "  + mates);
-//        System.out.println("draws "  + draws);
+
+        System.out.println("nodesA "  + nodesA);
+//        System.out.println("nodesB "  + nodesB);
 //
-//
-////        System.out.println(fenA.equals( fenB ));
-//        System.out.println(fenB.delta(  fenA ));
-////        System.out.println(fenA);
+//        System.out.println("mobs  "  + mobs);
+        System.out.println("caps  "  + caps);
+        System.out.println("en passants " + enPassants);
+        System.out.println("castles " + castles);
+        System.out.println("promotions " + promotions);
+        System.out.println("checks " + checks);
+        System.out.println("mates "  + mates);
+        System.out.println("draws "  + draws);
 
 
-        testRandom();
+//        System.out.println(fenA.equals( fenB ));
+        System.out.println(fenB.delta(  fenA ));
+//        System.out.println(fenA);
+
+//
+//        testRandom();
     }
 
 
@@ -58,7 +60,7 @@ public class Test
         }
         System.out.println("done warm-up");
 
-        int  count  = 10000000;
+        int  count  = 1000000;
         long before = System.currentTimeMillis();
         for (int i = 0; i < count; i++)
         {
@@ -80,6 +82,8 @@ public class Test
     private static int draws      = 0;
     private static int mates      = 0;
     private static int enPassants = 0;
+    private static int castles    = 0;
+    private static int promotions = 0;
 
     private static int buildTree(
             State state, int ply, GameBranch check)
@@ -109,7 +113,14 @@ public class Test
                     caps++;
                 }
                 if (Move.isEnPassant(move)) {
+                    caps++;
                     enPassants++;
+                }
+                if (Move.isCastle(move)) {
+                    castles++;
+                }
+                if (Move.isPromotion(move)) {
+                    promotions++;
                 }
             }
 
@@ -218,9 +229,9 @@ public class Test
 
         while ((status = state.knownStatus()) == Status.IN_PROGRESS)
         {
-//            state.checkPieces();
+            state.checkPieces();
 
-            int     move     = 0;
+            int     move;
             boolean madeMove = false;
 
             int[] moveOrder = MovePicker.pick(nMoves);
