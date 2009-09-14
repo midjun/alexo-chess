@@ -374,4 +374,22 @@ public class Node
             return NODE;
         }
     }
+
+
+    //--------------------------------------------------------------------
+    public static void randomBench(Board state)
+    {
+        int[] legalMoves = new int[128];
+        do
+        {
+            int moveCount = state.generateMoves(false, legalMoves, 0);
+            if (moveCount > 0)
+            {
+                int move = RandomBot.random(legalMoves, moveCount);
+                state.makeMove(move);
+            }
+        }
+        while (AlexoChess.outcome(state, null, 0)
+                 == FullOutcome.UNDECIDED );
+    }
 }
