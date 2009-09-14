@@ -26,27 +26,13 @@ public class Test
 //                        "/PPPBBPPP/R3K2R w KQkq -");
 
 
-//        int nodesA = buildTree(new State(), 4, fenA);
+//        int nodesA = buildTree(new State(), 5, fenA);
         int nodesA = buildTree(new State(
                 "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
                         "/PPPBBPPP/R3K2R w KQkq -"), 4, fenA);
 //        int nodesA = buildTree(new State(
 //                "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -"), 6, fenA);
-
-
-//        int nodesB = buildMediocreTree(4, fenB);
-
-        int nodesB = buildMediocreTree(
-                "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
-                        "/PPPBBPPP/R3K2R w KQkq -", 4, fenB);
-//        int nodesB = buildMediocreTree(
-//                "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", 6, fenB);
-
-
-//        System.out.println("nodesA "  + nodesA);
-        System.out.println("nodesB "  + nodesB);
-//
-//        System.out.println("mobs  "  + mobs);
+        System.out.println("nodesA "  + nodesA);
         System.out.println("caps  "  + caps);
         System.out.println("en passants " + enPassants);
         System.out.println("castles " + castles);
@@ -55,12 +41,22 @@ public class Test
         System.out.println("mates "  + mates);
         System.out.println("draws "  + draws);
 
-        System.out.println();
-        System.out.println(fenA.equals( fenB ));
-        System.out.println();
-        System.out.println(fenB.minus(  fenA ));
-        System.out.println();
-        System.out.println(fenA.minus(  fenB ));
+
+//        System.out.println("building Mediocre");
+//        int nodesB = buildMediocreTree((String) null, 5, fenB);
+////        int nodesB = buildMediocreTree(
+////                "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
+////                        "/PPPBBPPP/R3K2R w KQkq -", 4, fenB);
+////        int nodesB = buildMediocreTree(
+////                "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", 6, fenB);
+//        System.out.println("nodesB "  + nodesB);
+//
+//        System.out.println();
+//        System.out.println(fenA.equals( fenB ));
+//        System.out.println();
+//        System.out.println(fenB.minus(  fenA ));
+//        System.out.println();
+//        System.out.println(fenA.minus(  fenB ));
 //        System.out.println();
 //        System.out.println(fenA);
 //        System.out.println();
@@ -128,16 +124,24 @@ public class Test
         int sum = 0;
         for (int i = 0; i < nMoves; i++) {
             State proto = state.prototype();
+//            State proto;
+//            if (ply == 1) {
+//                proto = state;
+//            } else {
+//                proto = state.prototype();
+//            }
 
-            State proto2 = state.prototype();
-            Move.apply(moves[ i ], proto2);
-            if (proto2.toFen().equals(
-                    "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3" +
-                            "/2N2Q1p/PPPBBPPP/R4RK1 b kq - 1")) {
-                System.out.println(
-                        Move.toString(moves[ i ]) + " -> " +
-                        proto2.toFen() );
-            }
+
+//            State proto2 = state.prototype();
+//            int   move2  = Move.apply(moves[ i ], proto2);
+//            if (truncate(proto2.toFen()).equals(
+//                    "r3k2r/p1ppqPb1/bn4p1/4N3/1p2n3/2N2Q1p/" +
+//                            "PPPBBPPP/R3K2R b KQkq - 0")) {
+////                System.out.println("wtf");
+//                System.out.println(
+//                        Move.toString(moves[ i ]) + " -> " +
+//                        proto2.toFen() );
+//            }
 
             int   move  = Move.apply(moves[ i ], proto);
 
@@ -162,11 +166,14 @@ public class Test
 
             sum += buildTree(
                     proto, ply - 1,
-//                    null
                     check.add(
                             truncate(proto.toFen()),
                             Move.toString(move))
                     );
+            Move.unApply(move, proto);
+
+//            System.out.println(
+//                    Move.toString(move));
         }
 
         return sum;
