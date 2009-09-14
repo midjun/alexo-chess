@@ -89,7 +89,7 @@ public class Location
     //--------------------------------------------------------------------
     public static String toString(int squareIndex)
     {
-        return "[" + rankIndex(squareIndex) + ", " +
-                     fileIndex(squareIndex) + "]";
+        return "[" + (rankIndex(squareIndex) + 1) + ", " +
+                     (fileIndex(squareIndex) + 1) + "]";
     }
 }
