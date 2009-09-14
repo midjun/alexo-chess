@@ -268,7 +268,9 @@ public class State
             int pseudoMove = pseudoMoves[ i ];
             int undoable   = Move.apply(pseudoMove, this);
 
-            if (! isInCheck(nextToAct.invert())) {
+            if (! isInCheck(nextToAct.invert())
+                    ) {
+//                    && Math.random() > 0.5) {
                 moves[ nextMoveIndex++ ] = pseudoMove;
             }
 
@@ -468,7 +470,8 @@ public class State
 
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
-        reversibleMoves     = 0;
+//        reversibleMoves     = 0;
+        reversibleMoves++;
         prevEnPassants      = enPassants;
         enPassants          = EP_NONE;
     }
@@ -591,7 +594,7 @@ public class State
                         Move.setPromotion(
                                 moves[addFrom + i], f);
 
-                int move = moves[ nextAddAt - 1 ];
+//                int move = moves[ nextAddAt - 1 ];
 //                if (! check(move)) {
 //                    check(move);
 //                }
@@ -1343,9 +1346,9 @@ public class State
             str.append(FILES.charAt(enPassants));
 //            str.append(" ");
             if (nextToAct == Colour.WHITE) {
-                str.append(EP_BLACK_DEST + 1);
-            } else {
                 str.append(EP_WHITE_DEST + 1);
+            } else {
+                str.append(EP_BLACK_DEST + 1);
             }
         }
         str.append(" ");

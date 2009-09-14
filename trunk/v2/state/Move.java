@@ -472,6 +472,10 @@ public class Move
                         Location.toString(to  ) + " capturing " +
                         Location.toString(cap );
             }
+
+            case CASTLE: {
+                return castleType(move) + " castle";
+            }
         }
 
         return "Unknown";

@@ -25,19 +25,22 @@ public class GameBranch
     }
     public GameBranch add(String fen)
     {
+        String cachedFen = FenCache.GLOBAL.get(fen);
+
 //        System.out.println( fen );
-        GameBranch sub = map.get( fen );
+        GameBranch sub = map.get( cachedFen );
         if (sub == null)
         {
             sub = new GameBranch();
-            map.put(fen, sub);
+            map.put(cachedFen, sub);
         }
         return sub;
     }
 
     public void annotate(String fen, String annotation)
     {
-        annot.put(fen, annotation);
+        String cachedFen = FenCache.GLOBAL.get(fen);
+        annot.put(cachedFen, annotation);
     }
     private String annotation(String fen)
     {
@@ -48,7 +51,7 @@ public class GameBranch
 
 
     //--------------------------------------------------------------------
-    public GameBranch delta(GameBranch missing)
+    public GameBranch minus(GameBranch missing)
     {
         GameBranch delta = new GameBranch();
         delta.annot.putAll( annot );
@@ -62,7 +65,7 @@ public class GameBranch
         } else {
             for (String k : map.keySet()) {
                 GameBranch subDelta =
-                        map.get(k).delta(
+                        map.get(k).minus(
                                 missing.map.get(k));
 
                 if (! subDelta.map.isEmpty()) {
