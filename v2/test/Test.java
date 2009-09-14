@@ -27,19 +27,23 @@ public class Test
 
 
 //        int nodesA = buildTree(new State(), 5, fenA);
-        int nodesA = buildTree(new State(
-                "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
-                        "/PPPBBPPP/R3K2R w KQkq -"), 4, fenA);
+//        int nodesA = buildTree(new State(
+//                "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p" +
+//                        "/PPPBBPPP/R3K2R w KQkq -"), 4, fenA);
+//        int nodesA = buildTree(new State(
+//                "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -"), 5, fenA);
+//        int nodesA = buildTree(new State(
+//                "8/PPP4k/8/8/8/8/4Kppp/8 w - -"), 5, fenA);
 //        int nodesA = buildTree(new State(
 //                "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -"), 6, fenA);
-        System.out.println("nodesA "  + nodesA);
-        System.out.println("caps  "  + caps);
-        System.out.println("en passants " + enPassants);
-        System.out.println("castles " + castles);
-        System.out.println("promotions " + promotions);
-        System.out.println("checks " + checks);
-        System.out.println("mates "  + mates);
-        System.out.println("draws "  + draws);
+//        System.out.println("nodesA "  + nodesA);
+//        System.out.println("caps  "  + caps);
+//        System.out.println("en passants " + enPassants);
+//        System.out.println("castles " + castles);
+//        System.out.println("promotions " + promotions);
+//        System.out.println("checks " + checks);
+//        System.out.println("mates "  + mates);
+//        System.out.println("draws "  + draws);
 
 
 //        System.out.println("building Mediocre");
@@ -63,7 +67,7 @@ public class Test
 //        System.out.println(fenB);
 
 //
-//        testRandom();
+        testRandom();
     }
 
 
@@ -73,23 +77,25 @@ public class Test
         System.out.println("warming up");
         for (int i = 0; i < 15001; i++)
         {
-            playOutRandom( new State() );
-//            playOutMediocre();
+//            playOutRandom( new State() );
+            playOutMediocre();
         }
         System.out.println("done warm-up");
 
-        int  count  = 1000000;
-        long before = System.currentTimeMillis();
-        for (int i = 0; i < count; i++)
-        {
-            //System.out.println(i);
-            playOutRandom( new State() );
-//            playOutMediocre();
+        while (true) {
+            int  count  = 100000;
+            long before = System.currentTimeMillis();
+            for (int i = 0; i < count; i++)
+            {
+                //System.out.println(i);
+//                playOutRandom( new State() );
+                playOutMediocre();
+            }
+            long delta = System.currentTimeMillis() - before;
+            System.out.println(
+                    count + " at " +
+                   (count / (delta / 1000)) + " per second");
         }
-        long delta = System.currentTimeMillis() - before;
-        System.out.println(
-                count + " at " +
-               (count / (delta / 1000)) + " per second");
     }
 
 
@@ -272,13 +278,13 @@ public class Test
     {
         Status status;
         int    nextCount = 0;
-        int[]  nextMoves = new int[ 256 ];
-        int[]  moves     = new int[ 256 ];
+        int[]  nextMoves = new int[ 128 ];
+        int[]  moves     = new int[ 128 ];
         int    nMoves    = state.moves(moves);
 
-        while ((status = state.knownStatus()) == Status.IN_PROGRESS)
+        do
         {
-            state.checkPieces();
+//            state.checkPieces();
 
             int     move;
             boolean madeMove = false;
@@ -324,6 +330,8 @@ public class Test
                 nMoves          = nextCount;
             }
         }
+        while ((status = state.knownStatus()) == Status.IN_PROGRESS);
+
         return status.toOutcome();
     }
 
@@ -351,11 +359,6 @@ public class Test
     {
         Board board = new Board();
         board.setupStart();
-        Node  root  = new Node(board);
-
-        root.strategize(
-                board,
-                null,
-                false);
+        Node.randomBench(board);
     }
 }
