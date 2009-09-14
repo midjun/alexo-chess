@@ -303,7 +303,9 @@ public class State
             oppKing   = wPieces[ KING ];
             pieces    = bPieces;
         }
-        oppKing |= castlePath;
+
+        oppKing  |= castlePath;
+        opponent |= castlePath;
 
         long notProponent = ~proponent;
         long notOpponent  = ~opponent;
@@ -989,7 +991,8 @@ public class State
         }
 
         if (colour != nextToAct && castlePath != 0) {
-            targetKing = castlePath;
+            targetKing  = castlePath;
+            attacked   |= castlePath;
         }
 
         long notAttacker = ~attacker;
