@@ -56,7 +56,7 @@ public enum FullOutcome
 
 
     //--------------------------------------------------------------------
-    public String toString()
+    @Override public String toString()
     {
         return DISPLAY;
     }
