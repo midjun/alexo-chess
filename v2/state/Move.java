@@ -2,6 +2,7 @@ package v2.state;
 
 import v2.data.Location;
 import v2.piece.Figure;
+import v2.piece.Piece;
 
 /**
  * Date: Feb 6, 2009
@@ -302,9 +303,13 @@ public class Move
     }
 
     public static int castle(
+            int        fromSquareIndex,
+            int          toSquareIndex,
             CastleType type)
     {
-        return   typeBits( MoveType.CASTLE ) |
+        return   fromBits( fromSquareIndex ) |
+                   toBits( toSquareIndex   ) |
+                 typeBits( MoveType.CASTLE ) |
                castleBits( type            );
     }
 
@@ -479,5 +484,29 @@ public class Move
         }
 
         return "Unknown";
+    }
+
+
+    //--------------------------------------------------------------------
+    public static String toInputNotation(int move)
+    {
+        int from      = fromSquareIndex(move);
+        int to        =   toSquareIndex(move);
+        int promoteTo = promotion(move);
+
+        String promoteToInput =
+                (promoteTo == 0)
+                ? "" : Figure.VALUES[ promoteTo ]
+                         .toString().substring(0, 1).toLowerCase();
+        return String.valueOf(
+                State.FILES.charAt(
+                        Location.fileIndex(from))) +
+                (Location.rankIndex(from) + 1)
+                +
+                State.FILES.charAt(
+                        Location.fileIndex(to)) +
+                (Location.rankIndex(to) + 1)
+                +
+                promoteToInput;
     }
 }
