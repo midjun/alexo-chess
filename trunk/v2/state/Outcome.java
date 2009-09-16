@@ -16,6 +16,19 @@ public enum Outcome
 
 
     //--------------------------------------------------------------------
+    public double valueFor(Colour nextToAct) {
+        if (this == DRAW) {
+            return 0.5;
+        } else if (this == WHITE_WINS &&
+                nextToAct == Colour.WHITE) {
+            return 1.0;
+        } else {
+            return 0.0;
+        }
+    }
+
+
+    //--------------------------------------------------------------------
     public static Outcome wins(Colour c)
     {
         return c == Colour.WHITE
