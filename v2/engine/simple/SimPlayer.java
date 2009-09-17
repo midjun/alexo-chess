@@ -1,5 +1,6 @@
 package v2.engine.simple;
 
+import util.Io;
 import v2.data.MovePicker;
 import v2.engine.PlayerImpl;
 import v2.piece.Colour;
@@ -30,8 +31,9 @@ public class SimPlayer extends PlayerImpl
     public int move(
             State position)
     {
-        int[] moves  = new int[128];
+        int[] moves  = new int[Move.MAX_PER_PLY];
         int   nMoves = position.legalMoves(moves);
+        if (nMoves == 0) return -1;
 
         int      sims        = simCount / nMoves;
         State    state       = position.prototype();
@@ -55,6 +57,7 @@ public class SimPlayer extends PlayerImpl
             }
         }
 
+        Io.display("Playing: " + (maxEv / sims));
         return moves[ maxEvIndex ];
     }
 

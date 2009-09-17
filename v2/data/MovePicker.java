@@ -1,5 +1,7 @@
 package v2.data;
 
+import v2.state.Move;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,15 +18,16 @@ public class MovePicker
 
 
     //--------------------------------------------------------------------
-    private static final int       maxMoves = 128;
-    private static final int       picsPerN = 128;
+    private static final int       picsPerN = 16;
 
-    private static final long[]    lastPick = new long[ maxMoves ];
-    private static final int[][][] allPicks = new int[ maxMoves ][][];
+    private static final long[]    lastPick =
+            new long[ Move.MAX_PER_PLY ];
+    private static final int[][][] allPicks =
+            new int [ Move.MAX_PER_PLY ][][];
 
     static
     {
-        for (int nMoves = 0; nMoves < maxMoves; nMoves++) {
+        for (int nMoves = 0; nMoves < Move.MAX_PER_PLY; nMoves++) {
             int[][] availPicks = new int[ picsPerN ][ nMoves ];
 
             for (int i = 0; i < picsPerN; i++) {
@@ -38,7 +41,7 @@ public class MovePicker
 
 
     //--------------------------------------------------------------------
-    public static int[] pick(int nMoves)
+    public static int[] pickRandom(int nMoves)
     {
         return allPicks[ nMoves                               ]
                        [ (int)(lastPick[nMoves]++ % picsPerN) ];

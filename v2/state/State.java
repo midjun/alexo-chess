@@ -34,6 +34,10 @@ public class State
             BitLoc.locationToBitBoard(0, 4);
     private static final long BLACK_KING_START =
             BitLoc.locationToBitBoard(7, 4);
+    private static final int  WHITE_KING_START_INDEX =
+            BitLoc.bitBoardToLocation(WHITE_KING_START);
+    private static final int  BLACK_KING_START_INDEX =
+            BitLoc.bitBoardToLocation(BLACK_KING_START);
 
     private static final long WHITE_K_CASTLE_PATH = WHITE_KING_START |
             SlidingPieces.castFiles(WHITE_KING_START,  2);
@@ -61,6 +65,14 @@ public class State
             BitLoc.locationToBitBoard(7, 6);
     private static final long BLACK_Q_CASTLE_END =
             BitLoc.locationToBitBoard(7, 2);
+    private static final int  WHITE_K_CASTLE_END_INDEX =
+            BitLoc.bitBoardToLocation(WHITE_K_CASTLE_END);
+    private static final int  WHITE_Q_CASTLE_END_INDEX =
+            BitLoc.bitBoardToLocation(WHITE_Q_CASTLE_END);
+    private static final int  BLACK_K_CASTLE_END_INDEX =
+            BitLoc.bitBoardToLocation(BLACK_K_CASTLE_END);
+    private static final int  BLACK_Q_CASTLE_END_INDEX =
+            BitLoc.bitBoardToLocation(BLACK_Q_CASTLE_END);
 
     private static final long WHITE_K_CASTLE_MOVE =
             WHITE_KING_START ^ WHITE_K_CASTLE_END;
@@ -113,7 +125,7 @@ public class State
     private static final byte EP_WHITE_DEST = 5;
     private static final byte EP_BLACK_DEST = 2;
 
-    private static final String FILES = "abcdefgh";
+    public  static final String FILES = "abcdefgh";
 
 
     //--------------------------------------------------------------------
@@ -258,7 +270,7 @@ public class State
     //--------------------------------------------------------------------
     public int legalMoves(int[] moves)
     {
-        int pseudoMoves[] = new int[ 256 ];
+        int pseudoMoves[] = new int[ 128 ];
         int nPseudoMoves  = moves(pseudoMoves);
         if (nPseudoMoves == -1) return -1;
 
@@ -386,11 +398,6 @@ public class State
             moves[ offset++ ] = Move.mobility(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
 
-            int move = moves[ offset - 1 ];
-//            if (! check(move)) {
-//                check(move);
-//            }
-
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -425,6 +432,7 @@ public class State
             int[] moves, int offset,
             long proponent, long opponent)
     {
+        int  kingStart, qKingEnd, kKingEnd;
         long kingCastle , kingCorridor;
         long queenCastle, queenCorridor;
         if (nextToAct == Colour.WHITE) {
@@ -433,12 +441,18 @@ public class State
             queenCastle   = WHITE_Q_CASTLE;
             kingCorridor  = WHITE_K_CASTLE_CORRIDOR;
             queenCorridor = WHITE_Q_CASTLE_CORRIDOR;
+            kingStart     = WHITE_KING_START_INDEX;
+            kKingEnd      = WHITE_K_CASTLE_END_INDEX;
+            qKingEnd      = WHITE_Q_CASTLE_END_INDEX;
         } else {
             if ((castles & BLACK_CASTLE) == 0) return offset;
             kingCastle    = BLACK_K_CASTLE;
             queenCastle   = BLACK_Q_CASTLE;
             kingCorridor  = BLACK_K_CASTLE_CORRIDOR;
             queenCorridor = BLACK_Q_CASTLE_CORRIDOR;
+            kingStart     = BLACK_KING_START_INDEX;
+            kKingEnd      = BLACK_K_CASTLE_END_INDEX;
+            qKingEnd      = BLACK_Q_CASTLE_END_INDEX;
         }
 
         int  newOffset = offset;
@@ -446,19 +460,13 @@ public class State
 
         if ((castles & kingCastle) != 0 &&
                 (allPieces & kingCorridor) == 0) {
-//            int moveAddend = Move.castle(CastleType.KING_SIDE);
-//            if (! check(moveAddend)) {
-//                check(moveAddend);
-//            }
-            moves[ newOffset++ ] = Move.castle(CastleType.KING_SIDE);
+            moves[ newOffset++ ] = Move.castle(
+                    kingStart, kKingEnd, CastleType.KING_SIDE);
         }
         if ((castles & queenCastle) != 0 &&
                 (allPieces & queenCorridor) == 0) {
-//            int moveAddend = Move.castle(CastleType.QUEEN_SIDE);
-//            if (! check(moveAddend)) {
-//                check(moveAddend);
-//            }
-            moves[ newOffset++ ] = Move.castle(CastleType.QUEEN_SIDE);
+            moves[ newOffset++ ] = Move.castle(
+                    kingStart, qKingEnd, CastleType.QUEEN_SIDE);
         }
 
         return newOffset;
@@ -1244,7 +1252,7 @@ public class State
 
 
     //--------------------------------------------------------------------
-    public String toString() {
+    @Override public String toString() {
         StringBuffer str = new StringBuffer();
 
         str.append("Next to Act: ").append(nextToAct);
@@ -1361,5 +1369,32 @@ public class State
         str.append("n"); // full moves since start of game
 
 		return str.toString();
+    }
+
+
+    //--------------------------------------------------------------------
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        State state = (State) o;
+        return castlePath == state.castlePath &&
+                castles == state.castles &&
+                enPassants == state.enPassants &&
+                reversibleMoves == state.reversibleMoves &&
+                Arrays.equals(bPieces, state.bPieces) &&
+                nextToAct == state.nextToAct &&
+                Arrays.equals(wPieces, state.wPieces);
+    }
+
+    @Override public int hashCode() {
+        int result = Arrays.hashCode(wPieces);
+        result = 31 * result + Arrays.hashCode(bPieces);
+        result = 31 * result + (int) enPassants;
+        result = 31 * result + (int) castles;
+        result = 31 * result + (int) (castlePath ^ (castlePath >>> 32));
+        result = 31 * result + (int) reversibleMoves;
+        result = 31 * result + nextToAct.hashCode();
+        return result;
     }
 }
