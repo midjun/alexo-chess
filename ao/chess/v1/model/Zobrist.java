@@ -1,4 +1,4 @@
-package model;
+package ao.chess.v1.model;
 
 import java.util.Random;
 

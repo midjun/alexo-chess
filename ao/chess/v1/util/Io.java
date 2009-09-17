@@ -1,9 +1,9 @@
-package util;
+package ao.chess.v1.util;
 
 import javax.swing.*;
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  *

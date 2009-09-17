@@ -1,8 +1,4 @@
-package model;
-
-import model.Board;
-import model.Definitions;
-import model.Move;
+package ao.chess.v1.model;
 
 /**
  * class See

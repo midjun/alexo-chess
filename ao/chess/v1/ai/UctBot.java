@@ -1,8 +1,8 @@
-package ao;
+package ao.chess.v1.ai;
 
-import model.Board;
-import util.Condition;
-import util.Io;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.util.Condition;
+import ao.chess.v1.util.Io;
 
 import java.util.HashMap;
 import java.util.Map;

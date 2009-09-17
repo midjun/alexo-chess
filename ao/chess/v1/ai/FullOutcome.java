@@ -1,4 +1,4 @@
-package ao;
+package ao.chess.v1.ai;
 
 /**
  *

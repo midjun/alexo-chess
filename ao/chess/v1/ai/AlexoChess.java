@@ -1,11 +1,11 @@
-package ao;
+package ao.chess.v1.ai;
 
-import model.Board;
-import model.Move;
-import old.Engine;
-import old.Evaluation;
-import old.Mediocre;
-import util.Io;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.model.Move;
+import ao.chess.v1.old.Engine;
+import ao.chess.v1.old.Evaluation;
+import ao.chess.v1.old.Mediocre;
+import ao.chess.v1.util.Io;
 
 import java.io.IOException;
 import java.util.Arrays;

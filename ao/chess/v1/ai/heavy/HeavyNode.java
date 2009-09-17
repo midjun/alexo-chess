@@ -1,10 +1,10 @@
-package ao.heavy;
+package ao.chess.v1.ai.heavy;
 
-import ao.AlexoChess;
-import ao.FullOutcome;
-import ao.RandomBot;
-import ao.Reward;
-import model.Board;
+import ao.chess.v1.ai.AlexoChess;
+import ao.chess.v1.ai.FullOutcome;
+import ao.chess.v1.ai.RandomBot;
+import ao.chess.v1.ai.Reward;
+import ao.chess.v1.model.Board;
 
 import java.util.LinkedList;
 

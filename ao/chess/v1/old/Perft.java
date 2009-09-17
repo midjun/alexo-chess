@@ -1,7 +1,7 @@
-package old;
+package ao.chess.v1.old;
 
-import model.Board;
-import model.Move;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.model.Move;
 
 /**
  *  class Perft

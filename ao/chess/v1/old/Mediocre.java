@@ -1,11 +1,11 @@
-package old;
+package ao.chess.v1.old;
 
-import engine.Book;
-import engine.TranspositionTable;
-import model.Board;
-import model.Definitions;
-import model.Move;
-import util.Io;
+import ao.chess.v1.engine.Book;
+import ao.chess.v1.engine.TranspositionTable;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.model.Definitions;
+import ao.chess.v1.model.Move;
+import ao.chess.v1.util.Io;
 
 import java.io.*;
 
