@@ -1,10 +1,10 @@
-package old;
+package ao.chess.v1.old;
 
-import model.Board;
-import model.Definitions;
-import model.Move;
-import model.See;
-import util.Io;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.model.Definitions;
+import ao.chess.v1.model.Move;
+import ao.chess.v1.model.See;
+import ao.chess.v1.util.Io;
 
 import java.io.IOException;
 

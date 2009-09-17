@@ -1,8 +1,7 @@
-package ao.heavy;
+package ao.chess.v1.ai.heavy;
 
-import model.Board;
-import ao.heavy.HeavyNode;
-import ao.Bot;
+import ao.chess.v1.ai.Bot;
+import ao.chess.v1.model.Board;
 
 /**
  *

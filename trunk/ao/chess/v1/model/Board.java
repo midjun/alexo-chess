@@ -1,6 +1,6 @@
-package model;
+package ao.chess.v1.model;
 
-import ao.Position;
+import ao.chess.v1.ai.Position;
 
 import java.util.Arrays;
 

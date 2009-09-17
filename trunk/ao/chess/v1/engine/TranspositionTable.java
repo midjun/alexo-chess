@@ -1,9 +1,9 @@
-package engine;
+package ao.chess.v1.engine;
 
-import model.Board;
-import model.Definitions;
-import old.Evaluation;
-import old.Mediocre;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.model.Definitions;
+import ao.chess.v1.old.Evaluation;
+import ao.chess.v1.old.Mediocre;
 
 import java.io.IOException;
 

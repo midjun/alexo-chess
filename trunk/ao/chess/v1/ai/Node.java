@@ -1,8 +1,8 @@
-package ao;
+package ao.chess.v1.ai;
 
-import model.Board;
-import old.Evaluation;
-import util.Io;
+import ao.chess.v1.model.Board;
+import ao.chess.v1.old.Evaluation;
+import ao.chess.v1.util.Io;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,24 +69,6 @@ public class Node
     {
         return visits;
     }
-    
-
-    //--------------------------------------------------------------------
-    public void addTo(Map<Position, Node> transposition)
-    {
-        transposition.put(position, this);
-    }
-
-    public void addLineageTo(Map<Position, Node> transposition)
-    {
-        addTo( transposition );
-
-        if (kids == null) return;
-        for (Node kid : kids)
-        {
-            kid.addLineageTo( transposition );
-        }
-    }
 
 
     //--------------------------------------------------------------------
@@ -105,6 +87,23 @@ public class Node
         return null;
     }
 
+
+    //--------------------------------------------------------------------
+    public void addTo(Map<Position, Node> transposition)
+    {
+        transposition.put(position, this);
+    }
+
+    public void addLineageTo(Map<Position, Node> transposition)
+    {
+        addTo( transposition );
+
+        if (kids == null) return;
+        for (Node kid : kids)
+        {
+            kid.addLineageTo( transposition );
+        }
+    }
 
 
     //--------------------------------------------------------------------

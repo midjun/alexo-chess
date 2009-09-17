@@ -1,6 +1,6 @@
-package ao;
+package ao.chess.v1.ai;
 
-import model.Board;
+import ao.chess.v1.model.Board;
 
 /**
  * 

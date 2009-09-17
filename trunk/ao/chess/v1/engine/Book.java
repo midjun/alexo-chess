@@ -1,4 +1,4 @@
-package engine; /**
+package ao.chess.v1.engine; /**
  *  Book class by Yves Catineau 
  */
 
