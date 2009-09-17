@@ -5,7 +5,8 @@ package v2.state;
  * Date: Feb 21, 2009
  * Time: 10:18:24 PM
  */
-public enum CastleType
+public enum
+        CastleType
 {
     //--------------------------------------------------------------------
     QUEEN_SIDE, KING_SIDE;

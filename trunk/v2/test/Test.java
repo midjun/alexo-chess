@@ -77,8 +77,8 @@ public class Test
         System.out.println("warming up");
         for (int i = 0; i < 15001; i++)
         {
-//            playOutRandom( new State() );
-            playOutMediocre();
+            playOutRandom( new State() );
+//            playOutMediocre();
         }
         System.out.println("done warm-up");
 
@@ -112,7 +112,7 @@ public class Test
     private static int buildTree(
             State state, int ply, GameBranch check)
     {
-        int moves[] = new int[256];
+        int moves[] = new int[128];
         int nMoves  = state.legalMoves(moves);
         if (nMoves == 0) {
             if (ply == 0) {
@@ -289,7 +289,7 @@ public class Test
             int     move;
             boolean madeMove = false;
 
-            int[] moveOrder = MovePicker.pick(nMoves);
+            int[] moveOrder = MovePicker.pickRandom(nMoves);
             for (int moveIndex : moveOrder)
             {
 //                if (! state.check(moves[ moveIndex ])) {

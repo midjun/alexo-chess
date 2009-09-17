@@ -20,6 +20,8 @@ public enum Figure
     //--------------------------------------------------------------------
     private final String SYMBOL;
 
+
+    //--------------------------------------------------------------------
     private Figure(String symbol)
     {
         SYMBOL = symbol;
@@ -27,7 +29,7 @@ public enum Figure
 
 
     //--------------------------------------------------------------------
-    public String toString()
+    @Override public String toString()
     {
         return SYMBOL;
     }
