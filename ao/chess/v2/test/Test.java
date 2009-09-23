@@ -1,14 +1,12 @@
 package ao.chess.v2.test;
 
-import ao.AlexoChess;
-import ao.FullOutcome;
-import ao.Node;
+import ao.chess.v1.ai.Node;
+import ao.chess.v1.model.Board;
 import ao.chess.v2.data.MovePicker;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
-import model.Board;
 
 /**
  * Date: Feb 6, 2009
@@ -227,50 +225,50 @@ public class Test
 
 
     //--------------------------------------------------------------------
-    private static int buildMediocreTree(
-            String fen, int ply, GameBranch check)
-    {
-        Board board = new Board();
-        if (fen == null) {
-            board.setupStart();
-        } else {
-            board.inputFEN(fen);
-        }
-
-        return buildMediocreTree(board, ply, check);
-    }
-    private static int buildMediocreTree(
-            Board board, int ply, GameBranch check)
-    {
-        if (ply == 0) return 1;
-
-        FullOutcome out = AlexoChess.outcome(board, null, 0);
-        if (out.isDraw()) {
-//            draws++;
-            return 0;
-        } else if (out != FullOutcome.UNDECIDED) {
-//            mates++;
-            return 0;
-        }
-
-        int moves[] = new int[256];
-        int nMoves  = board.generateMoves(false, moves, 0);
-
-        int sum = 0;
-        for (int i = 0; i < nMoves; i++)
-        {
-            int move = moves[ i ];
-            board.makeMove(move);
-
-            sum += buildMediocreTree(board, ply - 1,
-                    check.add(truncate(board.getFEN()),
-                              model.Move.notation( move )));
-
-            board.unmakeMove(move);
-        }
-
-        return sum;
-    }
+//    private static int buildMediocreTree(
+//            String fen, int ply, GameBranch check)
+//    {
+//        Board board = new Board();
+//        if (fen == null) {
+//            board.setupStart();
+//        } else {
+//            board.inputFEN(fen);
+//        }
+//
+//        return buildMediocreTree(board, ply, check);
+//    }
+//    private static int buildMediocreTree(
+//            Board board, int ply, GameBranch check)
+//    {
+//        if (ply == 0) return 1;
+//
+//        FullOutcome out = AlexoChess.outcome(board, null, 0);
+//        if (out.isDraw()) {
+////            draws++;
+//            return 0;
+//        } else if (out != FullOutcome.UNDECIDED) {
+////            mates++;
+//            return 0;
+//        }
+//
+//        int moves[] = new int[256];
+//        int nMoves  = board.generateMoves(false, moves, 0);
+//
+//        int sum = 0;
+//        for (int i = 0; i < nMoves; i++)
+//        {
+//            int move = moves[ i ];
+//            board.makeMove(move);
+//
+//            sum += buildMediocreTree(board, ply - 1,
+//                    check.add(truncate(board.getFEN()),
+//                              model.Move.notation( move )));
+//
+//            board.unmakeMove(move);
+//        }
+//
+//        return sum;
+//    }
 
 
     //--------------------------------------------------------------------

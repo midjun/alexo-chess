@@ -416,7 +416,7 @@ public class State
             moves[ offset++ ] = Move.capture(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
 
-            int move = moves[ offset - 1 ];
+//            int move = moves[ offset - 1 ];
 //            if (! check(move)) {
 //                check(move);
 //            }
@@ -646,11 +646,6 @@ public class State
     public void capturePromote(
             int from, int to, int promotion, int captured)
     {
-        // todo need to add history of moves, and go back
-        //  one by one until i can track down the source of this wierd issue:
-        //  it seems to come up whenever a pawn captures a knight to promote
-        //  to a knight
-
         long toBB = BitLoc.locationToBitBoard(to);
         capturePromote(from, toBB, promotion, captured);
     }
@@ -1170,85 +1165,85 @@ public class State
     }
 
 
-    //--------------------------------------------------------------------
-    public boolean checkPieces()
-    {
-        if (!(whiteBB == calcPieces(Colour.WHITE) &&
-              blackBB == calcPieces(Colour.BLACK))) {
-            System.out.println("checkPieces: colourBB failed");
-            return false;
-        }
-
-        if (Long.bitCount(wPieces[ KING ]) != 1 ||
-            Long.bitCount(bPieces[ KING ]) != 1) {
-            System.out.println("checkPieces: not exactly one king");
-            return false;
-        }
-
-        if ((castles & WHITE_CASTLE) != 0) {
-            if ((wPieces[ KING ] & WHITE_KING_START) == 0) {
-                System.out.println("white can't castle after king moved");
-                return false;
-            }
-            if ((castles & WHITE_K_CASTLE) != 0 &&
-                    (wPieces[ ROOKS ] & WHITE_K_ROOK_START) == 0) {
-                System.out.println("white k castle impossible");
-                return false;
-            }
-            if ((castles & WHITE_Q_CASTLE) != 0 &&
-                    (wPieces[ ROOKS ] & WHITE_Q_ROOK_START) == 0) {
-                System.out.println("white q castle impossible");
-                return false;
-            }
-        }
-        if ((castles & BLACK_CASTLE) != 0) {
-            if ((bPieces[ KING ] & BLACK_KING_START) == 0) {
-                System.out.println("black can't castle after king moved");
-                return false;
-            }
-            if ((castles & BLACK_K_CASTLE) != 0 &&
-                    (bPieces[ ROOKS ] & BLACK_K_ROOK_START) == 0) {
-                System.out.println("black k castle impossible");
-                return false;
-            }
-            if ((castles & BLACK_Q_CASTLE) != 0 &&
-                    (bPieces[ ROOKS ] & BLACK_Q_ROOK_START) == 0) {
-                System.out.println("black q castle impossible");
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private long calcPieces(Colour c)
-    {
-        long[] pieces = (c == Colour.WHITE)
-                        ? wPieces : bPieces;
-
-        long bb = 0;
-        for (Figure f : Figure.VALUES)
-        {
-            bb |= pieces[ f.ordinal() ];
-        }
-        return bb;
-    }
-
-    public boolean check(int move)
-    {
-        State myClone = prototype();
-        move = Move.apply(move, myClone);
-        boolean afterDo   = myClone.checkPieces();
-        if (! afterDo) {
-            System.out.println("before: " + toString());
-            System.out.println("move: " + Move.toString(move));
-            System.out.println("after: " + myClone.toString());
-        }
-
-        Move.unApply(move, myClone);
-        boolean afterUndo = myClone.checkPieces();
-        return afterDo && afterUndo;
-    }
+//    //--------------------------------------------------------------------
+//    public boolean checkPieces()
+//    {
+//        if (!(whiteBB == calcPieces(Colour.WHITE) &&
+//              blackBB == calcPieces(Colour.BLACK))) {
+//            System.out.println("checkPieces: colourBB failed");
+//            return false;
+//        }
+//
+//        if (Long.bitCount(wPieces[ KING ]) != 1 ||
+//            Long.bitCount(bPieces[ KING ]) != 1) {
+//            System.out.println("checkPieces: not exactly one king");
+//            return false;
+//        }
+//
+//        if ((castles & WHITE_CASTLE) != 0) {
+//            if ((wPieces[ KING ] & WHITE_KING_START) == 0) {
+//                System.out.println("white can't castle after king moved");
+//                return false;
+//            }
+//            if ((castles & WHITE_K_CASTLE) != 0 &&
+//                    (wPieces[ ROOKS ] & WHITE_K_ROOK_START) == 0) {
+//                System.out.println("white k castle impossible");
+//                return false;
+//            }
+//            if ((castles & WHITE_Q_CASTLE) != 0 &&
+//                    (wPieces[ ROOKS ] & WHITE_Q_ROOK_START) == 0) {
+//                System.out.println("white q castle impossible");
+//                return false;
+//            }
+//        }
+//        if ((castles & BLACK_CASTLE) != 0) {
+//            if ((bPieces[ KING ] & BLACK_KING_START) == 0) {
+//                System.out.println("black can't castle after king moved");
+//                return false;
+//            }
+//            if ((castles & BLACK_K_CASTLE) != 0 &&
+//                    (bPieces[ ROOKS ] & BLACK_K_ROOK_START) == 0) {
+//                System.out.println("black k castle impossible");
+//                return false;
+//            }
+//            if ((castles & BLACK_Q_CASTLE) != 0 &&
+//                    (bPieces[ ROOKS ] & BLACK_Q_ROOK_START) == 0) {
+//                System.out.println("black q castle impossible");
+//                return false;
+//            }
+//        }
+//
+//        return true;
+//    }
+//
+//    private long calcPieces(Colour c)
+//    {
+//        long[] pieces = (c == Colour.WHITE)
+//                        ? wPieces : bPieces;
+//
+//        long bb = 0;
+//        for (Figure f : Figure.VALUES)
+//        {
+//            bb |= pieces[ f.ordinal() ];
+//        }
+//        return bb;
+//    }
+//
+//    public boolean check(int move)
+//    {
+//        State myClone = prototype();
+//        move = Move.apply(move, myClone);
+//        boolean afterDo   = myClone.checkPieces();
+//        if (! afterDo) {
+//            System.out.println("before: " + toString());
+//            System.out.println("move: " + Move.toString(move));
+//            System.out.println("after: " + myClone.toString());
+//        }
+//
+//        Move.unApply(move, myClone);
+//        boolean afterUndo = myClone.checkPieces();
+//        return afterDo && afterUndo;
+//    }
 
 
     //--------------------------------------------------------------------

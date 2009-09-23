@@ -1,13 +1,12 @@
 package ao.chess.v2.engine;
 
-import ao.RandomBot;
+import ao.chess.v1.util.Io;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
 import ao.chess.v2.engine.uct.UctPlayer;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
-import util.Io;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -60,11 +59,15 @@ public class AoChess {
             if (botName.equals("random")) {
                 bot = new RandomPlayer();
             } else if (botName.equals("uct")) {
-                bot = new UctPlayer(64 * 1024);
+                Io.display("UCT");
+                bot = new UctPlayer(false);
+            } else if (botName.equals("uct_o")) {
+                Io.display("Optimized UCT");
+                bot = new UctPlayer(true);
             } else if (botName.equals("sim")) {
-                bot = new SimPlayer(64 * 1024);
+                bot = new SimPlayer();
             }
-            
+
 //            if (botName.matches("\\d+"))
 //            {
 //                bot = new UctBot(
@@ -74,7 +77,7 @@ public class AoChess {
 //            {
 //                bot = new UctBot(1024*16, true);
 //            }
-            
+
             while (winboard(bot)) {}
         }
         catch (Throwable t)
@@ -83,6 +86,7 @@ public class AoChess {
             Io.display( Arrays.toString(t.getStackTrace()) );
             t.printStackTrace();
         }
+        System.exit(0);
     }
 
 
@@ -257,7 +261,7 @@ public class AoChess {
         else
         {
             Move.apply(move, state);
-            Io.display("forcing " + Move.toInputNotation(move) + 
+            Io.display("forcing " + Move.toInputNotation(move) +
                         " :: " + Move.toString(move));
         }
     }

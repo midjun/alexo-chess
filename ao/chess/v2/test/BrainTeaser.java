@@ -13,19 +13,22 @@ import ao.chess.v2.state.State;
 public class BrainTeaser {
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        int    time   = 1000;
+        int    time   = 2 * 60 * 1000;
 
-        Player player = new UctPlayer(1024);
+        Player player = new UctPlayer(true);
 
-        State  state  = new State();
+        State  state  = new State(
+                "8/1K3k2/8/8/P7/8/7P/8 w - -");
 
-        int move = player.move(state, time, time, 0);
-        Move.apply(move, state);
-        player.move(state, time, time, 0);
+//        int move = player.move(state, time, time, 0);
+//        Move.apply(move, state);
+//        player.move(state, time, time, 0);
 
         System.out.println(state);
         System.out.println(Move.toString(
                 player.move(state, time, time, 0)
         ));
+
+        System.exit(0);
     }
 }
