@@ -1,16 +1,15 @@
 package ao.chess.v2.engine.uct;
 
+import ao.chess.v1.util.Io;
 import ao.chess.v2.data.MovePicker;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
-import model.Board;
-import old.Evaluation;
-import util.Io;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: aostrovsky
@@ -20,6 +19,8 @@ import java.util.List;
 public class UctNode
 {
     //--------------------------------------------------------------------
+    private final boolean optimize;
+
     private int      visits;
     private double   rewardSum;
 
@@ -28,12 +29,27 @@ public class UctNode
     private int      acts[];
 
 
+
+
     //--------------------------------------------------------------------
-    public UctNode(State protoState)
+    public UctNode(boolean             opt,
+                   State               protoState,
+                   Map<State, UctNode> transposition)
     {
-        state     = protoState.prototype();
+        optimize = opt;
+
+        if (protoState == null) {
+            state = null;
+        } else {
+            state = protoState.prototype();
+        }
+
         visits    = 0;
         rewardSum = 0;
+
+        if (optimize) {
+            addTo(transposition);
+        }
     }
 
 
@@ -69,13 +85,32 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
+    public void addTo(Map<State, UctNode> transposition)
+    {
+        if (! optimize) return;
+//        transposition.put(state, this);
+    }
+
+    public void addLineageTo(Map<State, UctNode> transposition)
+    {
+        addTo( transposition );
+
+        if (kids == null) return;
+        for (UctNode kid : kids)
+        {
+            kid.addLineageTo( transposition );
+        }
+    }
+
+
+    //--------------------------------------------------------------------
     public UctNode childMatching(State board)
     {
         if (kids == null) return null;
 
         for (UctNode kid : kids)
         {
-            if (kid.state.equals( board ))
+            if (board.equals( kid.state ))
             {
                 return kid;
             }
@@ -92,7 +127,7 @@ public class UctNode
 
         UctNode optimal       = this;
         int     optimalAct    = 0;
-        double  optimalReward = Long.MIN_VALUE;
+        double  optimalReward = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < kids.length; i++)
         {
             UctNode nextChild = kids[ i ];
@@ -107,6 +142,9 @@ public class UctNode
             }
         }
 
+//        Io.display("best move is " + optimal.averageReward() +
+//                    " with " + optimal.visits() +
+//                    " at " + (optimize ? "?" : optimal.depth()));
         Io.display("best move is " + optimal.averageReward() +
                     " with " + optimal.visits() +
                     " at " + optimal.depth());
@@ -129,25 +167,31 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    public void strategize()
+    public void strategize(Map<State, UctNode> transposition)
     {
         List<Action> path = new ArrayList<Action>();
         path.add(new Action(0, this));
 
-        while (! path.get( path.size() - 1 ).NODE.unvisited())
+        while (! path.get( path.size() - 1 ).node().unvisited())
         {
-            UctNode node = path.get( path.size() - 1 ).NODE;
+            UctNode node = path.get( path.size() - 1 ).node();
             Action selectedChild =
-                    node.descendByUCB1();
+                    node.descendByUCB1( transposition );
             if (selectedChild == null) break;
 
             path.add( selectedChild );
         }
 
-        UctNode leaf = path.get( path.size() - 1 ).NODE;
+        Action  leaf     = path.get( path.size() - 1 );
+        UctNode leafNode = leaf.node();
+        if (leafNode.state == null) {
+            Action parent = path.get( path.size() - 2 );
+            State parentState = parent.node().state.prototype();
+            Move.apply(leaf.act(), parentState);
+            leafNode.state = parentState;
+        }
         propagateValue(
-                path,
-                leaf.monteCarloValue());
+                path, leafNode.monteCarloValue());
     }
 
     private void propagateValue(
@@ -168,11 +212,11 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    private Action descendByUCB1()
+    private Action descendByUCB1(Map<State, UctNode> transposition)
     {
         if (kids == null)
         {
-            populateKids();
+            populateKids(transposition);
         }
 
         double greatestUtc   = Long.MIN_VALUE;
@@ -185,19 +229,22 @@ public class UctNode
             double utcValue;
             if (kid.unvisited())
             {
-//                utcValue =
-//                        Integer.MAX_VALUE
-//                            + ((Move.capture(act) != 0)
-//                                ? 100000 : 1000)
-//                              * Math.random();
-                utcValue = 1.0;
+                utcValue = 1000 + Math.random();
             }
             else
             {
-                utcValue =
-                    kid.averageReward() +
-                    Math.sqrt(Math.log(visits) /
-                              (5 * kid.visits));
+//                if (optimize) {
+//                    utcValue =
+//                        kid.averageReward() +
+//                        Math.sqrt((2 * Math.log(visits)) /
+//                                  kid.visits) +
+//                        2;
+//                } else {
+                    utcValue =
+                        kid.averageReward() +
+                        Math.sqrt(Math.log(visits) /
+                                  (5 * kid.visits));
+//                }
             }
 
             if (utcValue > greatestUtc)
@@ -273,7 +320,7 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    private void populateKids()
+    private void populateKids(Map<State, UctNode> transposition)
     {
         if (kids != null) return;
 
@@ -285,13 +332,22 @@ public class UctNode
 
         for (int i = 0; i < moveCount; i++)
         {
-            int move = Move.apply(legalMoves[ i ], state);
-
-            UctNode newChild = new UctNode(state);
-            kids[ i ] = newChild;
-            acts[ i ] = move;
-
-            Move.unApply(move, state);
+//            if (optimize) {
+                kids[ i ] = new UctNode(optimize, null, transposition);
+                acts[ i ] = legalMoves[ i ];
+//            } else {
+//                int move = Move.apply(legalMoves[ i ], state);
+//
+//                UctNode existing = transposition.get(state);
+//                if (existing == null) {
+//                    kids[ i ] = new UctNode(optimize, state, transposition);
+//                } else {
+//                    kids[ i ] = existing;
+//                }
+//                acts[ i ] = move;
+//
+//                Move.unApply(move, state);
+//            }
         }
     }
 
@@ -317,22 +373,4 @@ public class UctNode
             return NODE;
         }
     }
-
-
-    //--------------------------------------------------------------------
-//    public static void randomBench(Board state)
-//    {
-//        int[] legalMoves = new int[128];
-//        do
-//        {
-//            int moveCount = state.generateMoves(false, legalMoves, 0);
-//            if (moveCount > 0)
-//            {
-//                int move = RandomBot.random(legalMoves, moveCount);
-//                state.makeMove(move);
-//            }
-//        }
-//        while (AlexoChess.outcome(state, null, 0)
-//                 == FullOutcome.UNDECIDED );
-//    }
 }

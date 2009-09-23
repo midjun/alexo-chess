@@ -1,51 +1,53 @@
 package ao.chess.v2.engine.simple;
 
+import ao.chess.v1.util.Io;
 import ao.chess.v2.data.MovePicker;
-import ao.chess.v2.engine.PlayerImpl;
+import ao.chess.v2.engine.Player;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
-import util.Io;
 
 /**
  * User: aostrovsky
  * Date: 16-Sep-2009
  * Time: 12:00:56 AM
  */
-public class SimPlayer extends PlayerImpl
+public class SimPlayer implements Player
 {
     //--------------------------------------------------------------------
-    private final int simCount;
-
-
-    //--------------------------------------------------------------------
-    public SimPlayer(int numberOfSimulations)
+    public SimPlayer()
     {
-        simCount = numberOfSimulations;
+
     }
 
 
     //--------------------------------------------------------------------
     public int move(
-            State position)
+            State position,
+            int   timeLeft,
+            int   timePerMove,
+            int   timeIncrement)
     {
         int[] moves  = new int[Move.MAX_PER_PLY];
         int   nMoves = position.legalMoves(moves);
         if (nMoves == 0) return -1;
 
-        int      sims        = simCount / nMoves;
+        int      count       = 0;
+        long     start       = System.currentTimeMillis();
         State    state       = position.prototype();
         double[] expectation = new double[ nMoves ];
-        for (int m = 0; m < nMoves; m++) {
-
-            int move = Move.apply(moves[m], state); 
-            for (int i = 0; i < sims; i++) {
+        while ((System.currentTimeMillis() - start) < timePerMove) {
+            for (int m = 0; m < nMoves; m++)
+            {
+                int move = Move.apply(moves[m], state);
                 expectation[m] += simulate(
                         state.prototype(), position.nextToAct());
+                Move.unApply(move, state);
+
+                count++;
             }
-            Move.unApply(move, state);
         }
 
         double maxEv      = -1;
@@ -57,7 +59,7 @@ public class SimPlayer extends PlayerImpl
             }
         }
 
-        Io.display("Playing: " + (maxEv / sims));
+        Io.display("Playing: " + (maxEv / count));
         return moves[ maxEvIndex ];
     }
 
@@ -71,6 +73,8 @@ public class SimPlayer extends PlayerImpl
         int[]   moves     = new int[ 128 ];
         int     nMoves    = state.moves(moves);
         Outcome outcome   = null;
+
+        if (nMoves < 1) return Double.NaN;
 
         do
         {

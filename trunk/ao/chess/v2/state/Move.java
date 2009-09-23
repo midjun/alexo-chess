@@ -166,7 +166,7 @@ public class Move
         return squareIndex << TO_SHIFT;
     }
     private static int figureBits(Figure figure) {
-        
+
         return figure.ordinal() << FIGURE_SHIFT;
     }
 //    private static int capturedBits(Figure captured) {
@@ -271,7 +271,7 @@ public class Move
         return promotion(move) != 0;
     }
 
-    
+
     //--------------------------------------------------------------------
     public static int mobility(
             Figure moving,

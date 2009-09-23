@@ -84,7 +84,7 @@ public class GameBranch
     @Override public boolean equals(Object obj)
     {
         assert obj instanceof GameBranch;
-        
+
         GameBranch other = (GameBranch) obj;
         if (! map.keySet().equals( other.map.keySet() )) {
             return false;
