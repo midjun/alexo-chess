@@ -10,6 +10,8 @@ import ao.chess.v2.state.Status;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * User: aostrovsky
@@ -19,6 +21,13 @@ import java.util.Map;
 public class UctNode
 {
     //--------------------------------------------------------------------
+    private static final int             CORES = Math.max(
+            Runtime.getRuntime().availableProcessors() - 1, 1);
+    private static final ExecutorService EXEC  =
+            Executors.newFixedThreadPool(CORES);
+
+
+    //--------------------------------------------------------------------
     private final boolean optimize;
 
     private int      visits;
@@ -27,8 +36,6 @@ public class UctNode
     private State    state;
     private UctNode  kids[];
     private int      acts[];
-
-
 
 
     //--------------------------------------------------------------------
@@ -126,7 +133,7 @@ public class UctNode
         if (kids == null) return null;
 
         UctNode optimal       = this;
-        int     optimalAct    = 0;
+        int     optimalAct    = -1;
         double  optimalReward = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < kids.length; i++)
         {
@@ -190,20 +197,42 @@ public class UctNode
             Move.apply(leaf.act(), parentState);
             leafNode.state = parentState;
         }
-        propagateValue(
-                path, leafNode.monteCarloValue());
+        propagateValue(path, leafNode);
     }
 
     private void propagateValue(
-            List<Action> path, double reward)
+            List<Action> path, UctNode leafNode)
     {
-        double maxiMax = 1.0 - reward;
-//        double maxiMax = reward;
+        Outcome outcome = leafNode.monteCarloValue();
+        double  reward  = outcome.valueFor(state.nextToAct());
+//
+        double maxiMax = Double.NaN;
+//        if (optimize) {
+//            if (leafNode.state.nextToAct() == state.nextToAct()) {
+//                maxiMax = reward;
+////                maxiMax = 1.0 - reward; // was not bad
+//            } else {
+////                maxiMax = 1.0 - reward;
+////                maxiMax = reward; // was always suicidal
+//                maxiMax = 1.0 - reward; // was sometimes suicidal
+//            }
+//        } else {
+            maxiMax = 1.0 - reward; // works well when maxiMax reverses
+//            maxiMax = reward;
+//        }
+
         for (int i = path.size() - 1; i >= 0; i--)
         {
             Action step = path.get(i);
 
-            step.NODE.rewardSum += maxiMax;
+//            if (optimize) {
+                step.NODE.rewardSum +=
+                        outcome.valueFor(
+                                state.nextToAct());
+//            } else {
+//                step.NODE.rewardSum += maxiMax;
+//            }
+
             step.NODE.visits++;
 
             maxiMax = 1.0 - maxiMax;
@@ -263,7 +292,34 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    private double monteCarloValue()
+    private Outcome monteCarloValue()
+    {
+//        if (optimize) {
+//            List<Callable<Double>> tasks =
+//                    new ArrayList<Callable<Double>>(CORES);
+//            for (int i = 0; i < CORES; i++) {
+//                tasks.add(new Callable<Double>() {
+//                    public Double call() throws Exception {
+//                        return computeMonteCarloValue();
+//                    }
+//                });
+//            }
+//
+//            try {
+//                double sum = 0;
+//                for (Future<Double> value : EXEC.invokeAll(tasks)) {
+//                    sum += value.get();
+//                }
+//                return sum / CORES;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                return Double.NaN;
+//            }
+//        } else {
+            return computeMonteCarloValue();
+//        }
+    }
+    private Outcome computeMonteCarloValue()
     {
         State   simState  = state.prototype();
         Status  status    = null;
@@ -313,9 +369,10 @@ public class UctNode
             outcome = status.toOutcome();
         }
 
-        return outcome == null
-               ? Double.NaN
-               : outcome.valueFor(state.nextToAct());
+//        return outcome == null
+//               ? Double.NaN
+//               : outcome.valueFor(state.nextToAct());
+        return outcome;
     }
 
 

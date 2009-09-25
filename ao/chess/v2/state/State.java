@@ -1030,90 +1030,91 @@ public class State
     public Status knownStatus()
     {
         if (reversibleMoves > 100) return Status.DRAW;
+        return Status.IN_PROGRESS;
 
-        // at least one major piece (i.e. rook or queen)
-        if (wPieces[ ROOKS  ] != 0 ||
-            bPieces[ ROOKS  ] != 0 ||
-            wPieces[ QUEENS ] != 0 ||
-            bPieces[ QUEENS ] != 0) return Status.IN_PROGRESS;
-
-        boolean whiteBishops, blackBishops;
-        boolean whiteKnights, blackKnights;
-
-        boolean whitePawns = (wPieces[ PAWNS ] != 0);
-        boolean blackPawns = (bPieces[ PAWNS ] != 0);
-        if (whitePawns && blackPawns) {
-            return Status.IN_PROGRESS;
-        } else {
-            whiteBishops = (wPieces[ BISHOPS ] != 0);
-            blackBishops = (bPieces[ BISHOPS ] != 0);
-
-            whiteKnights = (wPieces[ KNIGHTS ] != 0);
-            blackKnights = (bPieces[ KNIGHTS ] != 0);
-
-            if (whitePawns || blackPawns) {
-                // at least one side has at least a minor pawn
-                if (whiteBishops || blackBishops ||
-                    whiteKnights || blackKnights) {
-                    return Status.IN_PROGRESS;
-                } else {
-                    if (whitePawns) {
-                        int nWhitePawns =
-                                Long.bitCount(wPieces[ PAWNS ]);
-                        return (nWhitePawns == 1)
-                               ? Status.DRAW : Status.IN_PROGRESS;
-                    } else {
-                        int nBlackPawns =
-                                Long.bitCount(bPieces[ PAWNS ]);
-                        return (nBlackPawns == 1)
-                               ? Status.DRAW : Status.IN_PROGRESS;
-                    }
-                }
-            }
-        }
-        // only knights and bishops present, no pawns, queens, or rooks
-
-        if (whiteBishops && blackBishops) {
-            if (whiteKnights || blackKnights){
-                return Status.IN_PROGRESS;
-            }
-
-            // both sides have a king and a bishop,
-            //   the bishops being the same color
-            int nWhiteBishops = Long.bitCount(wPieces[ BISHOPS ]);
-            if (nWhiteBishops > 1) return Status.IN_PROGRESS;
-
-            int nBlackBishops = Long.bitCount(wPieces[ BISHOPS ]);
-            if (nBlackBishops > 1) return Status.IN_PROGRESS;
-
-            return (BitBoard.isDark(wPieces[ BISHOPS ]) ==
-                    BitBoard.isDark(bPieces[ BISHOPS ]))
-                   ? Status.DRAW : Status.IN_PROGRESS;
-        }
-        else if (whiteBishops || blackBishops)
-        {
-            // one player has a bishop
-            return (whiteKnights || blackKnights)
-                   ? Status.IN_PROGRESS
-                   : Status.DRAW;
-        }
-        // no bishops
-
-        if (whiteKnights && blackKnights) return Status.IN_PROGRESS;
-        if (whiteKnights) {
-            int nWhiteKnights =
-                    Long.bitCount(wPieces[ KNIGHTS ]);
-
-            //one side has two or more knights against the bare king
-            return (nWhiteKnights <= 2)
-                    ? Status.DRAW : Status.IN_PROGRESS;
-        } else if (blackKnights) {
-            int nBlackKnights =
-                    Long.bitCount(bPieces[ KNIGHTS ]);
-            return (nBlackKnights <= 2)
-                    ? Status.DRAW : Status.IN_PROGRESS;
-        }
-        return Status.DRAW;
+//        // at least one major piece (i.e. rook or queen)
+//        if (wPieces[ ROOKS  ] != 0 ||
+//            bPieces[ ROOKS  ] != 0 ||
+//            wPieces[ QUEENS ] != 0 ||
+//            bPieces[ QUEENS ] != 0) return Status.IN_PROGRESS;
+//
+//        boolean whiteBishops, blackBishops;
+//        boolean whiteKnights, blackKnights;
+//
+//        boolean whitePawns = (wPieces[ PAWNS ] != 0);
+//        boolean blackPawns = (bPieces[ PAWNS ] != 0);
+//        if (whitePawns && blackPawns) {
+//            return Status.IN_PROGRESS;
+//        } else {
+//            whiteBishops = (wPieces[ BISHOPS ] != 0);
+//            blackBishops = (bPieces[ BISHOPS ] != 0);
+//
+//            whiteKnights = (wPieces[ KNIGHTS ] != 0);
+//            blackKnights = (bPieces[ KNIGHTS ] != 0);
+//
+//            if (whitePawns || blackPawns) {
+//                // at least one side has at least a minor pawn
+//                if (whiteBishops || blackBishops ||
+//                    whiteKnights || blackKnights) {
+//                    return Status.IN_PROGRESS;
+//                } else {
+//                    if (whitePawns) {
+//                        int nWhitePawns =
+//                                Long.bitCount(wPieces[ PAWNS ]);
+//                        return (nWhitePawns == 1)
+//                               ? Status.DRAW : Status.IN_PROGRESS;
+//                    } else {
+//                        int nBlackPawns =
+//                                Long.bitCount(bPieces[ PAWNS ]);
+//                        return (nBlackPawns == 1)
+//                               ? Status.DRAW : Status.IN_PROGRESS;
+//                    }
+//                }
+//            }
+//        }
+//        // only knights and bishops present, no pawns, queens, or rooks
+//
+//        if (whiteBishops && blackBishops) {
+//            if (whiteKnights || blackKnights){
+//                return Status.IN_PROGRESS;
+//            }
+//
+//            // both sides have a king and a bishop,
+//            //   the bishops being the same color
+//            int nWhiteBishops = Long.bitCount(wPieces[ BISHOPS ]);
+//            if (nWhiteBishops > 1) return Status.IN_PROGRESS;
+//
+//            int nBlackBishops = Long.bitCount(wPieces[ BISHOPS ]);
+//            if (nBlackBishops > 1) return Status.IN_PROGRESS;
+//
+//            return (BitBoard.isDark(wPieces[ BISHOPS ]) ==
+//                    BitBoard.isDark(bPieces[ BISHOPS ]))
+//                   ? Status.DRAW : Status.IN_PROGRESS;
+//        }
+//        else if (whiteBishops || blackBishops)
+//        {
+//            // one player has a bishop
+//            return (whiteKnights || blackKnights)
+//                   ? Status.IN_PROGRESS
+//                   : Status.DRAW;
+//        }
+//        // no bishops
+//
+//        if (whiteKnights && blackKnights) return Status.IN_PROGRESS;
+//        if (whiteKnights) {
+//            int nWhiteKnights =
+//                    Long.bitCount(wPieces[ KNIGHTS ]);
+//
+//            //one side has two or more knights against the bare king
+//            return (nWhiteKnights <= 2)
+//                    ? Status.DRAW : Status.IN_PROGRESS;
+//        } else if (blackKnights) {
+//            int nBlackKnights =
+//                    Long.bitCount(bPieces[ KNIGHTS ]);
+//            return (nBlackKnights <= 2)
+//                    ? Status.DRAW : Status.IN_PROGRESS;
+//        }
+//        return Status.DRAW;
     }
 
 
