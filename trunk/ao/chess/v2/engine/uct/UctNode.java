@@ -2,6 +2,7 @@ package ao.chess.v2.engine.uct;
 
 import ao.chess.v1.util.Io;
 import ao.chess.v2.data.MovePicker;
+import ao.chess.v2.engine.Pool;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -10,8 +11,8 @@ import ao.chess.v2.state.Status;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * User: aostrovsky
@@ -20,13 +21,6 @@ import java.util.concurrent.Executors;
  */
 public class UctNode
 {
-    //--------------------------------------------------------------------
-    private static final int             CORES = Math.max(
-            Runtime.getRuntime().availableProcessors() - 1, 1);
-    private static final ExecutorService EXEC  =
-            Executors.newFixedThreadPool(CORES);
-
-
     //--------------------------------------------------------------------
     private final boolean optimize;
 
@@ -54,9 +48,9 @@ public class UctNode
         visits    = 0;
         rewardSum = 0;
 
-        if (optimize) {
-            addTo(transposition);
-        }
+//        if (optimize) {
+//            addTo(transposition);
+//        }
     }
 
 
@@ -92,22 +86,22 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    public void addTo(Map<State, UctNode> transposition)
-    {
-        if (! optimize) return;
-//        transposition.put(state, this);
-    }
-
-    public void addLineageTo(Map<State, UctNode> transposition)
-    {
-        addTo( transposition );
-
-        if (kids == null) return;
-        for (UctNode kid : kids)
-        {
-            kid.addLineageTo( transposition );
-        }
-    }
+//    public void addTo(Map<State, UctNode> transposition)
+//    {
+//        if (! optimize) return;
+////        transposition.put(state, this);
+//    }
+//
+//    public void addLineageTo(Map<State, UctNode> transposition)
+//    {
+//        addTo( transposition );
+//
+//        if (kids == null) return;
+//        for (UctNode kid : kids)
+//        {
+//            kid.addLineageTo( transposition );
+//        }
+//    }
 
 
     //--------------------------------------------------------------------
@@ -134,18 +128,29 @@ public class UctNode
 
         UctNode optimal       = this;
         int     optimalAct    = -1;
+        int     optimalCount  = 0;
         double  optimalReward = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < kids.length; i++)
         {
             UctNode nextChild = kids[ i ];
+            int     nextCount = nextChild.visits();
             int     act       = acts[ i ];
             double  reward    = nextChild.averageReward();
 
-            if (reward > optimalReward)
-            {
-                optimal       = nextChild;
-                optimalAct    = act;
-                optimalReward = reward;
+            if (optimize) {
+                if (nextCount > optimalCount) {
+                    optimal       = nextChild;
+                    optimalAct    = act;
+                    optimalReward = reward;
+                    optimalCount  = nextCount;
+                }
+            } else {
+                if (reward > optimalReward) {
+                    optimal       = nextChild;
+                    optimalAct    = act;
+                    optimalReward = reward;
+                    optimalCount  = nextCount;
+                }
             }
         }
 
@@ -153,7 +158,7 @@ public class UctNode
 //                    " with " + optimal.visits() +
 //                    " at " + (optimize ? "?" : optimal.depth()));
         Io.display("best move is " + optimal.averageReward() +
-                    " with " + optimal.visits() +
+                    " with " + optimalCount +
                     " at " + optimal.depth());
         return new Action(optimalAct, optimal);
     }
@@ -163,7 +168,7 @@ public class UctNode
     private double averageReward()
     {
         return visits == 0
-               ? 0
+               ? Double.NaN
                : rewardSum / visits;
     }
 
@@ -177,7 +182,7 @@ public class UctNode
     public void strategize(Map<State, UctNode> transposition)
     {
         List<Action> path = new ArrayList<Action>();
-        path.add(new Action(0, this));
+        path.add(new Action(-1, this));
 
         while (! path.get( path.size() - 1 ).node().unvisited())
         {
@@ -203,10 +208,10 @@ public class UctNode
     private void propagateValue(
             List<Action> path, UctNode leafNode)
     {
-        Outcome outcome = leafNode.monteCarloValue();
-        double  reward  = outcome.valueFor(state.nextToAct());
+//        Outcome outcome = leafNode.monteCarloValue();
+//        double  reward  = outcome.valueFor(state.nextToAct());
 //
-        double maxiMax = Double.NaN;
+//        double maxiMax = Double.NaN;
 //        if (optimize) {
 //            if (leafNode.state.nextToAct() == state.nextToAct()) {
 //                maxiMax = reward;
@@ -217,8 +222,18 @@ public class UctNode
 //                maxiMax = 1.0 - reward; // was sometimes suicidal
 //            }
 //        } else {
-            maxiMax = 1.0 - reward; // works well when maxiMax reverses
+//            maxiMax = 1.0 - reward; // works well when maxiMax reverses
 //            maxiMax = reward;
+//        }
+
+
+//        double optReward  = outcome.valueFor(
+//                leafNode.state.nextToAct());
+        double optReward  = 1.0 - leafNode.monteCarloValue();
+//        double optMaxiMax = 1.0 - optReward;
+
+//        if (optimize) {
+//            optReward = 1.0 - optReward;
 //        }
 
         for (int i = path.size() - 1; i >= 0; i--)
@@ -226,16 +241,17 @@ public class UctNode
             Action step = path.get(i);
 
 //            if (optimize) {
-                step.NODE.rewardSum +=
-                        outcome.valueFor(
-                                state.nextToAct());
+//                step.NODE.rewardSum +=
+//                        outcome.valueFor(
+//                                step.NODE.state.nextToAct());
+                step.NODE.rewardSum += optReward;
+                optReward            = 1.0 - optReward;
 //            } else {
 //                step.NODE.rewardSum += maxiMax;
+//                maxiMax              = 1.0 - maxiMax;
 //            }
 
             step.NODE.visits++;
-
-            maxiMax = 1.0 - maxiMax;
         }
     }
 
@@ -269,11 +285,14 @@ public class UctNode
 //                                  kid.visits) +
 //                        2;
 //                } else {
-                    utcValue =
-                        kid.averageReward() +
-                        Math.sqrt(Math.log(visits) /
-                                  (5 * kid.visits));
+//                    utcValue =
+//                        kid.averageReward() +
+//                        Math.sqrt(Math.log(visits) /
+//                                  (5 * kid.visits));
 //                }
+                utcValue =
+                        kid.averageReward() +
+                        Math.sqrt((2 * Math.log(visits)) / (kid.visits));
             }
 
             if (utcValue > greatestUtc)
@@ -292,34 +311,34 @@ public class UctNode
 
 
     //--------------------------------------------------------------------
-    private Outcome monteCarloValue()
+    private double monteCarloValue()
     {
 //        if (optimize) {
-//            List<Callable<Double>> tasks =
-//                    new ArrayList<Callable<Double>>(CORES);
-//            for (int i = 0; i < CORES; i++) {
-//                tasks.add(new Callable<Double>() {
-//                    public Double call() throws Exception {
-//                        return computeMonteCarloValue();
-//                    }
-//                });
-//            }
-//
-//            try {
-//                double sum = 0;
-//                for (Future<Double> value : EXEC.invokeAll(tasks)) {
-//                    sum += value.get();
-//                }
-//                return sum / CORES;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                return Double.NaN;
-//            }
+            List<Callable<Double>> tasks =
+                    new ArrayList<Callable<Double>>(Pool.CORES);
+            for (int i = 0; i < Pool.CORES; i++) {
+                tasks.add(new Callable<Double>() {
+                    public Double call() throws Exception {
+                        return computeMonteCarloValue();
+                    }
+                });
+            }
+
+            try {
+                double sum = 0;
+                for (Future<Double> value : Pool.EXEC.invokeAll(tasks)) {
+                    sum += value.get();
+                }
+                return sum / Pool.CORES;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Double.NaN;
+            }
 //        } else {
-            return computeMonteCarloValue();
+//            return computeMonteCarloValue();
 //        }
     }
-    private Outcome computeMonteCarloValue()
+    private double computeMonteCarloValue()
     {
         State   simState  = state.prototype();
         Status  status    = null;
@@ -369,10 +388,10 @@ public class UctNode
             outcome = status.toOutcome();
         }
 
-//        return outcome == null
-//               ? Double.NaN
-//               : outcome.valueFor(state.nextToAct());
-        return outcome;
+        return outcome == null
+               ? Double.NaN
+               : outcome.valueFor(simState.nextToAct());
+//        return outcome;
     }
 
 

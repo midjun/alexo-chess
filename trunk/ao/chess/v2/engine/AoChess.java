@@ -37,7 +37,7 @@ public class AoChess {
     // analyze - Mediocre does not support analyze mode in winboard yet
     // done - We are now done with starting up and can begin
     private static final String WINBOARD_INIT =
-            "feature myname=\"alexo2\" usermove=1 " +
+            "feature sigint=0 myname=\"alexo2\" usermove=1 " +
             "setboard=1 colors=0 analyze=0 done=1";
 
     private static final String WINBOARD_NEW      = "new";
@@ -53,6 +53,8 @@ public class AoChess {
     {
         try
         {
+            Io.display( "FUCK YOUUUU!!!!" );
+
             Io.display( Arrays.toString(args) );
             Player bot = new RandomPlayer();
             String botName = (args.length > 0 ? args[0] : "");
@@ -65,7 +67,9 @@ public class AoChess {
                 Io.display("Optimized UCT");
                 bot = new UctPlayer(true);
             } else if (botName.equals("sim")) {
-                bot = new SimPlayer();
+                bot = new SimPlayer(false);
+            } else if (botName.equals("sim_o")) {
+                bot = new SimPlayer(true);
             }
 
 //            if (botName.matches("\\d+"))
@@ -101,6 +105,7 @@ public class AoChess {
 //        board.makeMove( mv );
 //        new UctBot(1024).act( board );
 //        System.out.println("took " + (System.currentTimeMillis() - time));
+
 
         String command = Io.read();
         assert command.equals(WINBOARD_TAG)
@@ -202,7 +207,11 @@ public class AoChess {
 
 				if (! force)
 				{
-                    playMove(state, bot, timeLeft, moveTime, increment);
+                    if (! playMove(state,
+                            bot, timeLeft, moveTime, increment)) {
+                        Io.display("game is done, I lose =(");
+                        return true;
+                    }
                     gameIsDone(state);
 				}
 			}
@@ -211,7 +220,7 @@ public class AoChess {
 
 
     //--------------------------------------------------------------------
-    private static void playMove(
+    private static boolean playMove(
             State state, Player bot,
             int timeLeft, int moveTime, int timeIncrement)
     {
@@ -222,9 +231,11 @@ public class AoChess {
             Io.write("move " + Move.toInputNotation(move));
             Io.display("playing " + Move.toInputNotation(move) +
                         " :: " + Move.toString(move));
+            return true;
         }
         else {
             Io.display("could not move in:\n" + state);
+            return false;
         }
     }
 

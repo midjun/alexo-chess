@@ -2,6 +2,7 @@ package ao.chess.v2.engine.uct;
 
 import ao.chess.v1.util.Io;
 import ao.chess.v2.engine.Player;
+import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 
 import java.util.HashMap;
@@ -44,7 +45,7 @@ public class UctPlayer implements Player
         if (root == null) {
             root = new UctNode(OPTIMIZE, position, transposition);
         } else {
-            root.addLineageTo( transposition );
+//            root.addLineageTo( transposition );
         }
 
 //        Io.display("Recycling " + root.visits() +
@@ -58,11 +59,12 @@ public class UctPlayer implements Player
         while ((System.currentTimeMillis() - before) < timePerMove) {
             root.strategize(transposition);
 
-            if (count++ % 25000 == 0) {
+            if (count++ != 0 && count % 25000 == 0) {
                 System.out.println(
                         "root size: " + root.visits() +
                         "@" + root.depth() +
-                        " in " + (System.currentTimeMillis() - prev));
+                        " in " + (System.currentTimeMillis() - prev) +
+                        " | " + Move.toString(root.optimize().act()));
                 prev = System.currentTimeMillis();
             }
         }

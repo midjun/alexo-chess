@@ -1,5 +1,7 @@
 package ao.chess.v2.data;
 
+import ao.chess.v2.state.State;
+
 /**
  * Date: Feb 6, 2009
  * Time: 2:23:36 AM
@@ -89,7 +91,10 @@ public class Location
     //--------------------------------------------------------------------
     public static String toString(int squareIndex)
     {
-        return "[" + (rankIndex(squareIndex) + 1) + ", " +
-                     (fileIndex(squareIndex) + 1) + "]";
+//        return "[" + (rankIndex(squareIndex) + 1) + ", " +
+//                     (fileIndex(squareIndex) + 1) + "]";
+        return String.valueOf(State.FILES.charAt(
+                 fileIndex(squareIndex))) +
+                (rankIndex(squareIndex) + 1);
     }
 }
