@@ -3,11 +3,17 @@ package ao.chess.v2.engine.simple;
 import ao.chess.v1.util.Io;
 import ao.chess.v2.data.MovePicker;
 import ao.chess.v2.engine.Player;
+import ao.chess.v2.engine.Pool;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * User: aostrovsky
@@ -17,9 +23,13 @@ import ao.chess.v2.state.Status;
 public class SimPlayer implements Player
 {
     //--------------------------------------------------------------------
-    public SimPlayer()
-    {
+    private final boolean OPTIMIZE;
 
+
+    //--------------------------------------------------------------------
+    public SimPlayer(boolean optimize)
+    {
+        OPTIMIZE = optimize;
     }
 
 
@@ -34,39 +44,83 @@ public class SimPlayer implements Player
         int   nMoves = position.legalMoves(moves);
         if (nMoves == 0) return -1;
 
-        int      count       = 0;
+        int      totalCount  = 0;
         long     start       = System.currentTimeMillis();
         State    state       = position.prototype();
+        int   [] count       = new int   [ nMoves ];
         double[] expectation = new double[ nMoves ];
         while ((System.currentTimeMillis() - start) < timePerMove) {
             for (int m = 0; m < nMoves; m++)
             {
                 int move = Move.apply(moves[m], state);
                 expectation[m] += simulate(
-                        state.prototype(), position.nextToAct());
+                        state, position.nextToAct());
                 Move.unApply(move, state);
+                count[ m ]++;
 
-                count++;
+                if (totalCount++ != 0 && totalCount % 25000 == 0) {
+                    optimize(nMoves, moves, count, expectation);
+                }
             }
         }
 
+        return optimize(nMoves, moves, count, expectation);
+    }
+
+    private int optimize(
+            int      nMoves,
+            int   [] moves,
+            int   [] count,
+            double[] expectation) {
         double maxEv      = -1;
-        int    maxEvIndex = 0;
+        int    maxEvIndex = -1;
         for (int m = 0; m < nMoves; m++) {
-            if (expectation[ m ] > maxEv) {
-                maxEv      = expectation[ m ];
+            double ev = expectation[ m ] / count[ m ];
+            if (ev > maxEv) {
+                maxEv      = ev;
                 maxEvIndex = m;
             }
         }
-
-        Io.display("Playing: " + (maxEv / count));
+        int bestMove = moves[ maxEvIndex ];
+        Io.display("Best so far is: " +
+                        maxEv + " | " +
+                        Move.toString(bestMove));
         return moves[ maxEvIndex ];
     }
 
 
     //--------------------------------------------------------------------
-    private double simulate(State state, Colour fromPov)
+    private double simulate(final State state, final Colour fromPov)
     {
+        if (OPTIMIZE) {
+            List<Callable<Double>> tasks =
+                    new ArrayList<Callable<Double>>(Pool.CORES);
+            for (int i = 0; i < Pool.CORES; i++) {
+                tasks.add(new Callable<Double>() {
+                    public Double call() throws Exception {
+                        return doSimulate(state, fromPov);
+                    }
+                });
+            }
+
+            try {
+                double sum = 0;
+                for (Future<Double> value : Pool.EXEC.invokeAll(tasks)) {
+                    sum += value.get();
+                }
+                return sum / Pool.CORES;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Double.NaN;
+            }
+        } else {
+            return doSimulate(state, fromPov);
+        }
+    }
+
+    private double doSimulate(State protoState, Colour fromPov)
+    {
+        State   state     = protoState.prototype();
         Status  status    = null;
         int     nextCount = 0;
         int[]   nextMoves = new int[ 128 ];

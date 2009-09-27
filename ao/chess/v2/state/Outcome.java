@@ -19,11 +19,20 @@ public enum Outcome
     public double valueFor(Colour nextToAct) {
         if (this == DRAW) {
             return 0.5;
-        } else if (this == WHITE_WINS &&
-                nextToAct == Colour.WHITE) {
-            return 1.0;
         } else {
-            return 0.0;
+            if (this == WHITE_WINS) {
+                if (nextToAct == Colour.WHITE) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } else /*if (this == BLACK_WINS)*/ {
+                if (nextToAct == Colour.BLACK) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
         }
     }
 
