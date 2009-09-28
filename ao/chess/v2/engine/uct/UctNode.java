@@ -319,7 +319,13 @@ public class UctNode
             for (int i = 0; i < Pool.CORES; i++) {
                 tasks.add(new Callable<Double>() {
                     public Double call() throws Exception {
-                        return computeMonteCarloValue();
+                        try {
+                            return computeMonteCarloValue();
+                        } catch (Throwable t) {
+                            System.out.println("ERROR COMPUTING MC");
+                            t.printStackTrace();
+                            return 0.0;
+                        }
                     }
                 });
             }
