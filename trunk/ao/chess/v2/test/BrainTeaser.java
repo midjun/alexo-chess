@@ -13,7 +13,7 @@ import ao.chess.v2.state.State;
 public class BrainTeaser {
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        int    time   = 60 * 60 * 1000;
+        int    time   = 24 * 60 * 60 * 1000;
 
         Player player = new UctPlayer(true);
 //        Player player = new UctPlayer(false);
@@ -21,8 +21,12 @@ public class BrainTeaser {
 //        Player player = new SimPlayer(false);
 
         State  state  = new State(
+                // my
+//                "r2kq2r/pb2ppbp/1p4p1/2ppP3/1n3P2/2NPQN2/PPP3PP/1KR2B1R w kq"
+//                "r1r2k2/4p1bp/1p3pp1/1p1pP3/1P1PbP2/1P3NP1/NK5P/2R2R2 w"
+
                 // easy
-                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
+//                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
 //                "7k/5K2/5P1p/3p4/6P1/3p4/8/8 w" // bm g5 (+100000 -2250000)
 //                "8/6B1/p5p1/Pp4kp/1P5r/5P1Q/4q1PK/8 w" // bm Qxh4 (1,825,000)
 
@@ -38,7 +42,6 @@ public class BrainTeaser {
 
 
 //                "3r2k1/p2r1p1p/1p2p1p1/q4n2/3P4/PQ5P/1P1RNPP1/3R2K1 b" // bm Nxd4
-//                "3r2k1/1p3ppp/2pq4/p1n5/P6P/1P6/1PB2QP1/1K2R3 w - -" // am Rd1
 
 //                "1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -" // bm Qd1+
 //                "3r1k2/4npp1/1ppr3p/p6P/P2PPPP1/1NR5/5K2/2R5 w - -" // bm d5

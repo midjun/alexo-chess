@@ -268,6 +268,12 @@ public class State
 
 
     //--------------------------------------------------------------------
+    public int[] legalMoves()
+    {
+        int[] legalMoves = new int[ Move.MAX_PER_PLY ];
+        int   nMoves     = legalMoves(legalMoves);
+        return Arrays.copyOf(legalMoves, nMoves);
+    }
     public int legalMoves(int[] moves)
     {
         int pseudoMoves[] = new int[ 128 ];
