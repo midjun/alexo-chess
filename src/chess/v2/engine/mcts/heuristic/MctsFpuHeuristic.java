@@ -9,22 +9,13 @@ import ao.chess.v2.state.State;
  * Date: 27-Sep-2009
  * Time: 11:54:01 PM
  */
-public class MctsHeuristicImpl
+public class MctsFpuHeuristic
     implements MctsHeuristic
 {
     //--------------------------------------------------------------------
-//    public static class Factory implements MctsHeuristic.Factory {
-//        @Override public MctsHeuristic newHeuristic() {
-//            return new MctsHeuristicImpl();
-//        }
-//    }
-
-
-    //--------------------------------------------------------------------
     @Override
     public double firstPlayUrgency() {
-        return 1000 + Math.random();
-//        return 1.0
+        return 1.0 + (1.0 - Math.random()) / 10000;
     }
 
 

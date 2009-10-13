@@ -43,6 +43,7 @@ public class MctsRolloutImpl
     @Override public double monteCarloPlayout(
             State fromState, MctsHeuristic heuristic)
     {
+//        return Math.random();
         double sum = 0;
         for (int i = 0; i < nSims; i++) {
             State curState =
@@ -52,7 +53,7 @@ public class MctsRolloutImpl
 
             sum += computeMonteCarloPlayout(curState, heuristic);
         }
-        return sum / nSims; 
+        return sum / nSims;
     }
 
     private double computeMonteCarloPlayout(

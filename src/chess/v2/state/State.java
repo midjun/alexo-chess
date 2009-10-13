@@ -3,6 +3,8 @@ package ao.chess.v2.state;
 import ao.chess.v2.data.BitBoard;
 import ao.chess.v2.data.BitLoc;
 import ao.chess.v2.data.Location;
+import ao.chess.v2.engine.mcts.TranspositionTable;
+import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.move.SlidingPieces;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
@@ -268,15 +270,20 @@ public class State
 
 
     //--------------------------------------------------------------------
-    public int[] legalMoves()
+    public int[] legalMoves(/*TranspositionTable transTable*/)
     {
         int[] legalMoves = new int[ Move.MAX_PER_PLY ];
-        int   nMoves     = legalMoves(legalMoves);
+        int   nMoves     = legalMoves(legalMoves/*, transTable*/);
 
         if (nMoves == -1) return null;
         return Arrays.copyOf(legalMoves, nMoves);
     }
-    public int legalMoves(int[] moves)
+//    public int legalMoves(int[] moves)
+//    {
+//        return legalMoves(moves, new NullTransTable());
+//    }
+    public int legalMoves(
+            int[] moves/*, TranspositionTable transTable*/)
     {
         int pseudoMoves[] = new int[ Move.MAX_PER_PLY ];
         int nPseudoMoves  = moves(pseudoMoves);
@@ -288,10 +295,9 @@ public class State
             int pseudoMove = pseudoMoves[ i ];
             int undoable   = Move.apply(pseudoMove, this);
 
-            if (! isInCheck(nextToAct.invert())
-                    ) {
-//                    && Math.random() > 0.5) {
-                moves[ nextMoveIndex++ ] = pseudoMove;
+            if (! isInCheck(nextToAct.invert())/* &&
+                    ! transTable.contains(longHashCode())*/) {
+                moves[ nextMoveIndex++ ] = undoable;
             }
 
             Move.unApply(undoable, this);
@@ -983,6 +989,23 @@ public class State
 
 
     //--------------------------------------------------------------------
+    // must be obtained before move is applied
+
+//    public long zobristMobility(
+//            long zobrist, Piece piece, int from, int to) {
+//        zobrist = Zobrist.togglePiece(
+//                zobrist, piece, from);
+//        zobrist = Zobrist.togglePiece(
+//                zobrist, piece, to);
+//
+////        Zobrist.
+//
+//        return zobrist;
+//    }
+
+
+
+    //--------------------------------------------------------------------
     public boolean isInCheck(Colour colour)
     {
         long occupied    = whiteBB | blackBB;
@@ -1400,5 +1423,68 @@ public class State
         result = 31 * result + (int) reversibleMoves;
         result = 31 * result + nextToAct.hashCode();
         return result;
+    }
+
+    public long longHashCode() {
+        long zobrist = 0;
+
+        if (nextToAct == Colour.WHITE) {
+            zobrist = Zobrist.toggleWhiteToAct(zobrist);
+        }
+
+        zobrist = addZobristPieces(zobrist, Colour.WHITE);
+        zobrist = addZobristPieces(zobrist, Colour.BLACK);
+
+        if (enPassants != EP_NONE) {
+            zobrist = Zobrist.toggleEnPassant(zobrist, enPassants);
+        }
+
+        zobrist = addZobristCastles(zobrist);
+
+        zobrist = Zobrist.toggleReversibleMoves(
+                zobrist, reversibleMoves);
+
+        return zobrist;
+    }
+    private long addZobristPieces(
+            long zobrist, Colour side) {
+        long[] pieces =
+                (side == Colour.WHITE)
+                ? wPieces : bPieces;
+
+        for (Figure f : Figure.VALUES) {
+            Piece piece = Piece.valueOf(side, f);
+
+            long bb = pieces[ f.ordinal() ];
+            while (bb != 0) {
+                long pieceBoard = BitBoard.lowestOneBit(bb);
+                int  location   = BitLoc.bitBoardToLocation(pieceBoard);
+
+                zobrist = Zobrist.togglePiece(zobrist, piece, location);
+
+                // reset LS1B
+                bb &= bb - 1;
+            }
+        }
+        return zobrist;
+    }
+    private long addZobristCastles(long zobrist) {
+        if ((castles & WHITE_K_CASTLE) != 0) {
+            zobrist = Zobrist.toggleCastle(
+                    zobrist, Colour.WHITE, CastleType.KING_SIDE);
+        }
+        if ((castles & WHITE_Q_CASTLE) != 0) {
+            zobrist = Zobrist.toggleCastle(
+                    zobrist, Colour.WHITE, CastleType.QUEEN_SIDE);
+        }
+        if ((castles & BLACK_K_CASTLE) != 0) {
+            zobrist = Zobrist.toggleCastle(
+                    zobrist, Colour.BLACK, CastleType.KING_SIDE);
+        }
+        if ((castles & BLACK_Q_CASTLE) != 0) {
+            zobrist = Zobrist.toggleCastle(
+                    zobrist, Colour.BLACK, CastleType.QUEEN_SIDE);
+        }
+        return zobrist;
     }
 }

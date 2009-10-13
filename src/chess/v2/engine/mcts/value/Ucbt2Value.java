@@ -8,13 +8,13 @@ import ao.chess.v2.engine.mcts.MctsValue;
  * Date: 30-Sep-2009
  * Time: 5:14:28 PM
  */
-public class Ucb1TunedValue implements MctsValue<Ucb1TunedValue>
+public class Ucbt2Value implements MctsValue<Ucbt2Value>
 {
     //--------------------------------------------------------------------
     public static class Factory
-            implements MctsValue.Factory<Ucb1TunedValue> {
-        @Override public Ucb1TunedValue newValue() {
-            return new Ucb1TunedValue();
+            implements MctsValue.Factory<Ucbt2Value> {
+        @Override public Ucbt2Value newValue() {
+            return new Ucbt2Value();
         }
     }
 
@@ -26,7 +26,7 @@ public class Ucb1TunedValue implements MctsValue<Ucb1TunedValue>
 
 
     //--------------------------------------------------------------------
-    public Ucb1TunedValue()
+    public Ucbt2Value()
     {
         sum        = 0;
         sumSquares = 0;
@@ -46,8 +46,8 @@ public class Ucb1TunedValue implements MctsValue<Ucb1TunedValue>
 
     //--------------------------------------------------------------------
     @Override public double confidenceBound(
-            Ucb1TunedValue transpositionValue,
-            Ucb1TunedValue withRespectToParent)
+            Ucbt2Value transpositionValue,
+            Ucbt2Value withRespectToParent)
     {
         int    trials = withRespectToParent.visits;
         double mean   = mean();
@@ -81,17 +81,17 @@ public class Ucb1TunedValue implements MctsValue<Ucb1TunedValue>
 
     //--------------------------------------------------------------------
     public static class VisitSelector
-            implements MctsSelector<Ucb1TunedValue> {
+            implements MctsSelector<Ucbt2Value> {
         @Override public int compare(
-                Ucb1TunedValue a, Ucb1TunedValue b) {
+                Ucbt2Value a, Ucbt2Value b) {
             return a.visits - b.visits;
         }
     }
 
     public static class MeanSelector
-            implements MctsSelector<Ucb1TunedValue> {
+            implements MctsSelector<Ucbt2Value> {
         @Override public int compare(
-                Ucb1TunedValue a, Ucb1TunedValue b) {
+                Ucbt2Value a, Ucbt2Value b) {
             return Double.compare(a.mean(), b.mean());
         }
     }

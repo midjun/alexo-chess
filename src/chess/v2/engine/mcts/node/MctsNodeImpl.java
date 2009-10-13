@@ -4,6 +4,9 @@ import ao.chess.v2.engine.mcts.*;
 import ao.chess.v2.engine.mcts.message.MctsAction;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
+import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,25 +24,27 @@ public class MctsNodeImpl<V extends MctsValue<V>>
             implements MctsNode.Factory<V> {
         @Override
         public MctsNodeImpl<V> newNode(
-                        MctsValue.Factory<V> valueFactory)
+                State                state,
+                MctsValue.Factory<V> valueFactory)
         {
-            return new MctsNodeImpl<V>(valueFactory);
+            return new MctsNodeImpl<V>(state, valueFactory);
         }
-
     }
 
 
     //--------------------------------------------------------------------
     private V                 value;
+    private long              stateHash;
     private int[]             acts;
     private MctsNodeImpl<V>[] kids;
 
 
     //--------------------------------------------------------------------
-    public MctsNodeImpl(MctsValue.Factory<V> valueFactory) {
-        value = valueFactory.newValue();
-        acts  = null;
-        kids  = null;
+    public MctsNodeImpl(State state, MctsValue.Factory<V> valueFactory) {
+        value     = valueFactory.newValue();
+        stateHash = state.longHashCode();
+        acts      = null;
+        kids      = null;
     }
 
 
@@ -52,42 +57,47 @@ public class MctsNodeImpl<V extends MctsValue<V>>
     //--------------------------------------------------------------------
     @Override
     public void runTrajectory(
-            State                fromProtoState,
-            MctsValue.Factory<V> values,
-            MctsRollout          mcRollout,
-            MctsHeuristic        heuristic)
+            State                 fromProtoState,
+            MctsValue.Factory<V>  values,
+            MctsRollout           mcRollout,
+            TranspositionTable<V> transpositionTable,
+            MctsHeuristic         heuristic)
     {
         State cursor = fromProtoState.prototype();
 
-        List<MctsNodeImpl> path = new ArrayList<MctsNodeImpl>();
+        List<MctsNodeImpl<V>> path =
+                new ArrayList<MctsNodeImpl<V>>();
         path.add(this);
 
         while (! path.get( path.size() - 1 ).isUnvisited())
         {
-            MctsNodeImpl node = path.get( path.size() - 1 );
+            MctsNodeImpl<V> node = path.get( path.size() - 1 );
 
-            MctsNodeImpl selectedChild =
-                    node.descendByBandit(cursor, heuristic, values);
+            MctsNodeImpl<V> selectedChild =
+                    node.descendByBandit(cursor, heuristic, values,
+                            transpositionTable);
             if (selectedChild == null) break;
 
             path.add( selectedChild );
         }
 
-        MctsNodeImpl leaf = path.get( path.size() - 1 );
+        MctsNodeImpl<V> leaf = path.get( path.size() - 1 );
         if (leaf.kids == null) {
-            leaf.initiateKids(cursor);
+            leaf.initiateKids(cursor/*, transpositionTable*/);
         }
 
-        backupMcValue(
-                path, mcRollout.monteCarloPlayout(cursor, heuristic));
+        backupMcValue(path,
+                mcRollout.monteCarloPlayout(cursor, heuristic),
+                transpositionTable);
     }
 
 
     //--------------------------------------------------------------------
-    private MctsNodeImpl descendByBandit(
-            State                cursor,
-            MctsHeuristic        heuristic,
-            MctsValue.Factory<V> values)
+    private MctsNodeImpl<V> descendByBandit(
+            State                 cursor,
+            MctsHeuristic         heuristic,
+            MctsValue.Factory<V>  values,
+            TranspositionTable<V> transTable)
     {
         if (kids.length == 0) return null;
 
@@ -98,10 +108,21 @@ public class MctsNodeImpl<V extends MctsValue<V>>
 
             double banditValue;
             if (kid == null || kid.isUnvisited()) {
-                banditValue = heuristic.firstPlayEargency();
+                banditValue = heuristic.firstPlayUrgency();
             } else {
-                banditValue = kid.value.confidenceBound(value);
+                banditValue = kid.value.confidenceBound(
+                        transTable.get(kid.stateHash),
+                        value);
             }
+
+//            double banditValue;
+//            if (kid == null) {
+//                banditValue = heuristic.firstPlayUrgency();
+//            } else {
+//                V kidValue  = transTable.get( kid.stateHash );
+//                banditValue = kid.value.confidenceBound(
+//                        kidValue, value);
+//            }
 
             if (banditValue > greatestValue) {
                 greatestValue      = banditValue;
@@ -110,16 +131,19 @@ public class MctsNodeImpl<V extends MctsValue<V>>
         }
         if (greatestValueIndex == -1) return null;
 
-        if (kids[ greatestValueIndex ] == null) {
-            kids[ greatestValueIndex ] = new MctsNodeImpl<V>(values);
-        }
         Move.apply(acts[greatestValueIndex], cursor);
+        if (kids[ greatestValueIndex ] == null) {
+            kids[ greatestValueIndex ] =
+                    new MctsNodeImpl<V>(cursor, values);
+        }
         return kids[ greatestValueIndex ];
     }
 
     @SuppressWarnings("unchecked")
-    private void initiateKids(State fromState) {
-        acts = fromState.legalMoves();
+    private void initiateKids(
+            State                 fromState/*,
+            TranspositionTable<V> transTable*/) {
+        acts = fromState.legalMoves(/*transTable*/);
         kids = (acts == null)
                ? null : new MctsNodeImpl[ acts.length ];
     }
@@ -127,14 +151,18 @@ public class MctsNodeImpl<V extends MctsValue<V>>
 
     //--------------------------------------------------------------------
     private void backupMcValue(
-            List<MctsNodeImpl> path,
-            double             leafPlayout)
+            List<MctsNodeImpl<V>> path,
+            double                leafPlayout,
+            TranspositionTable<V> transpositionTable)
     {
         double reward = 1.0 - leafPlayout;
 
         for (int i = path.size() - 1; i >= 0; i--)
         {
             path.get(i).value.update(reward);
+            transpositionTable.update(
+                    path.get(i).stateHash, reward);
+
             reward = 1.0 - reward;
         }
     }
@@ -178,8 +206,30 @@ public class MctsNodeImpl<V extends MctsValue<V>>
 
     //--------------------------------------------------------------------
     @Override
+    public void addStates(LongCollection to) {
+//        to.add(stateHash);
+//
+//        if (kids == null) return;
+//        for (MctsNodeImpl kid : kids) {
+//            if (kid == null) continue;
+//            kid.addStates(to);
+//        }
+    }
+
+
+    //--------------------------------------------------------------------
+    @Override
     public String toString() {
-        return depth() + " | " + value.toString();
+        return //size()       + " | " +
+               uniqueSize() + " | " +
+               depth()      + " | " +
+               value.toString();
+    }
+
+    private int uniqueSize() {
+        LongSet states = new LongOpenHashSet();
+        addStates(states);
+        return states.size();
     }
 
     private int depth() {
@@ -191,5 +241,16 @@ public class MctsNodeImpl<V extends MctsValue<V>>
             depth = Math.max(depth, kid.depth());
         }
         return depth + 1;
+    }
+
+    private int size() {
+        if (kids == null) return 1;
+
+        int size = 1;
+        for (MctsNodeImpl kid : kids) {
+            if (kid == null) continue;
+            size += kid.size();
+        }
+        return size;
     }
 }

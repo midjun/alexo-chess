@@ -13,6 +13,12 @@ public class Location
 
 
     //--------------------------------------------------------------------
+    public static final int COUNT = 64;
+    public static final int RANKS = 8;
+    public static final int FILES = 8;
+
+
+    //--------------------------------------------------------------------
     /**
      * @param rankIndex rank of square {0..7}
      * @param fileIndex file of square {0..7}
