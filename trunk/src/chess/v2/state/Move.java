@@ -61,7 +61,7 @@ public class Move
      * Layout of move int is:
      *  [
      *    type {mobility, capture, en passant, castle}
-     *      if mobility of capture lead to promotion, then
+     *      if mobility or capture lead to promotion, then
      *          the promoted to figure will be > 0
      *      lg 4  = 2 |
      *
@@ -88,6 +88,10 @@ public class Move
      *
      *    extra
      *      8 bits
+     *          (prev en passants) lg 9 = 4
+     *          (prev castles) 4
+     *          (prev castle (path)) lg 3 = 2
+     *          (prev reversible moves) 7
      *  ]
      */
 

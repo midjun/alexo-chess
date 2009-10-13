@@ -42,6 +42,7 @@ public class UcbTuned2Value implements MctsValue<UcbTuned2Value>
 
     //--------------------------------------------------------------------
     @Override public double confidenceBound(
+            UcbTuned2Value transpositionValue,
             UcbTuned2Value withRespectToParent)
     {
         double mean   = sum / visits;

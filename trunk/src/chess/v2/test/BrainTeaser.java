@@ -1,12 +1,8 @@
 package ao.chess.v2.test;
 
 import ao.chess.v2.engine.Player;
-import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
-import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
-import ao.chess.v2.engine.mcts.player.MctsPlayer;
-import ao.chess.v2.engine.mcts.rollout.MctsDeepRolloutImpl;
-import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
-import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
+import ao.chess.v2.engine.simple.SimPlayer;
+import ao.chess.v2.engine.trans.TransPlayer;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 
@@ -27,29 +23,44 @@ public class BrainTeaser {
 //        Player player = new UctPlayer(true);
 //        Player player = new UctPlayer(false);
 //        Player player = new SimPlayer(true);
-//        Player player = new SimPlayer(false);
+        Player player = new SimPlayer(false);
 //        Player player = new MctsPlayer(
 //                new MctsNodeImpl.Factory<Ucb1Value>(),
 //                new Ucb1Value.Factory(),
 //                new MctsRolloutImpl(),
 //                new Ucb1Value.VisitSelector(),
 //                new MctsHeuristicImpl(),
+//                new NativeTransTable<Ucb1Value>(
+//                        new Ucb1Value.Factory()),
 //                new MctsSchedulerImpl.Factory()
 //        );
-        Player player = new MctsPlayer(
-                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
-                new Ucb1TunedValue.Factory(),
-                new MctsDeepRolloutImpl(128),
-                new Ucb1TunedValue.VisitSelector(),
-                new MctsHeuristicImpl(),
-                new MctsSchedulerImpl.Factory()
-        );
+//        Player player = new MctsPlayer(
+//                new MctsNodeImpl.Factory<Ucb1Value2>(),
+//                new Ucb1Value2.Factory(),
+//                new MctsRolloutImpl(),
+//                new Ucb1Value2.VisitSelector(),
+//                new MctsHeuristicImpl(),
+//                new NativeTransTable<Ucb1Value2>(
+//                        new Ucb1Value2.Factory()),
+//                new MctsSchedulerImpl.Factory()
+//        );
+//        Player player = new MctsPlayer(
+//                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+//                new Ucb1TunedValue.Factory(),
+//                new MctsDeepRolloutImpl(128),
+//                new Ucb1TunedValue.VisitSelector(),
+//                new MctsHeuristicImpl(),
+//                new MctsSchedulerImpl.Factory()
+//        );
 //        Player player = new MctsPlayer(
 //                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
 //                new Ucb1TunedValue.Factory(),
 //                new MctsRolloutImpl(),
 //                new Ucb1TunedValue.VisitSelector(),
 //                new MctsHeuristicImpl(),
+////                new NativeTransTable<Ucb1TunedValue>(
+////                        new Ucb1TunedValue.Factory()),
+//                new NullTransTable<Ucb1TunedValue>(),
 //                new MctsSchedulerImpl.Factory()
 //        );
 //        Player player = new MctsPlayer(
@@ -68,6 +79,7 @@ public class BrainTeaser {
 //                new MctsHeuristicImpl(),
 //                new MctsSchedulerImpl.Factory()
 //        );
+//        Player player = new TransPlayer();
 
         State  state  = new State(
                 // my
@@ -84,7 +96,7 @@ public class BrainTeaser {
 
                 // mate in three (7)
 //                "K7/8/2k1P3/8/3Q4/8/8/8 w"
-                "4rQK1/6P1/8/8/8/8/5R2/6k1 w"
+//                "4rQK1/6P1/8/8/8/8/5R2/6k1 w"
 
                 // mate in four (7)
 //                "kq4n1/4p2Q/1P2P4/1K6/8/8/p7/8 w"
@@ -98,7 +110,7 @@ public class BrainTeaser {
 
 
                 // easy
-//                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
+                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
 //                "7k/5K2/5P1p/3p4/6P1/3p4/8/8 w" // bm g5 (+100000 -2250000)
 //                "8/6B1/p5p1/Pp4kp/1P5r/5P1Q/4q1PK/8 w" // bm Qxh4 (1,825,000)
 

@@ -8,13 +8,13 @@ import ao.chess.v2.engine.mcts.MctsValue;
  * Date: 27-Sep-2009
  * Time: 10:54:23 PM
  */
-public class Ucb1Value implements MctsValue<Ucb1Value>
+public class Ucb1Value2 implements MctsValue<Ucb1Value2>
 {
     //--------------------------------------------------------------------
     public static class Factory
-            implements MctsValue.Factory<Ucb1Value> {
-        @Override public Ucb1Value newValue() {
-            return new Ucb1Value();
+            implements MctsValue.Factory<Ucb1Value2> {
+        @Override public Ucb1Value2 newValue() {
+            return new Ucb1Value2();
         }
     }
 
@@ -25,7 +25,7 @@ public class Ucb1Value implements MctsValue<Ucb1Value>
 
 
     //--------------------------------------------------------------------
-    public Ucb1Value()
+    public Ucb1Value2()
     {
         visits = 0;
         sum    = 0;
@@ -49,13 +49,12 @@ public class Ucb1Value implements MctsValue<Ucb1Value>
     //--------------------------------------------------------------------
     @Override
     public double confidenceBound(
-            Ucb1Value transpositionValue,
-            Ucb1Value withRespectToParent) {
-        return averageReward() +
-               (visits == 0
-               ? 1000 + Math.random()
-               : Math.sqrt((2 * Math.log(
-                       withRespectToParent.visits)) /visits));
+            Ucb1Value2 transpositionValue,
+            Ucb1Value2 withRespectToParent) {
+        return transpositionValue.averageReward() +
+               (visits == 0 ? 0 :
+                  Math.sqrt((2 * Math.log(
+                          withRespectToParent.visits)) / visits));
     }
 
 
@@ -67,15 +66,15 @@ public class Ucb1Value implements MctsValue<Ucb1Value>
 
     //--------------------------------------------------------------------
     public static class VisitSelector
-            implements MctsSelector<Ucb1Value> {
-        @Override public int compare(Ucb1Value a, Ucb1Value b) {
+            implements MctsSelector<Ucb1Value2> {
+        @Override public int compare(Ucb1Value2 a, Ucb1Value2 b) {
             return a.visits - b.visits;
         }
     }
 
     public static class MeanSelector
-            implements MctsSelector<Ucb1Value> {
-        @Override public int compare(Ucb1Value a, Ucb1Value b) {
+            implements MctsSelector<Ucb1Value2> {
+        @Override public int compare(Ucb1Value2 a, Ucb1Value2 b) {
             return Double.compare(a.averageReward(), b.averageReward());
         }
     }

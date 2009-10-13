@@ -1,14 +1,18 @@
 package ao.chess.v2.engine;
 
 import ao.chess.v1.util.Io;
+import ao.chess.v2.engine.mcts.heuristic.MctsFpuHeuristic;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
 import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
+import ao.chess.v2.engine.mcts.transposition.NativeTransTable;
+import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
+import ao.chess.v2.engine.trans.TransPlayer;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
@@ -58,7 +62,7 @@ public class AoChess {
     {
         try
         {
-            Io.display( "FUCK YOUUUU!!!!" );
+            Io.display( "Hi Mabsy!!!!" );
 
             Io.display( Arrays.toString(args) );
             Player bot = new RandomPlayer();
@@ -73,10 +77,22 @@ public class AoChess {
                         new MctsRolloutImpl(),
                         new Ucb1TunedValue.VisitSelector(),
                         new MctsHeuristicImpl(),
+                        new NullTransTable<Ucb1TunedValue>(),
                         new MctsSchedulerImpl.Factory()
                 );
+//                bot = new MctsPlayer(
+//                        new MctsNodeImpl.Factory<Ucb1Value>(),
+//                        new Ucb1Value.Factory(),
+//                        new MctsRolloutImpl(),
+//                        new Ucb1Value.VisitSelector(),
+//                        new MctsHeuristicImpl(),
+//                        new NativeTransTable<Ucb1Value>(
+//                                new Ucb1Value.Factory()),
+//                        new MctsSchedulerImpl.Factory()
+//                );
             } else if (botName.equals("uct_o")) {
                 Io.display("Optimized UCT");
+                bot = new TransPlayer();
 //                bot = new UctPlayer(true);
 //                bot = new MctsPlayer(
 //                        new MctsNodeImpl.Factory<UcbTuned2Value>(),
@@ -86,14 +102,25 @@ public class AoChess {
 //                        new MctsHeuristicImpl(),
 //                        new MctsSchedulerImpl.Factory()
 //                );
-                bot = new MctsPlayer(
-                        new MctsNodeImpl.Factory<Ucb1TunedValue>(),
-                        new Ucb1TunedValue.Factory(),
-                        new MctsRolloutImpl(8),
-                        new Ucb1TunedValue.VisitSelector(),
-                        new MctsHeuristicImpl(),
-                        new MctsSchedulerImpl.Factory()
-                );
+//                bot = new MctsPlayer(
+//                        new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+//                        new Ucb1TunedValue.Factory(),
+//                        new MctsRolloutImpl(),
+//                        new Ucb1TunedValue.VisitSelector(),
+//                        new MctsFpuHeuristic(),
+//                        new NullTransTable<Ucb1TunedValue>(),
+//                        new MctsSchedulerImpl.Factory()
+//                );
+//                bot = new MctsPlayer(
+//                        new MctsNodeImpl.Factory<Ucb1Value2>(),
+//                        new Ucb1Value2.Factory(),
+//                        new MctsRolloutImpl(),
+//                        new Ucb1Value2.VisitSelector(),
+//                        new MctsHeuristicImpl(),
+//                        new NativeTransTable<Ucb1Value2>(
+//                                new Ucb1Value2.Factory()),
+//                        new MctsSchedulerImpl.Factory()
+//                );
             } else if (botName.equals("sim")) {
                 bot = new SimPlayer(false);
             } else if (botName.equals("sim_o")) {

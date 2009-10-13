@@ -10,7 +10,7 @@ import ao.chess.v2.state.State;
 public interface MctsHeuristic
 {
     //--------------------------------------------------------------------
-    public double firstPlayEargency();
+    public double firstPlayUrgency();
 
 
     //--------------------------------------------------------------------

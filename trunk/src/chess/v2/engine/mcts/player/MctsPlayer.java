@@ -6,6 +6,9 @@ import ao.chess.v2.engine.mcts.*;
 import ao.chess.v2.engine.mcts.message.MctsAction;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
+import it.unimi.dsi.fastutil.longs.LongLists;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 /**
  * User: alex
@@ -21,26 +24,29 @@ public class MctsPlayer implements Player
     private final MctsSelector          sellectors;
     private final MctsHeuristic         heuristics;
     private final MctsScheduler.Factory schedulers;
+    private final TranspositionTable    transTable;
 
-    private State    prevState = null;
-    private MctsNode prevPlay  = null;
+    private State              prevState = null;
+    private MctsNode           prevPlay  = null;
 
 
     //--------------------------------------------------------------------
     public <V extends MctsValue<V>>
             MctsPlayer(MctsNode.Factory<V>   nodeFactory,
                        MctsValue.Factory<V>  valueFactory,
-                       MctsRollout           rolloutInstance,
+                       MctsRollout           rollOutInstance,
                        MctsSelector<V>       selectorInstance,
                        MctsHeuristic         heuristicInstance,
+                       TranspositionTable<V> transpositionTable,
                        MctsScheduler.Factory schedulerFactory)
     {
-        nodes      = nodeFactory;
-        values     = valueFactory;
-        rollouts   = rolloutInstance;
-        sellectors = selectorInstance;
-        heuristics = heuristicInstance;
-        schedulers = schedulerFactory;
+        nodes       = nodeFactory;
+        values      = valueFactory;
+        rollouts    = rollOutInstance;
+        sellectors  = selectorInstance;
+        heuristics  = heuristicInstance;
+        transTable  = transpositionTable;
+        schedulers  = schedulerFactory;
     }
 
 
@@ -59,21 +65,35 @@ public class MctsPlayer implements Player
         }
 
         if (root == null) {
-            root = nodes.newNode(values);
+            root = nodes.newNode(position, values);
+            transTable.retain( LongLists.EMPTY_LIST );
         } else {
             Io.display("Recycling " + root);
+
+//            LongSet states = new LongOpenHashSet();
+//            root.addStates(states);
+//            Io.display("Unique states " + states.size());
+//            transTable.retain(states);
         }
 
         MctsScheduler scheduler = schedulers.newScheduler(
                 timeLeft, timePerMove, timeIncrement);
 
-        int count  = 0;
+        int  count  = 0;
+        long lastReport = System.currentTimeMillis();
         while (scheduler.shouldContinue()) {
-            root.runTrajectory(position, values, rollouts, heuristics);
+            root.runTrajectory(
+                    position, values, rollouts, transTable, heuristics);
 
-            if (count++ != 0 && count % 1 == 0) {
-                Io.display( root.bestMove(sellectors).information() );
-            }
+//            if (count++ != 0 && count % 10000 == 0) {
+//                long timer  = System.currentTimeMillis() - lastReport;
+//                long before = System.currentTimeMillis();
+//                Io.display( root );
+//                Io.display( root.bestMove(sellectors).information() );
+//                Io.display( "took " + timer + " | " +
+//                        (System.currentTimeMillis() - before) );
+//                lastReport = System.currentTimeMillis();
+//            }
         }
 
         MctsAction act = root.bestMove(sellectors);

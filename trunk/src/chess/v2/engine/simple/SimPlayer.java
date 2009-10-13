@@ -123,8 +123,8 @@ public class SimPlayer implements Player
         State   state     = protoState.prototype();
         Status  status    = null;
         int     nextCount = 0;
-        int[]   nextMoves = new int[ 128 ];
-        int[]   moves     = new int[ 128 ];
+        int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
+        int[]   moves     = new int[ Move.MAX_PER_PLY ];
         int     nMoves    = state.moves(moves);
         Outcome outcome   = null;
 
