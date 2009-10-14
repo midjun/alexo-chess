@@ -3,8 +3,6 @@ package ao.chess.v2.state;
 import ao.chess.v2.data.BitBoard;
 import ao.chess.v2.data.BitLoc;
 import ao.chess.v2.data.Location;
-import ao.chess.v2.engine.mcts.TranspositionTable;
-import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.move.SlidingPieces;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
@@ -146,7 +144,7 @@ public class State
     private long   whiteBB;
     private long   blackBB;
 
-    private byte   enPassants; // available to take for nextToAct
+    private byte enPassant; // available to take for nextToAct
     private byte   prevEnPassants;
 
     private byte   castles;
@@ -191,7 +189,7 @@ public class State
         castles         = copyCastles;
         nextToAct       = copyNextToAct;
         castlePath      = copyCastlePath;
-        enPassants      = copyEnPassants;
+        enPassant = copyEnPassants;
         reversibleMoves = copyReversibleMoves;
 
         whiteBB = copyWhiteBB;
@@ -210,7 +208,7 @@ public class State
         wPieces    = new long[ Figure.VALUES.length ];
         bPieces    = new long[ Figure.VALUES.length ];
         castles    = 0;
-        enPassants = EP_NONE;
+        enPassant = EP_NONE;
         whiteBB    = 0;
         blackBB    = 0;
 
@@ -250,7 +248,7 @@ public class State
         }
 
         if (parts.length >= 4 && (! parts[3].equals("-"))) {
-            enPassants = (byte) FILES.indexOf(parts[3].charAt(0));
+            enPassant = (byte) FILES.indexOf(parts[3].charAt(0));
         }
 
         if (parts.length >= 5 && (! parts[4].equals("-"))) {
@@ -496,8 +494,8 @@ public class State
         prevReversibleMoves = reversibleMoves;
 //        reversibleMoves     = 0;
         reversibleMoves++;
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
     }
 
     public void unCastle(CastleType type)
@@ -506,7 +504,7 @@ public class State
         toggleCastle(type);
 
         castles         = prevCastles;
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
         castlePath      = prevCastlePath;
     }
@@ -636,8 +634,8 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
         prevCastlePath      = castlePath;
         castlePath          = 0;
         prevCastles         = castles;
@@ -684,8 +682,8 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
     }
     private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
@@ -712,7 +710,7 @@ public class State
     public void unPushPromote(int from, int to, int promotion)
     {
         nextToAct       = nextToAct.invert();
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
         castles         = prevCastles;
         castlePath      = prevCastlePath;
@@ -726,7 +724,7 @@ public class State
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 
         long toBB = BitLoc.locationToBitBoard(to);
@@ -748,8 +746,8 @@ public class State
                    BitLoc.locationToBitBoard(fromSquareIndex),
                    BitLoc.locationToBitBoard(toSquareIndex));
 
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
         prevCastlePath      = castlePath;
         castlePath          = 0;
         prevReversibleMoves = reversibleMoves;
@@ -796,7 +794,7 @@ public class State
 
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -840,8 +838,8 @@ public class State
                 BitLoc.locationToBitBoard(fromSquareIndex), toBB);
 
         prevReversibleMoves = reversibleMoves;
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
         castlePath          = 0;
@@ -900,7 +898,7 @@ public class State
 
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -908,7 +906,7 @@ public class State
     //--------------------------------------------------------------------
     private boolean canEnPassant(int from)
     {
-        if (enPassants == EP_NONE) return false;
+        if (enPassant == EP_NONE) return false;
 
         int rank = Location.rankIndex(from);
         if (nextToAct == Colour.WHITE) {
@@ -917,8 +915,8 @@ public class State
         else if (rank != 3) return false;
 
         int file = Location.fileIndex(from);
-        return enPassants == (file - 1) ||
-               enPassants == (file + 1);
+        return enPassant == (file - 1) ||
+               enPassant == (file + 1);
     }
 
     private int addEnPassant(
@@ -926,10 +924,10 @@ public class State
     {
         if (nextToAct == Colour.BLACK) {
             moves[nextOffset] = Move.enPassant(from,
-                    Location.squareIndex(EP_BLACK_DEST, enPassants));
+                    Location.squareIndex(EP_BLACK_DEST, enPassant));
         } else {
             moves[nextOffset] = Move.enPassant(from,
-                    Location.squareIndex(EP_WHITE_DEST, enPassants));
+                    Location.squareIndex(EP_WHITE_DEST, enPassant));
         }
         return nextOffset + 1;
     }
@@ -940,8 +938,8 @@ public class State
         enPassantSwaps(from, to, captured);
 
         nextToAct           = nextToAct.invert();
-        prevEnPassants      = enPassants;
-        enPassants          = EP_NONE;
+        prevEnPassants      = enPassant;
+        enPassant = EP_NONE;
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
@@ -951,7 +949,7 @@ public class State
             int from, int to, int captured)
     {
         nextToAct       = nextToAct.invert();
-        enPassants      = prevEnPassants;
+        enPassant = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
         castlePath      = prevCastlePath;
 
@@ -983,7 +981,7 @@ public class State
     {
         if (Math.abs(Location.rankIndex(from) -
                      Location.rankIndex(to  )) > 1) {
-            enPassants = (byte) Location.fileIndex(from);
+            enPassant = (byte) Location.fileIndex(from);
         }
     }
 
@@ -1182,7 +1180,7 @@ public class State
     {
         return new State(wPieces.clone(),
                          bPieces.clone(),
-                         enPassants,
+                enPassant,
                          castles,
                          reversibleMoves,
                          nextToAct,
@@ -1197,85 +1195,106 @@ public class State
     }
 
 
-//    //--------------------------------------------------------------------
-//    public boolean checkPieces()
-//    {
-//        if (!(whiteBB == calcPieces(Colour.WHITE) &&
-//              blackBB == calcPieces(Colour.BLACK))) {
+    //--------------------------------------------------------------------
+    public boolean checkPieces()
+    {
+        if (!(whiteBB == calcPieces(Colour.WHITE) &&
+              blackBB == calcPieces(Colour.BLACK))) {
 //            System.out.println("checkPieces: colourBB failed");
-//            return false;
-//        }
-//
-//        if (Long.bitCount(wPieces[ KING ]) != 1 ||
-//            Long.bitCount(bPieces[ KING ]) != 1) {
+            return false;
+        }
+
+        if (Long.bitCount(wPieces[ KING ]) != 1 ||
+            Long.bitCount(bPieces[ KING ]) != 1) {
 //            System.out.println("checkPieces: not exactly one king");
-//            return false;
-//        }
-//
-//        if ((castles & WHITE_CASTLE) != 0) {
-//            if ((wPieces[ KING ] & WHITE_KING_START) == 0) {
+            return false;
+        }
+
+        if (enPassant != EP_NONE) {
+            if (nextToAct == Colour.WHITE) {
+                if (pieceAt(3, enPassant) == Piece.WHITE_PAWN &&
+                        pieceAt(2, enPassant) == null &&
+                        pieceAt(1, enPassant) == null) {
+                    return false;
+                }
+            } else {
+                if (pieceAt(4, enPassant) == Piece.WHITE_PAWN &&
+                        pieceAt(5, enPassant) == null &&
+                        pieceAt(6, enPassant) == null) {
+                    return false;
+                }
+            }
+        }
+        
+        if ((wPieces[PAWNS] & BitBoard.RANK_1) != 0 ||
+                (bPieces[PAWNS] & BitBoard.RANK_8) != 0) {
+            return false;
+        }
+
+        if ((castles & WHITE_CASTLE) != 0) {
+            if ((wPieces[ KING ] & WHITE_KING_START) == 0) {
 //                System.out.println("white can't castle after king moved");
-//                return false;
-//            }
-//            if ((castles & WHITE_K_CASTLE) != 0 &&
-//                    (wPieces[ ROOKS ] & WHITE_K_ROOK_START) == 0) {
+                return false;
+            }
+            if ((castles & WHITE_K_CASTLE) != 0 &&
+                    (wPieces[ ROOKS ] & WHITE_K_ROOK_START) == 0) {
 //                System.out.println("white k castle impossible");
-//                return false;
-//            }
-//            if ((castles & WHITE_Q_CASTLE) != 0 &&
-//                    (wPieces[ ROOKS ] & WHITE_Q_ROOK_START) == 0) {
+                return false;
+            }
+            if ((castles & WHITE_Q_CASTLE) != 0 &&
+                    (wPieces[ ROOKS ] & WHITE_Q_ROOK_START) == 0) {
 //                System.out.println("white q castle impossible");
-//                return false;
-//            }
-//        }
-//        if ((castles & BLACK_CASTLE) != 0) {
-//            if ((bPieces[ KING ] & BLACK_KING_START) == 0) {
+                return false;
+            }
+        }
+        if ((castles & BLACK_CASTLE) != 0) {
+            if ((bPieces[ KING ] & BLACK_KING_START) == 0) {
 //                System.out.println("black can't castle after king moved");
-//                return false;
-//            }
-//            if ((castles & BLACK_K_CASTLE) != 0 &&
-//                    (bPieces[ ROOKS ] & BLACK_K_ROOK_START) == 0) {
+                return false;
+            }
+            if ((castles & BLACK_K_CASTLE) != 0 &&
+                    (bPieces[ ROOKS ] & BLACK_K_ROOK_START) == 0) {
 //                System.out.println("black k castle impossible");
-//                return false;
-//            }
-//            if ((castles & BLACK_Q_CASTLE) != 0 &&
-//                    (bPieces[ ROOKS ] & BLACK_Q_ROOK_START) == 0) {
+                return false;
+            }
+            if ((castles & BLACK_Q_CASTLE) != 0 &&
+                    (bPieces[ ROOKS ] & BLACK_Q_ROOK_START) == 0) {
 //                System.out.println("black q castle impossible");
-//                return false;
-//            }
-//        }
-//
-//        return true;
-//    }
-//
-//    private long calcPieces(Colour c)
-//    {
-//        long[] pieces = (c == Colour.WHITE)
-//                        ? wPieces : bPieces;
-//
-//        long bb = 0;
-//        for (Figure f : Figure.VALUES)
-//        {
-//            bb |= pieces[ f.ordinal() ];
-//        }
-//        return bb;
-//    }
-//
-//    public boolean check(int move)
-//    {
-//        State myClone = prototype();
-//        move = Move.apply(move, myClone);
-//        boolean afterDo   = myClone.checkPieces();
-//        if (! afterDo) {
-//            System.out.println("before: " + toString());
-//            System.out.println("move: " + Move.toString(move));
-//            System.out.println("after: " + myClone.toString());
-//        }
-//
-//        Move.unApply(move, myClone);
-//        boolean afterUndo = myClone.checkPieces();
-//        return afterDo && afterUndo;
-//    }
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private long calcPieces(Colour c)
+    {
+        long[] pieces = (c == Colour.WHITE)
+                        ? wPieces : bPieces;
+
+        long bb = 0;
+        for (Figure f : Figure.VALUES)
+        {
+            bb |= pieces[ f.ordinal() ];
+        }
+        return bb;
+    }
+
+    public boolean check(int move)
+    {
+        State myClone = prototype();
+        move = Move.apply(move, myClone);
+        boolean afterDo   = myClone.checkPieces();
+        if (! afterDo) {
+            System.out.println("before: " + toString());
+            System.out.println("move: " + Move.toString(move));
+            System.out.println("after: " + myClone.toString());
+        }
+
+        Move.unApply(move, myClone);
+        boolean afterUndo = myClone.checkPieces();
+        return afterDo && afterUndo;
+    }
 
 
     //--------------------------------------------------------------------
@@ -1312,10 +1331,10 @@ public class State
             }
         }
 
-        if (enPassants != 0) {
+        if (enPassant != 0) {
             str.append("\nEn Passants: ");
-            if (enPassants != EP_NONE) {
-                str.append(enPassants);
+            if (enPassant != EP_NONE) {
+                str.append(enPassant);
             }
         }
 
@@ -1378,10 +1397,10 @@ public class State
         str.append(" ");
 
 		// En passant square
-        if (enPassants == EP_NONE) {
+        if (enPassant == EP_NONE) {
             str.append("-");
         } else {
-            str.append(FILES.charAt(enPassants));
+            str.append(FILES.charAt(enPassant));
 //            str.append(" ");
             if (nextToAct == Colour.WHITE) {
                 str.append(EP_WHITE_DEST + 1);
@@ -1407,7 +1426,7 @@ public class State
         State state = (State) o;
         return castlePath == state.castlePath &&
                 castles == state.castles &&
-                enPassants == state.enPassants &&
+                enPassant == state.enPassant &&
                 reversibleMoves == state.reversibleMoves &&
                 Arrays.equals(bPieces, state.bPieces) &&
                 nextToAct == state.nextToAct &&
@@ -1417,7 +1436,7 @@ public class State
     @Override public int hashCode() {
         int result = Arrays.hashCode(wPieces);
         result = 31 * result + Arrays.hashCode(bPieces);
-        result = 31 * result + (int) enPassants;
+        result = 31 * result + (int) enPassant;
         result = 31 * result + (int) castles;
         result = 31 * result + (int) (castlePath ^ (castlePath >>> 32));
         result = 31 * result + (int) reversibleMoves;
@@ -1435,8 +1454,8 @@ public class State
         zobrist = addZobristPieces(zobrist, Colour.WHITE);
         zobrist = addZobristPieces(zobrist, Colour.BLACK);
 
-        if (enPassants != EP_NONE) {
-            zobrist = Zobrist.toggleEnPassant(zobrist, enPassants);
+        if (enPassant != EP_NONE) {
+            zobrist = Zobrist.toggleEnPassant(zobrist, enPassant);
         }
 
         zobrist = addZobristCastles(zobrist);

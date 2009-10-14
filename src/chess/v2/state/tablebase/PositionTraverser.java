@@ -1,54 +1,44 @@
-package ao.chess.v2.state;
+package ao.chess.v2.state.tablebase;
 
 import ao.chess.v2.data.Location;
 import ao.chess.v2.piece.Colour;
-import ao.chess.v2.piece.Piece;
 import ao.chess.v2.piece.Figure;
+import ao.chess.v2.piece.Piece;
+import ao.chess.v2.state.Outcome;
+import ao.chess.v2.state.State;
+import ao.util.misc.Traverser;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * User: aostrovsky
- * Date: 12-Oct-2009
- * Time: 3:18:38 PM
+ * Date: 13-Oct-2009
+ * Time: 11:17:46 PM
  */
-public class Retrograde
+public class PositionTraverser
 {
     //--------------------------------------------------------------------
     public static void main(String[] args) {
         long before = System.currentTimeMillis();
 
-        final long wWins[] = {0};
-        final long bWins[] = {0};
-        final long draws[] = {0};
+        final long count[] = {0};
 
-        new Retrograde().terminals(
+        new PositionTraverser().traverse(
                 Arrays.asList(
                         Piece.WHITE_KING,
-                        Piece.BLACK_KING,
-                        Piece.BLACK_PAWN),
-                new TerminalVisitor() {
-                    @Override
-                    public void visit(State state, Outcome outcome) {
+                        Piece.BLACK_KING),
+                new Traverser<State>() {
+                    @Override public void traverse(State state) {
                         System.out.println();
-                        System.out.println(outcome);
                         System.out.println(state);
 
-                        switch (outcome) {
-                            case WHITE_WINS: wWins[0]++; break;
-                            case BLACK_WINS: bWins[0]++; break;
-                            case DRAW:       draws[0]++; break;
-                        }
+                        count[0]++;
                     }
                 }
         );
 
-        System.out.println("found: " +
-                wWins[0] + " white wins, " +
-                bWins[0] + " black wins, " +
-                draws[0] + " draws");
+        System.out.println("found: " + count[0]);
         System.out.println(
                 "took " + (System.currentTimeMillis() - before));
     }
@@ -59,52 +49,46 @@ public class Retrograde
 
 
     //--------------------------------------------------------------------
-    public Retrograde() {
+    public PositionTraverser()
+    {
         BOARD = new Piece[ Location.RANKS ]
                          [ Location.FILES ];
     }
 
 
     //--------------------------------------------------------------------
-//    public Collection<State> precedents(State of)
-//    {
-//        return null;
-//    }
-
-
-    //--------------------------------------------------------------------
-    public void terminals(
-            List<Piece>     pieces,
-            TerminalVisitor terminalTraverser)
+    public synchronized void traverse(
+            List     <Piece> pieces,
+            Traverser<State> visitor)
     {
         place(pieces.get(0),
               pieces.subList(1, pieces.size()),
-              terminalTraverser);
+              visitor);
     }
 
 
     //--------------------------------------------------------------------
     private void place(
-            Piece           first,
-            List<Piece>     rest,
-            TerminalVisitor terminalTraverser)
+            Piece            first,
+            List     <Piece> rest,
+            Traverser<State> visitor)
     {
         for (int rank = 0; rank < Location.RANKS; rank++) {
             if (first.figure() == Figure.PAWN &&
                     (rank == 0 || rank == 7)) continue;
-            
+
             for (int file = 0; file < Location.FILES; file++) {
                 if (BOARD[rank][file] != null) continue;
 
                 BOARD[rank][file] = first;
 
                 if (rest.isEmpty()) {
-                    check(Colour.WHITE, terminalTraverser);
-                    check(Colour.BLACK, terminalTraverser);
+                    check(Colour.WHITE, visitor);
+                    check(Colour.BLACK, visitor);
                 } else {
                     place(rest.get(0),
                           rest.subList(1, rest.size()),
-                          terminalTraverser);
+                          visitor);
                 }
 
                 BOARD[rank][file] = null;
@@ -115,38 +99,39 @@ public class Retrograde
 
     //--------------------------------------------------------------------
     private void check(
-            Colour          nextToAct,
-            TerminalVisitor terminalVisitor)
+            Colour           nextToAct,
+            Traverser<State> visitor)
     {
-        checkTerminal(new State(
-                fen(nextToAct, -1)), terminalVisitor);
+        checkValid(new State(
+                fen(nextToAct, -1)), visitor);
 
         int enPassant = enPassant( nextToAct.invert() );
         if (enPassant == -1) return;
 
-        checkTerminal(new State(
-                fen(nextToAct, enPassant)), terminalVisitor);
+        checkValid(new State(
+                fen(nextToAct, enPassant)), visitor);
     }
 
-    private void checkTerminal(
-            State           state,
-            TerminalVisitor terminalVisitor)
+    private void checkValid(
+            State            state,
+            Traverser<State> visitor)
     {
-        int moves[] = state.legalMoves();
-        if (moves == null &&
-                state.isInCheck( state.nextToAct() ) &&
-                ! state.isInCheck( state.nextToAct().invert() )) {
-            terminalVisitor.visit(
-                    state, Outcome.loses(state.nextToAct()));
-        } else if (moves != null && moves.length == 0) {
-            if (state.isInCheck( state.nextToAct() )) {
-                terminalVisitor.visit(
-                        state, Outcome.loses(state.nextToAct()));
-            } else {
-                terminalVisitor.visit(
-                        state, Outcome.DRAW);
-            }
+        if (! state.checkPieces()) {
+            return;
         }
+
+        boolean nextToActInCheck =
+                state.isInCheck( state.nextToAct()          );
+
+        boolean lastToActInCheck =
+                state.isInCheck( state.nextToAct().invert() );
+
+        if (nextToActInCheck && lastToActInCheck) {
+            // cannot give mutual check
+            return;
+        }
+
+        visitor.traverse(state);
     }
 
 
@@ -234,12 +219,5 @@ public class Retrograde
         str.append("0");
 
 		return str.toString();
-    }
-
-
-    //--------------------------------------------------------------------
-    public static interface TerminalVisitor
-    {
-        public void visit(State state, Outcome outcome);
     }
 }
