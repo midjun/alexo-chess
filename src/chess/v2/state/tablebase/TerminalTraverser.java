@@ -85,12 +85,12 @@ public class TerminalTraverser
             TerminalVisitor terminalVisitor)
     {
         int moves[] = state.legalMoves();
-        if (moves == null &&
-                state.isInCheck( state.nextToAct() ) &&
-                ! state.isInCheck( state.nextToAct().invert() )) {
-            terminalVisitor.visit(
-                    state, Outcome.loses(state.nextToAct()));
-        } else if (moves != null && moves.length == 0) {
+        if (moves == null) {
+            if (state.isInCheck( state.nextToAct() )) {
+                terminalVisitor.visit(
+                        state, Outcome.loses(state.nextToAct()));
+            }
+        } else if (moves.length == 0) {
             if (state.isInCheck( state.nextToAct() )) {
                 terminalVisitor.visit(
                         state, Outcome.loses(state.nextToAct()));

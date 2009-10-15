@@ -121,7 +121,6 @@ public class SimPlayer implements Player
     private double doSimulate(State protoState, Colour fromPov)
     {
         State   state     = protoState.prototype();
-        Status  status    = null;
         int     nextCount = 0;
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
         int[]   moves     = new int[ Move.MAX_PER_PLY ];
@@ -130,6 +129,7 @@ public class SimPlayer implements Player
 
         if (nMoves < 1) return Double.NaN;
 
+        boolean wasDrawnBy50MovesRule = false;
         do
         {
             int     move;
@@ -164,10 +164,10 @@ public class SimPlayer implements Player
                 nMoves          = nextCount;
             }
         }
-        while ((status = state.knownStatus()) == Status.IN_PROGRESS);
-
-        if (outcome == null && status != null) {
-            outcome = status.toOutcome();
+        while (! (wasDrawnBy50MovesRule =
+                    state.isDrawnBy50MovesRule()));
+        if (wasDrawnBy50MovesRule) {
+            outcome = Outcome.DRAW;
         }
 
         return outcome == null

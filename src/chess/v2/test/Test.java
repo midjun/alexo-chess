@@ -274,7 +274,6 @@ public class Test
     //--------------------------------------------------------------------
     private static Outcome playOutRandom(State state)
     {
-        Status status;
         int    nextCount = 0;
         int[]  nextMoves = new int[ 128 ];
         int[]  moves     = new int[ 128 ];
@@ -328,9 +327,8 @@ public class Test
                 nMoves          = nextCount;
             }
         }
-        while ((status = state.knownStatus()) == Status.IN_PROGRESS);
-
-        return status.toOutcome();
+        while (! state.isDrawnBy50MovesRule());
+        return Outcome.DRAW;
     }
 
 

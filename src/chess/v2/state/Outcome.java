@@ -48,4 +48,12 @@ public enum Outcome
     {
         return wins(c.invert());
     }
+
+    public Colour winner() {
+        return (this == WHITE_WINS)
+               ? Colour.WHITE
+               : (this == BLACK_WINS)
+                 ? Colour.BLACK
+                 : null;
+    }
 }

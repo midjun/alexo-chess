@@ -1,13 +1,16 @@
 package ao.chess.v2.state.tablebase;
 
+import ao.chess.v2.piece.Colour;
+import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * User: aostrovsky
@@ -21,14 +24,34 @@ public class HashCollide
     public static void main(String[] args) {
 
         HashCollide visitor = new HashCollide();
-        new PositionTraverser().traverse(
-                Arrays.asList(
-                        Piece.WHITE_KING,
-                        Piece.BLACK_KING,
-                        Piece.WHITE_PAWN,
-                        Piece.WHITE_PAWN),
-                visitor);
+
+        feed(visitor);
+
+        for (Figure figure : Figure.VALUES) {
+            if (figure == Figure.KING) continue;
+
+            for (Colour colour : Colour.VALUES) {
+                feed(visitor, Piece.valueOf(colour, figure));
+            }
+        }
+        
         visitor.displayReport();
+    }
+
+    private static void feed(
+            Traverser<State> visitor,
+            Piece...         nonKingPieces)
+    {
+        List<Piece> pieces = new ArrayList<Piece>(Arrays.asList(
+                Piece.WHITE_KING, Piece.BLACK_KING));
+
+        pieces.addAll(Arrays.asList(nonKingPieces));
+
+        long before = System.currentTimeMillis();
+        System.out.println("feeding: " + pieces);
+        new PositionTraverser().traverse(pieces, visitor);
+        System.out.println("took: " +
+                (System.currentTimeMillis() - before));
     }
 
 
@@ -41,8 +64,10 @@ public class HashCollide
 
     
     //--------------------------------------------------------------------
-    @Override public void traverse(State state) {
-        long hash = state.longHashCode();
+    @Override public void traverse(State state)
+    {
+//        long hash = state.longHashCode();
+        long hash = state.staticHashCode();
 
         State existing = byHash.get( hash );
         if (existing == null) {

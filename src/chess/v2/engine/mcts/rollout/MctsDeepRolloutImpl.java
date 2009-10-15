@@ -44,13 +44,12 @@ public class MctsDeepRolloutImpl
             State position, MctsHeuristic heuristic)
     {
         State state = position;
-        while (state.knownStatus() == Status.IN_PROGRESS)
+        while (! state.isDrawnBy50MovesRule())
         {
             int move = bestMove(state, heuristic);
             if (move == -1) {
-                return (state.isInCheck(state.nextToAct())
-                          ? Outcome.loses(state.nextToAct())
-                          : Outcome.DRAW).valueFor( state.nextToAct() );
+                return state.knownOutcome()
+                            .valueFor( state.nextToAct() );
             }
             Move.apply(move, state);
         }
@@ -107,12 +106,11 @@ public class MctsDeepRolloutImpl
     private double computeMonteCarloPlayout(
             State fromState, MctsHeuristic heuristic) {
         State   simState  = fromState.prototype();
-        Status  status    = null;
         int     nextCount = 0;
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
         int[]   moves     = new int[ Move.MAX_PER_PLY ];
         int     nMoves    = simState.moves(moves);
-        Outcome outcome   = null;
+        Outcome outcome   = Outcome.DRAW;
 
         do
         {
@@ -150,11 +148,7 @@ public class MctsDeepRolloutImpl
                 nMoves          = nextCount;
             }
         }
-        while ((status = simState.knownStatus()) == Status.IN_PROGRESS);
-
-        if (outcome == null && status != null) {
-            outcome = status.toOutcome();
-        }
+        while (! simState.isDrawnBy50MovesRule());
 
         return outcome == null
                ? Double.NaN

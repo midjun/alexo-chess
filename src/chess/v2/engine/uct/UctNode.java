@@ -347,13 +347,13 @@ public class UctNode
     private double computeMonteCarloValue()
     {
         State   simState  = state.prototype();
-        Status  status    = null;
         int     nextCount = 0;
         int[]   nextMoves = new int[ 128 ];
         int[]   moves     = new int[ 128 ];
         int     nMoves    = state.moves(moves);
         Outcome outcome   = null;
 
+        boolean wasDrawnBy50MovesRule = false;
         do
         {
             int     move;
@@ -388,10 +388,10 @@ public class UctNode
                 nMoves          = nextCount;
             }
         }
-        while ((status = simState.knownStatus()) == Status.IN_PROGRESS);
-
-        if (outcome == null && status != null) {
-            outcome = status.toOutcome();
+        while (! (wasDrawnBy50MovesRule =
+                    state.isDrawnBy50MovesRule()));
+        if (wasDrawnBy50MovesRule) {
+            outcome = Outcome.DRAW;
         }
 
         return outcome == null

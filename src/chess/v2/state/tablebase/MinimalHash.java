@@ -30,8 +30,7 @@ public class MinimalHash
         new PositionTraverser().traverse(
                 Arrays.asList(
                         Piece.WHITE_KING,
-                        Piece.BLACK_KING,
-                        Piece.WHITE_ROOK),
+                        Piece.BLACK_KING),
                 minHash);
 
         minHash.hash();
