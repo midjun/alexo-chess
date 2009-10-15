@@ -11,6 +11,61 @@
         <attribute name="URI" value="/lib" />
         <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/fastutil5-5.1.5.jar!/</url>
       </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/colt-1.2.0.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/dsiutils-1.0.9.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/jakarta-commons-collections-3.2.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/jakarta-commons-configuration-1.4.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/jakarta-commons-io-1.4.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/jakarta-commons-lang-2.3.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/jsap-2.0.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/junit-3.8.2.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/lib/log4j-1.2.14.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../../lib/sux4j-2.0/sux4j-2.0.jar!/</url>
+      </containerElement>
+      <containerElement type="library" level="module">
+        <attribute name="method" value="2" />
+        <attribute name="URI" value="/lib" />
+        <url>jar://$MODULE_DIR$/../../common/util/util.jar!/</url>
+      </containerElement>
     </containerInfo>
     <setting name="jarUrl" value="file://$MODULE_DIR$/chess.jar" />
     <setting name="buildJar" value="true" />

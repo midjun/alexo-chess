@@ -120,16 +120,11 @@ public class PositionTraverser
             return;
         }
 
-        boolean nextToActInCheck =
-                state.isInCheck( state.nextToAct()          );
-
         boolean lastToActInCheck =
                 state.isInCheck( state.nextToAct().invert() );
 
-        if (nextToActInCheck && lastToActInCheck) {
-            // cannot give mutual check
-            return;
-        }
+        // cannot move into check
+        if (lastToActInCheck) return;
 
         visitor.traverse(state);
     }

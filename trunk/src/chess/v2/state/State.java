@@ -9,6 +9,8 @@ import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Date: Feb 6, 2009
@@ -135,6 +137,9 @@ public class State
     private static final int ROOKS   = Figure.ROOK  .ordinal();
     private static final int QUEENS  = Figure.QUEEN .ordinal();
     private static final int KING    = Figure.KING  .ordinal();
+
+    private static final int[] NON_KINGS_BY_PROB =
+            {PAWNS, ROOKS, BISHOPS, KNIGHTS, QUEENS};
 
 
     //--------------------------------------------------------------------
@@ -987,20 +992,36 @@ public class State
 
 
     //--------------------------------------------------------------------
-    // must be obtained before move is applied
+    public boolean atMostPieces(int n) {
+        int remain = n - 2; // kings
+        if (remain <= 0) return false;
 
-//    public long zobristMobility(
-//            long zobrist, Piece piece, int from, int to) {
-//        zobrist = Zobrist.togglePiece(
-//                zobrist, piece, from);
-//        zobrist = Zobrist.togglePiece(
-//                zobrist, piece, to);
-//
-////        Zobrist.
-//
-//        return zobrist;
-//    }
+        for (int figure : NON_KINGS_BY_PROB) {
+            remain -= Long.bitCount(wPieces[ figure ]);
+            if (remain <= 0) return true;
 
+            remain -= Long.bitCount(bPieces[ figure ]);
+            if (remain <= 0) return true;
+        }
+
+        return true;
+    }
+
+    public List<Piece> material() {
+        List<Piece> material = new ArrayList<Piece>(4);
+        material(material, wPieces);
+        material(material, bPieces);
+        return material;
+    }
+    private void material(List<Piece> addTo, long[] pieces) {
+        for (Figure f : Figure.VALUES) {
+            long bb = pieces[ f.ordinal() ];
+            while (bb != 0) {
+                addTo.add(Piece.valueOf(nextToAct, f));
+                bb &= bb - 1;
+            }
+        }
+    }
 
 
     //--------------------------------------------------------------------
@@ -1054,96 +1075,27 @@ public class State
 
 
     //--------------------------------------------------------------------
-    // see http://chessprogramming.wikispaces.com/Draw+evaluation
-    // can later be substituted with a tablebase
-    public Status knownStatus()
-    {
-        if (reversibleMoves > 100) return Status.DRAW;
-        return Status.IN_PROGRESS;
+    public boolean isDrawnBy50MovesRule() {
+        return reversibleMoves > 100;
+    }
 
-//        // at least one major piece (i.e. rook or queen)
-//        if (wPieces[ ROOKS  ] != 0 ||
-//            bPieces[ ROOKS  ] != 0 ||
-//            wPieces[ QUEENS ] != 0 ||
-//            bPieces[ QUEENS ] != 0) return Status.IN_PROGRESS;
-//
-//        boolean whiteBishops, blackBishops;
-//        boolean whiteKnights, blackKnights;
-//
-//        boolean whitePawns = (wPieces[ PAWNS ] != 0);
-//        boolean blackPawns = (bPieces[ PAWNS ] != 0);
-//        if (whitePawns && blackPawns) {
-//            return Status.IN_PROGRESS;
-//        } else {
-//            whiteBishops = (wPieces[ BISHOPS ] != 0);
-//            blackBishops = (bPieces[ BISHOPS ] != 0);
-//
-//            whiteKnights = (wPieces[ KNIGHTS ] != 0);
-//            blackKnights = (bPieces[ KNIGHTS ] != 0);
-//
-//            if (whitePawns || blackPawns) {
-//                // at least one side has at least a minor pawn
-//                if (whiteBishops || blackBishops ||
-//                    whiteKnights || blackKnights) {
-//                    return Status.IN_PROGRESS;
-//                } else {
-//                    if (whitePawns) {
-//                        int nWhitePawns =
-//                                Long.bitCount(wPieces[ PAWNS ]);
-//                        return (nWhitePawns == 1)
-//                               ? Status.DRAW : Status.IN_PROGRESS;
-//                    } else {
-//                        int nBlackPawns =
-//                                Long.bitCount(bPieces[ PAWNS ]);
-//                        return (nBlackPawns == 1)
-//                               ? Status.DRAW : Status.IN_PROGRESS;
-//                    }
-//                }
-//            }
-//        }
-//        // only knights and bishops present, no pawns, queens, or rooks
-//
-//        if (whiteBishops && blackBishops) {
-//            if (whiteKnights || blackKnights){
-//                return Status.IN_PROGRESS;
-//            }
-//
-//            // both sides have a king and a bishop,
-//            //   the bishops being the same color
-//            int nWhiteBishops = Long.bitCount(wPieces[ BISHOPS ]);
-//            if (nWhiteBishops > 1) return Status.IN_PROGRESS;
-//
-//            int nBlackBishops = Long.bitCount(wPieces[ BISHOPS ]);
-//            if (nBlackBishops > 1) return Status.IN_PROGRESS;
-//
-//            return (BitBoard.isDark(wPieces[ BISHOPS ]) ==
-//                    BitBoard.isDark(bPieces[ BISHOPS ]))
-//                   ? Status.DRAW : Status.IN_PROGRESS;
-//        }
-//        else if (whiteBishops || blackBishops)
-//        {
-//            // one player has a bishop
-//            return (whiteKnights || blackKnights)
-//                   ? Status.IN_PROGRESS
-//                   : Status.DRAW;
-//        }
-//        // no bishops
-//
-//        if (whiteKnights && blackKnights) return Status.IN_PROGRESS;
-//        if (whiteKnights) {
-//            int nWhiteKnights =
-//                    Long.bitCount(wPieces[ KNIGHTS ]);
-//
-//            //one side has two or more knights against the bare king
-//            return (nWhiteKnights <= 2)
-//                    ? Status.DRAW : Status.IN_PROGRESS;
-//        } else if (blackKnights) {
-//            int nBlackKnights =
-//                    Long.bitCount(bPieces[ KNIGHTS ]);
-//            return (nBlackKnights <= 2)
-//                    ? Status.DRAW : Status.IN_PROGRESS;
-//        }
-//        return Status.DRAW;
+    public Outcome knownOutcome() {
+        if (isDrawnBy50MovesRule()) return Outcome.DRAW;
+
+        int moves[] = legalMoves();
+        if (moves == null) {
+            if (isInCheck( nextToAct() )) {
+                return Outcome.loses( nextToAct() );
+            }
+        } else if (moves.length == 0) {
+            if (isInCheck( nextToAct() )) {
+                return Outcome.loses( nextToAct() );
+            } else {
+                return Outcome.DRAW;
+            }
+        }
+
+        return null;
     }
 
 
@@ -1280,21 +1232,21 @@ public class State
         return bb;
     }
 
-    public boolean check(int move)
-    {
-        State myClone = prototype();
-        move = Move.apply(move, myClone);
-        boolean afterDo   = myClone.checkPieces();
-        if (! afterDo) {
-            System.out.println("before: " + toString());
-            System.out.println("move: " + Move.toString(move));
-            System.out.println("after: " + myClone.toString());
-        }
-
-        Move.unApply(move, myClone);
-        boolean afterUndo = myClone.checkPieces();
-        return afterDo && afterUndo;
-    }
+//    public boolean check(int move)
+//    {
+//        State myClone = prototype();
+//        move = Move.apply(move, myClone);
+//        boolean afterDo   = myClone.checkPieces();
+//        if (! afterDo) {
+//            System.out.println("before: " + toString());
+//            System.out.println("move: " + Move.toString(move));
+//            System.out.println("after: " + myClone.toString());
+//        }
+//
+//        Move.unApply(move, myClone);
+//        boolean afterUndo = myClone.checkPieces();
+//        return afterDo && afterUndo;
+//    }
 
 
     //--------------------------------------------------------------------
@@ -1445,11 +1397,16 @@ public class State
     }
 
     public long longHashCode() {
+        return nextToActPostprocess(
+                Zobrist.toggleReversibleMoves(
+                        staticHashCode(), reversibleMoves));
+    }
+    public long staticHashCode() {
+        return nextToActPostprocess(
+                zobristPiecesEnPassantCastles());
+    }
+    private long zobristPiecesEnPassantCastles() {
         long zobrist = 0;
-
-        if (nextToAct == Colour.WHITE) {
-            zobrist = Zobrist.toggleWhiteToAct(zobrist);
-        }
 
         zobrist = addZobristPieces(zobrist, Colour.WHITE);
         zobrist = addZobristPieces(zobrist, Colour.BLACK);
@@ -1458,12 +1415,12 @@ public class State
             zobrist = Zobrist.toggleEnPassant(zobrist, enPassant);
         }
 
-        zobrist = addZobristCastles(zobrist);
-
-        zobrist = Zobrist.toggleReversibleMoves(
-                zobrist, reversibleMoves);
-
-        return zobrist;
+        return addZobristCastles(zobrist);
+    }
+    private long nextToActPostprocess(long zobrist) {
+        return (nextToAct == Colour.WHITE && zobrist < 0 ||
+                nextToAct == Colour.BLACK && zobrist >= 0)
+               ? -zobrist : zobrist;
     }
     private long addZobristPieces(
             long zobrist, Colour side) {
@@ -1505,5 +1462,9 @@ public class State
                     zobrist, Colour.BLACK, CastleType.QUEEN_SIDE);
         }
         return zobrist;
+    }
+
+    public static boolean hashOfWhiteToAct(long longOrStaticHash) {
+        return longOrStaticHash >= 0;
     }
 }

@@ -59,13 +59,13 @@ public class MctsRolloutImpl
     private double computeMonteCarloPlayout(
             State fromState, MctsHeuristic heuristic) {
         State   simState  = fromState;
-        Status  status    = null;
         int     nextCount = 0;
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
         int[]   moves     = new int[ Move.MAX_PER_PLY ];
         int     nMoves    = simState.moves(moves);
         Outcome outcome   = null;
 
+        boolean wasDrawnBy50MovesRule = false;
         do
         {
             int     move;
@@ -102,10 +102,10 @@ public class MctsRolloutImpl
                 nMoves          = nextCount;
             }
         }
-        while ((status = simState.knownStatus()) == Status.IN_PROGRESS);
-
-        if (outcome == null && status != null) {
-            outcome = status.toOutcome();
+        while (! (wasDrawnBy50MovesRule =
+                    simState.isDrawnBy50MovesRule()));
+        if (wasDrawnBy50MovesRule) {
+            outcome = Outcome.DRAW;
         }
 
         return outcome == null

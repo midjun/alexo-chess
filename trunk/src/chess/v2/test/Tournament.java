@@ -83,7 +83,7 @@ public class Tournament
     {
         State state = new State();
 
-        while (state.knownStatus() == Status.IN_PROGRESS)
+        while (! state.isDrawnBy50MovesRule())
         {
 //            System.out.println(state);
 

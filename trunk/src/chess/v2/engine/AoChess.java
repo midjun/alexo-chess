@@ -1,19 +1,18 @@
 package ao.chess.v2.engine;
 
 import ao.chess.v1.util.Io;
-import ao.chess.v2.engine.mcts.heuristic.MctsFpuHeuristic;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
 import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
-import ao.chess.v2.engine.mcts.transposition.NativeTransTable;
 import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
 import ao.chess.v2.engine.trans.TransPlayer;
 import ao.chess.v2.state.Move;
+import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.chess.v2.state.Status;
 
@@ -257,7 +256,7 @@ public class AoChess {
 				{
                     String moveCommand = command.substring(9);
                     forceMove(state, moveCommand);
-                    if (gameIsDone(state)) return true;
+                    if (gameIsDrawnBy50MovesRule(state)) return true;
 				}
 
 				if (! force)
@@ -267,7 +266,7 @@ public class AoChess {
                         Io.display("game is done, I lose =(");
                         return true;
                     }
-                    gameIsDone(state);
+                    gameIsDrawnBy50MovesRule(state);
 				}
 			}
         }
@@ -296,12 +295,11 @@ public class AoChess {
 
 
     //--------------------------------------------------------------------
-    private static boolean gameIsDone(State state)
+    private static boolean gameIsDrawnBy50MovesRule(State state)
     {
-        Status outcome = state.knownStatus();
-        if (outcome != Status.IN_PROGRESS) {
-            Io.write(outcome);
-            Io.display(outcome);
+        if (state.isDrawnBy50MovesRule()) {
+            Io.write(Outcome.DRAW);
+            Io.display(Outcome.DRAW);
             return true;
         }
         return false;
