@@ -123,10 +123,12 @@ public enum Piece implements BoardPiece
 
 
     //--------------------------------------------------------------------
-    public String toString()
+    @Override public String toString()
     {
         return COLOUR == Colour.WHITE
                ? FIGURE.toString().toUpperCase()
                : FIGURE.toString().toLowerCase();
     }
+
+
 }

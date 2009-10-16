@@ -4,7 +4,7 @@ import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.util.misc.Traverser;
+import ao.util.time.Stopwatch;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
@@ -26,52 +26,113 @@ public class MaterialOracle implements Serializable
     //--------------------------------------------------------------------
     public MaterialOracle(
             final Oracle      oracle,
-            final List<Piece> material) {
+            final List<Piece> material)
+    {
+        System.out.println("Computing MaterialOracle for " + material);
+        Stopwatch timer = new Stopwatch();
 
-        Retrograde retro = new Retrograde();
+        StateMap states = new StateMap();
         new PositionTraverser().traverse(
-                material, retro);
+                material, states);
+
+        System.out.println("filled state map, took " + timer);
+        timer = new Stopwatch();
+
+        HashRetrograde retro = new HashRetrograde();
+        states.traverse(retro);
+
+        System.out.println("retrograte analysis done, took " + timer);
+        timer = new Stopwatch();
 
         // all initial mates
-        final LongSet nextBlackWins = new LongOpenHashSet();
-        final LongSet nextWhiteWins = new LongOpenHashSet();
-        new PositionTraverser().traverse(
-                material, new Traverser<State>() {
-                    @Override public void traverse(State state) {
-                        Outcome result = findImminentMate(
-                                state, material, oracle);
-                        if (result == Outcome.WHITE_WINS) {
-                            nextWhiteWins.add( state.staticHashCode() );
-                        } else if (result == Outcome.BLACK_WINS) {
-                            nextBlackWins.add( state.staticHashCode() );
-                        }
-                    }
-                });
+        LongSet prevWhiteWins = new LongOpenHashSet();
+        LongSet prevBlackWins = new LongOpenHashSet();
 
-        while (! nextWhiteWins.isEmpty() &&
-               ! nextBlackWins.isEmpty())
+        addImmediateMates(
+                states.states(), oracle, states,
+                prevWhiteWins, prevBlackWins);
+
+        int ply = 1;
+        System.out.println("initial mates found, took " + timer);
+        timer = new Stopwatch();
+
+        while (! prevWhiteWins.isEmpty() ||
+               ! prevBlackWins.isEmpty())
         {
-            whiteWins.addAll( nextWhiteWins );
-            blackWins.addAll( nextBlackWins );
+            whiteWins.addAll( prevWhiteWins );
+            blackWins.addAll( prevBlackWins );
 
-            for (long wWin : nextWhiteWins) {
-                // todo: left off here
-                boolean whiteToAct = State.hashOfWhiteToAct(wWin);
-//                retro.precedents()
-            }
+            LongSet nextWhiteWins = new LongOpenHashSet();
+            LongSet nextBlackWins = new LongOpenHashSet();
 
-            nextWhiteWins.clear();
-            nextBlackWins.clear();
+            addNextImmediates(states, retro, prevWhiteWins, oracle,
+                              nextWhiteWins, nextBlackWins);
+            addNextImmediates(states, retro, prevBlackWins, oracle,
+                              nextWhiteWins, nextBlackWins);
+
+            System.out.println(
+                    "finished ply " + (ply++) + ", took " + timer);
+            timer = new Stopwatch();
+
+            prevWhiteWins = nextWhiteWins;
+            prevBlackWins = nextBlackWins;
         }
 
+        System.out.println("done, got " +
+                blackWins.size() + " | " +
+                whiteWins.size() + " | " +
+                states.size());
+    }
 
 
+    //--------------------------------------------------------------------
+    private void addNextImmediates(
+            StateMap       allStates,
+            HashRetrograde retro,
+            LongSet        prevWins,
+            Oracle         oracle,
+            LongSet        nextWhiteWins,
+            LongSet        nextBlackWins)
+    {
+        for (long wWin : prevWins) {
+            addImmediateMates(
+                    allStates.states(retro.precedents( wWin )),
+                    oracle, allStates, nextWhiteWins, nextBlackWins);
+        }
+    }
+
+
+    //--------------------------------------------------------------------
+    private void addImmediateMates(
+            Iterable<State> states,
+            Oracle          oracle,
+            StateMap        allStates,
+            LongSet         nextWhiteWins,
+            LongSet         nextBlackWins)
+    {
+        for (State state : states) {
+            if (! isUnknown(state)) continue;
+
+            Outcome result = findImminentMate(
+                    state, allStates, oracle);
+            if (result == Outcome.WHITE_WINS) {
+                nextWhiteWins.add( state.staticHashCode() );
+            } else if (result == Outcome.BLACK_WINS) {
+                nextBlackWins.add( state.staticHashCode() );
+            }
+        }
+    }
+
+    private boolean isUnknown(State state) {
+        long staticHash = state.staticHashCode();
+        return ! (whiteWins.contains(staticHash) ||
+                  blackWins.contains(staticHash));
     }
 
 
     //--------------------------------------------------------------------
     private Outcome findImminentMate(
-            State state, List<Piece> material, Oracle oracle)
+            State state, StateMap allStates, Oracle oracle)
     {
         Outcome result = state.knownOutcome();
         if (result != null && result != Outcome.DRAW) {
@@ -85,10 +146,12 @@ public class MaterialOracle implements Serializable
         for (int legalMove : legalMoves)
         {
             Move.apply(legalMove, state);
+
+            long    staticHash     = state.staticHashCode();
             Outcome imminentResult =
-                        material.containsAll( state.material() )
-                        ? see(state.staticHashCode())
-                        : oracle.see(state);
+                    allStates.containsState( staticHash )
+                    ? see( staticHash )
+                    : oracle.see(state);
             Move.unApply(legalMove, state);
 
             if (imminentResult != null &&
@@ -117,27 +180,4 @@ public class MaterialOracle implements Serializable
                  ? Outcome.BLACK_WINS
                  : null;
     }
-
-
-//    //--------------------------------------------------------------------
-//    public static class OptimalPlay
-//    {
-//        private final Outcome OUT;
-//        private final int     PLY;
-//
-//
-//        public OptimalPlay(Outcome out, int ply) {
-//            OUT = out;
-//            PLY = ply;
-//        }
-//
-//
-//        public Outcome outcome() {
-//            return OUT;
-//        }
-//
-//        public int ply() {
-//            return PLY;
-//        }
-//    }
 }
