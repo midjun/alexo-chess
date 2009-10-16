@@ -457,7 +457,7 @@ public class Move
                          " from " + Location.toString(from) + " to " +
                                     Location.toString(to) +
                          (promo != 0
-                          ? " promo " + Figure.VALUES[figure] : "");
+                          ? " promo " + Figure.VALUES[promo] : "");
             }
 
             case CAPTURE: {
@@ -470,7 +470,7 @@ public class Move
                          " from " + Location.toString(from) + " to " +
                                     Location.toString(to)   +
                          (promo != 0
-                          ? " promo " + Figure.VALUES[figure] : "");
+                          ? " promo " + Figure.VALUES[promo] : "");
             }
 
             case EN_PASSANT: {

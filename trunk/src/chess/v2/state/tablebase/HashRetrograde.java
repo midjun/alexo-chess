@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.longs.*;
  * Date: 14-Oct-2009
  * Time: 8:30:02 PM
  */
-public class Retrograde
+public class HashRetrograde
         implements Traverser<State>
 {
     //--------------------------------------------------------------------

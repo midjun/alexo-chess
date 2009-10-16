@@ -6,11 +6,12 @@ import ao.chess.v2.data.Location;
 import ao.chess.v2.move.SlidingPieces;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
+import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Date: Feb 6, 2009
@@ -138,8 +139,15 @@ public class State
     private static final int QUEENS  = Figure.QUEEN .ordinal();
     private static final int KING    = Figure.KING  .ordinal();
 
-    private static final int[] NON_KINGS_BY_PROB =
+    private static final int[]   NON_KINGS_BY_PROB        =
             {PAWNS, ROOKS, BISHOPS, KNIGHTS, QUEENS};
+
+    private static final Piece[] NON_KINGS_BY_PROB_PIECES =
+            {Piece.WHITE_PAWN  , Piece.BLACK_PAWN,
+             Piece.WHITE_ROOK  , Piece.BLACK_ROOK,
+             Piece.WHITE_BISHOP, Piece.BLACK_BISHOP,
+             Piece.WHITE_KNIGHT, Piece.BLACK_KNIGHT,
+             Piece.WHITE_QUEEN , Piece.BLACK_QUEEN};
 
 
     //--------------------------------------------------------------------
@@ -992,6 +1000,34 @@ public class State
 
 
     //--------------------------------------------------------------------
+    public int tallyNonKings(int atMost) {
+        int tally = 0, count;
+        for (int figure : NON_KINGS_BY_PROB) {
+            count = Long.bitCount(wPieces[ figure ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.WHITE, figure, count);
+            if ((atMost -= count) <= 0) return -1;
+
+            count = Long.bitCount(bPieces[ figure ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.BLACK, figure, count);
+            if ((atMost -= count) <= 0) return -1;
+        }
+        return tally;
+    }
+    public boolean tallyNonKings(MaterialTally tally, int atMost) {
+        for (int figure : NON_KINGS_BY_PROB) {
+            atMost -= tally.tally(Colour.WHITE, figure,
+                                  Long.bitCount(wPieces[ figure ]));
+            if (atMost <= 0) return false;
+
+            atMost -= tally.tally(Colour.BLACK, figure,
+                                  Long.bitCount(wPieces[ figure ]));
+            if (atMost <= 0) return false;
+        }
+        return true;
+    }
+
     public boolean atMostPieces(int n) {
         int remain = n - 2; // kings
         if (remain <= 0) return false;
