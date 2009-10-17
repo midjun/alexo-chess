@@ -1,21 +1,18 @@
 package ao.chess.v2.test;
 
 import ao.chess.v2.engine.Player;
-import ao.chess.v2.engine.simple.RandomPlayer;
-import ao.chess.v2.engine.simple.SimPlayer;
-import ao.chess.v2.engine.trans.TransPlayer;
-import ao.chess.v2.engine.mcts.player.MctsPlayer;
-import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
-import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
-import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
-import ao.chess.v2.engine.mcts.transposition.NullTransTable;
+import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
+import ao.chess.v2.engine.mcts.player.MctsPlayer;
+import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
+import ao.chess.v2.engine.mcts.rollout.MctsTablebaseRollout;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
+import ao.chess.v2.engine.mcts.transposition.NullTransTable;
+import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
-import ao.chess.v2.state.State;
-import ao.chess.v2.state.Status;
 import ao.chess.v2.state.Outcome;
+import ao.chess.v2.state.State;
 
 /**
  * User: aostrovsky
@@ -31,19 +28,28 @@ public class Tournament
     //--------------------------------------------------------------------
     public static void main(String[] args)
     {
-//        Player a = new MctsPlayer(
-//                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
-//                new Ucb1TunedValue.Factory(),
-//                new MctsRolloutImpl(),
-//                new Ucb1TunedValue.VisitSelector(),
-//                new MctsHeuristicImpl(),
-//                new NullTransTable<Ucb1TunedValue>(),
-//                new MctsSchedulerImpl.Factory()
-//        );
+        Player a = new MctsPlayer(
+                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+                new Ucb1TunedValue.Factory(),
+                new MctsRolloutImpl(),
+                new Ucb1TunedValue.VisitSelector(),
+                new MctsHeuristicImpl(),
+                new NullTransTable<Ucb1TunedValue>(),
+                new MctsSchedulerImpl.Factory()
+        );
 //        Player a = new RandomPlayer();
-        Player a = new SimPlayer(false);
+//        Player a = new SimPlayer(false);
 
-        Player b = new TransPlayer();
+//        Player b = new TransPlayer();
+        Player b = new MctsPlayer(
+                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+                new Ucb1TunedValue.Factory(),
+                new MctsTablebaseRollout(),
+                new Ucb1TunedValue.VisitSelector(),
+                new MctsHeuristicImpl(),
+                new NullTransTable<Ucb1TunedValue>(),
+                new MctsSchedulerImpl.Factory()
+        );
 
         int aWins = 0;
         int bWins = 0;

@@ -1,8 +1,14 @@
 package ao.chess.v2.test;
 
 import ao.chess.v2.engine.Player;
-import ao.chess.v2.engine.simple.SimPlayer;
-import ao.chess.v2.engine.trans.TransPlayer;
+import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
+import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
+import ao.chess.v2.engine.mcts.player.MctsPlayer;
+import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
+import ao.chess.v2.engine.mcts.rollout.MctsTablebaseRollout;
+import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
+import ao.chess.v2.engine.mcts.transposition.NullTransTable;
+import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 
@@ -23,7 +29,7 @@ public class BrainTeaser {
 //        Player player = new UctPlayer(true);
 //        Player player = new UctPlayer(false);
 //        Player player = new SimPlayer(true);
-        Player player = new SimPlayer(false);
+//        Player player = new SimPlayer(false);
 //        Player player = new MctsPlayer(
 //                new MctsNodeImpl.Factory<Ucb1Value>(),
 //                new Ucb1Value.Factory(),
@@ -63,6 +69,15 @@ public class BrainTeaser {
 //                new NullTransTable<Ucb1TunedValue>(),
 //                new MctsSchedulerImpl.Factory()
 //        );
+        Player player = new MctsPlayer(
+                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+                new Ucb1TunedValue.Factory(),
+                new MctsTablebaseRollout(),
+                new Ucb1TunedValue.VisitSelector(),
+                new MctsHeuristicImpl(),
+                new NullTransTable<Ucb1TunedValue>(),
+                new MctsSchedulerImpl.Factory()
+        );
 //        Player player = new MctsPlayer(
 //                new MctsNodeImpl.Factory<UcbTunedValue>(),
 //                new UcbTunedValue.Factory(),
@@ -110,8 +125,8 @@ public class BrainTeaser {
 
 
                 // easy
-                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
-//                "7k/5K2/5P1p/3p4/6P1/3p4/8/8 w" // bm g5 (+100000 -2250000)
+//                "1rbq1rk1/p1b1nppp/1p2p3/8/1B1pN3/P2B4/1P3PPP/2RQ1R1K w" // bm Nf6+ (325,000)
+//                "7k/5K2/5P1p/3p4/6P1/3p4/8/8 w" // bm g5 (+100,000 -2250000)
 //                "8/6B1/p5p1/Pp4kp/1P5r/5P1Q/4q1PK/8 w" // bm Qxh4 (1,825,000)
 
                 // mid

@@ -156,8 +156,9 @@ public class State
 
     private long   whiteBB;
     private long   blackBB;
+    private byte   nPieces;
 
-    private byte enPassant; // available to take for nextToAct
+    private byte   enPassant; // available to take for nextToAct
     private byte   prevEnPassants;
 
     private byte   castles;
@@ -187,6 +188,7 @@ public class State
                   byte   copyCastles,
                   byte   copyReversibleMoves,
                   Colour copyNextToAct,
+                  byte   copyNumberPieces,
                   long   copyWhiteBB,
                   long   copyBlackBB,
                   byte   copyPrevCastles,
@@ -202,11 +204,12 @@ public class State
         castles         = copyCastles;
         nextToAct       = copyNextToAct;
         castlePath      = copyCastlePath;
-        enPassant = copyEnPassants;
+        enPassant       = copyEnPassants;
         reversibleMoves = copyReversibleMoves;
 
         whiteBB = copyWhiteBB;
         blackBB = copyBlackBB;
+        nPieces = copyNumberPieces;
 
         prevCastles         = copyPrevCastles;
         prevCastlePath      = copyPrevCastlePath;
@@ -218,12 +221,13 @@ public class State
     //--------------------------------------------------------------------
     public void loadFen(String fen)
     {
-        wPieces    = new long[ Figure.VALUES.length ];
-        bPieces    = new long[ Figure.VALUES.length ];
-        castles    = 0;
+        wPieces   = new long[ Figure.VALUES.length ];
+        bPieces   = new long[ Figure.VALUES.length ];
+        castles   = 0;
         enPassant = EP_NONE;
-        whiteBB    = 0;
-        blackBB    = 0;
+        whiteBB   = 0;
+        blackBB   = 0;
+        nPieces   = 0;
 
         String[] parts = fen.split(" ");
         String[] ranks = parts[0].split("/");
@@ -242,6 +246,8 @@ public class State
                      : bPieces)[ piece.figure().ordinal() ]
                             |=  BitLoc.locationToBitBoard(
                                     rank, file++);
+
+                    nPieces++;
                 }
             }
         }
@@ -696,7 +702,9 @@ public class State
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
         prevEnPassants      = enPassant;
-        enPassant = EP_NONE;
+        enPassant           = EP_NONE;
+
+        nPieces--;
     }
     private void capturePromoteBB(Colour colour,
             int from, long toBB, int promotion, int captured)
@@ -737,11 +745,13 @@ public class State
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassant = prevEnPassants;
+        enPassant       = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
 
         long toBB = BitLoc.locationToBitBoard(to);
         capturePromoteBB(nextToAct, from, toBB, promotion, captured);
+
+        nPieces++;
     }
 
 
@@ -852,10 +862,12 @@ public class State
 
         prevReversibleMoves = reversibleMoves;
         prevEnPassants      = enPassant;
-        enPassant = EP_NONE;
+        enPassant           = EP_NONE;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
         castlePath          = 0;
+
+        nPieces--;
     }
     private void capture(
             int  attacker,
@@ -911,8 +923,10 @@ public class State
 
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
-        enPassant = prevEnPassants;
+        enPassant       = prevEnPassants;
         reversibleMoves = prevReversibleMoves;
+
+        nPieces++;
     }
 
 
@@ -1028,19 +1042,8 @@ public class State
         return true;
     }
 
-    public boolean atMostPieces(int n) {
-        int remain = n - 2; // kings
-        if (remain <= 0) return false;
-
-        for (int figure : NON_KINGS_BY_PROB) {
-            remain -= Long.bitCount(wPieces[ figure ]);
-            if (remain <= 0) return true;
-
-            remain -= Long.bitCount(bPieces[ figure ]);
-            if (remain <= 0) return true;
-        }
-
-        return true;
+    public byte pieceCount() {
+        return nPieces;
     }
 
     public List<Piece> material() {
@@ -1168,10 +1171,11 @@ public class State
     {
         return new State(wPieces.clone(),
                          bPieces.clone(),
-                enPassant,
+                         enPassant,
                          castles,
                          reversibleMoves,
                          nextToAct,
+                         nPieces,
                          whiteBB,
                          blackBB,
                          prevCastles,
