@@ -62,6 +62,7 @@ public class Oracle implements Serializable
 
     //--------------------------------------------------------------------
     private void addPermutations(int n) {
+        @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         List<List<Piece[]>> byPawnCount =
                 new AutovivifiedList<List<Piece[]>>(
                         Factories.<Piece[]>newArrayList());

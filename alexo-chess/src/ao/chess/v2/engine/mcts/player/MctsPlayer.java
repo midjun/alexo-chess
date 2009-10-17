@@ -97,7 +97,8 @@ public class MctsPlayer implements Player
         }
 
         MctsAction act = root.bestMove(sellectors);
-        
+        if (act == null) return -1; // game is done
+
         prevPlay = act.node();
         prevState = position.prototype();
         Move.apply(act.action(), prevState);
