@@ -11,7 +11,6 @@ import ao.chess.v2.piece.Piece;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -1015,6 +1014,21 @@ public class State
 
 
     //--------------------------------------------------------------------
+    public int tallyAllMaterial() {
+        int tally = 0, count;
+        for (Figure figure : Figure.VALUES) {
+            int figureIndex = figure.ordinal();
+
+            count = Long.bitCount(wPieces[ figureIndex ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.WHITE, figure, count);
+
+            count = Long.bitCount(bPieces[ figureIndex ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.BLACK, figure, count);
+        }
+        return tally;
+    }
     public int tallyNonKings(int atMost) {
         int tally = 0, count;
         for (int figure : NON_KINGS_BY_PROB) {
@@ -1030,17 +1044,18 @@ public class State
         }
         return tally;
     }
-    public boolean tallyNonKings(MaterialTally tally, int atMost) {
+    public int tallyNonKings() {
+        int tally = 0, count;
         for (int figure : NON_KINGS_BY_PROB) {
-            atMost -= tally.tally(Colour.WHITE, figure,
-                                  Long.bitCount(wPieces[ figure ]));
-            if (atMost <= 0) return false;
+            count = Long.bitCount(wPieces[ figure ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.WHITE, figure, count);
 
-            atMost -= tally.tally(Colour.BLACK, figure,
-                                  Long.bitCount(wPieces[ figure ]));
-            if (atMost <= 0) return false;
+            count = Long.bitCount(bPieces[ figure ]);
+            tally = MaterialTally.tally(
+                        tally, Colour.BLACK, figure, count);
         }
-        return true;
+        return tally;
     }
 
     public byte pieceCount() {
@@ -1290,38 +1305,25 @@ public class State
         return bb;
     }
 
-//    public boolean check(int move)
-//    {
-//        State myClone = prototype();
-//        move = Move.apply(move, myClone);
-//        boolean afterDo   = myClone.checkPieces();
-//        if (! afterDo) {
-//            System.out.println("before: " + toString());
-//            System.out.println("move: " + Move.toString(move));
-//            System.out.println("after: " + myClone.toString());
-//        }
-//
-//        Move.unApply(move, myClone);
-//        boolean afterUndo = myClone.checkPieces();
-//        return afterDo && afterUndo;
-//    }
-
 
     //--------------------------------------------------------------------
-    public long compress() {
-        BitSet rep = new BitSet();
-
-
-        for (int rank = 0; rank < Location.RANKS; rank++) {
-            for (int file = 0; file < Location.FILES; file++) {
-                Piece p = pieceAt(rank, file);
-                if (p == null) continue;
-
-
-            }
-        }
-        return 0;
-    }
+//    public State invert() {
+//        State inverce = prototype();
+//
+//        long[] tempPieces = inverce.wPieces;
+//        inverce.wPieces   = inverce.bPieces;
+//        inverce.bPieces   = tempPieces;
+//
+//        long tempBB     = inverce.whiteBB;
+//        inverce.whiteBB = inverce.blackBB;
+//        inverce.blackBB = tempBB;
+//
+//        inverce.castles = (byte)(
+//                 (inverce.castles >> 2) |
+//                ((inverce.castles << 2) & 0xC));
+//
+//        return inverce;
+//    }
 
 
     //--------------------------------------------------------------------

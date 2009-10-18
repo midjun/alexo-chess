@@ -2,10 +2,10 @@ package ao.chess.v2.engine.mcts.rollout;
 
 import ao.chess.v2.engine.mcts.MctsHeuristic;
 import ao.chess.v2.engine.mcts.MctsRollout;
+import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.chess.v2.state.Status;
 
 /**
  * User: alex
@@ -43,13 +43,14 @@ public class MctsDeepRolloutImpl
     @Override public double monteCarloPlayout(
             State position, MctsHeuristic heuristic)
     {
-        State state = position;
+        Colour fromPov = position.nextToAct();
+        State  state   = position;
         while (! state.isDrawnBy50MovesRule())
         {
             int move = bestMove(state, heuristic);
             if (move == -1) {
                 return state.knownOutcome()
-                            .valueFor( state.nextToAct() );
+                        .valueFor( fromPov );
             }
             Move.apply(move, state);
         }

@@ -2,6 +2,7 @@ package ao.chess.v2.engine.mcts.rollout;
 
 import ao.chess.v2.engine.mcts.MctsHeuristic;
 import ao.chess.v2.engine.mcts.MctsRollout;
+import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -24,7 +25,7 @@ public class MctsTablebaseRollout
 
 
     //--------------------------------------------------------------------
-    private final int    nPieces;
+//    private final int    nPieces;
     private final Oracle oracle;
 
 
@@ -36,8 +37,8 @@ public class MctsTablebaseRollout
 
     public MctsTablebaseRollout(int endgamePieces)
     {
-        nPieces = endgamePieces;
-        oracle  = new Oracle(nPieces);
+//        nPieces = endgamePieces;
+        oracle  = new Oracle(endgamePieces);
     }
 
 
@@ -45,18 +46,24 @@ public class MctsTablebaseRollout
     @Override public double monteCarloPlayout(
             State fromState, MctsHeuristic heuristic)
     {
+        Colour  pov       = fromState.nextToAct();
         State   simState  = fromState;
         int     nextCount = 0;
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
         int[]   moves     = new int[ Move.MAX_PER_PLY ];
         int     nMoves    = simState.moves(moves);
-        Outcome outcome   = null;
+        Outcome outcome;
 
         boolean wasDrawnBy50MovesRule = false;
-        ply_loop: do
+        do
         {
             int     move;
             boolean madeMove = false;
+
+            outcome = oracle.see(simState);
+            if (outcome != null) {
+                break;
+            }
 
 //            int[] moveOrder = heuristic.orderMoves(
 //                    simState, moves, nMoves);
@@ -71,14 +78,6 @@ public class MctsTablebaseRollout
                 if (nextCount < 0) { // if leads to mate
                     Move.unApply(move, simState);
                 } else {
-                    if (simState.pieceCount() <= nPieces) {
-                        outcome = oracle.see(simState);
-                        if (outcome == null) {
-                            outcome = Outcome.DRAW;
-                        }
-                        break ply_loop;
-                    }
-
                     madeMove = true;
                     break;
                 }
@@ -105,6 +104,6 @@ public class MctsTablebaseRollout
 
         return outcome == null
                ? Double.NaN
-               : outcome.valueFor( simState.nextToAct() );
+               : outcome.valueFor( pov );
     }
 }

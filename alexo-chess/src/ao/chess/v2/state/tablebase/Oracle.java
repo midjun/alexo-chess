@@ -35,7 +35,7 @@ public class Oracle implements Serializable
     public static void main(String[] args) {
         Oracle oracle = new Oracle(4);
 
-        State state = new State("8/8/2k5/8/8/3K3P/8/8 w");
+        State state = new State("8/8/2k5/8/7P/3K4/8/8 w");
         System.out.println(state);
         System.out.println(oracle.see(state));
     }
@@ -53,9 +53,20 @@ public class Oracle implements Serializable
     {
         pieceCount = nPieces;
 
+        addDeadEnds();
+
         int nNonKings = nPieces - 2;
         for (int n = 1; n <= nNonKings; n++) {
             addPermutations(n);
+        }
+    }
+
+    private void addDeadEnds() {
+        for (Piece[] allDraws : new Piece[][]{
+                {}, {Piece.WHITE_KNIGHT}, {Piece.WHITE_BISHOP},
+                    {Piece.BLACK_KNIGHT}, {Piece.BLACK_BISHOP}}) {
+            oracles.put(MaterialTally.tally(allDraws),
+                        new NilMaterialOracle());
         }
     }
 
@@ -106,10 +117,10 @@ public class Oracle implements Serializable
         if (oracles.containsKey(tally)) return;
 
         File           cacheFile      = materialOracleFile(tally);
-        MaterialOracle materialOracle =
+        FastMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {
-            materialOracle = new MaterialOracle(this, nonKings(pieces));
+            materialOracle = new FastMaterialOracle(this, nonKings(pieces));
             PersistentObjects.persist(materialOracle, cacheFile);
             System.out.println("Oracle persisted cache for " +
                                     Arrays.toString(pieces));
@@ -136,9 +147,12 @@ public class Oracle implements Serializable
     //--------------------------------------------------------------------
     public Outcome see(State position)
     {
+        if (position.pieceCount() > pieceCount) return null;
+
         MaterialOracle oracle =
-                oracles.get( position.tallyNonKings(pieceCount) );
-        return (oracle == null)
-               ? null : oracle.see( position.staticHashCode() );
+                oracles.get( position.tallyNonKings() );
+        Outcome outcome = (oracle == null)
+                          ? null : oracle.see( position );
+        return (outcome == null) ? Outcome.DRAW : outcome;
     }
 }

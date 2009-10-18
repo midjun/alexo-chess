@@ -3,11 +3,6 @@ package ao.chess.v2.state.tablebase;
 import ao.chess.v2.state.Representation;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterable;
-import it.unimi.dsi.fastutil.longs.LongIterator;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.util.Iterator;
 
@@ -20,37 +15,46 @@ public class StateMap
         implements Traverser<State>
 {
     //--------------------------------------------------------------------
-//    private final Long2ObjectMap<State> byHash =
-//            new Long2ObjectOpenHashMap<State>();
-    private final Long2ObjectMap<byte[]> byHash =
-            new Long2ObjectOpenHashMap<byte[]>();
+    private final MinPerfectHash indexer;
+    private final byte[][]       byIndex;
+
+
+    //--------------------------------------------------------------------
+    public StateMap(MinPerfectHash minHash)
+    {
+        indexer = minHash;
+        byIndex = new byte[ minHash.size() ][];
+    }
 
 
     //--------------------------------------------------------------------
     @Override public void traverse(State state)
     {
-//        State existing = byHash.get(state.staticHashCode());
-        State existing = get(state.staticHashCode());
+        long  staticHash = state.staticHashCode();
+        State existing   = get(staticHash);
         if (existing == null) {
-//            byHash.put(state.staticHashCode(), state);
-            put(state.staticHashCode(), state);
+            put(staticHash, state);
         } else if (! existing.equals(state)) {
             System.out.println("StateMap COLLISION FOUND!!!");
             System.out.println(existing);
             System.out.println("vs");
             System.out.println(state);
-            
         }
     }
 
 
     //--------------------------------------------------------------------
     private void put(long staticHash, State state) {
-        byHash.put(staticHash, Representation.packStream(state));
+        byIndex[ indexer.index(staticHash) ] =
+                Representation.packStream(state);
     }
 
     private State get(long staticHash) {
-        byte[] packed = byHash.get(staticHash);
+        return getIndexed( indexer.index(staticHash) );
+    }
+
+    private State getIndexed(int index) {
+        byte[] packed = byIndex[ index ];
         return packed == null
                ? null
                : Representation.unpackStream(packed);
@@ -59,8 +63,7 @@ public class StateMap
 
     //--------------------------------------------------------------------
     public void traverse(Traverser<State> visitor) {
-//        for (State state : byHash.values()) {
-        for (byte[] packedState : byHash.values()) {
+        for (byte[] packedState : byIndex) {
             State state = Representation.unpackStream(packedState);
             visitor.traverse( state );
         }
@@ -69,29 +72,29 @@ public class StateMap
 
     //--------------------------------------------------------------------
     public boolean containsState(long staticHash) {
-        return byHash.containsKey( staticHash );
+        return byIndex[ indexer.index(staticHash) ] != null;
     }
 
     
     //--------------------------------------------------------------------
     public State stateOf(long staticHash) {
-//        return byHash.get( staticHash );
         return get( staticHash );
     }
 
 
     //--------------------------------------------------------------------
-    public Iterable<State> states(LongIterable staticHashes) {
-        final LongIterator itr = staticHashes.iterator();
+    public Iterable<State> states(final int[] indexes) {
         return new Iterable<State>() {
             @Override public Iterator<State> iterator() {
                 return new Iterator<State>() {
+                    private int nextIndex = 0;
+
                     @Override public boolean hasNext() {
-                        return itr.hasNext();
+                        return nextIndex < indexes.length;
                     }
 
                     @Override public State next() {
-                        return stateOf( itr.nextLong() );
+                        return getIndexed( indexes[nextIndex++] );
                     }
 
                     @Override public void remove() {
@@ -105,18 +108,18 @@ public class StateMap
 
     //--------------------------------------------------------------------
     public Iterable<State> states() {
-//        return byHash.values();
         return new Iterable<State>() {
             @Override public Iterator<State> iterator() {
-                final ObjectIterator<byte[]> itr =
-                        byHash.values().iterator();
                 return new Iterator<State>() {
+                    private int nextIndex = 0;
+
                     @Override public boolean hasNext() {
-                        return itr.hasNext();
+                        return nextIndex < byIndex.length;
                     }
 
                     @Override public State next() {
-                        return Representation.unpackStream( itr.next() );
+                        return Representation.unpackStream(
+                                byIndex[ nextIndex++ ]);
                     }
 
                     @Override public void remove() {
@@ -130,6 +133,6 @@ public class StateMap
 
     //--------------------------------------------------------------------
     public int size() {
-        return byHash.size();
+        return byIndex.length;
     }
 }

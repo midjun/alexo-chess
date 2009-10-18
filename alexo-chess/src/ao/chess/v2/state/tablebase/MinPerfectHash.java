@@ -31,13 +31,13 @@ public class MinPerfectHash implements Serializable
 
 
     //--------------------------------------------------------------------
-    public long index(long staticHash) {
-        return hash.getLong(
+    public int index(long staticHash) {
+        return (int) hash.getLong(
                 MinimalHashBuilder.encode(
                         staticHash));
     }
 
-    public long index(State state) {
+    public int index(State state) {
         return index( state.staticHashCode() );
     }
 

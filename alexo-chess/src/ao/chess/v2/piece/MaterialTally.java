@@ -1,7 +1,5 @@
 package ao.chess.v2.piece;
 
-import ao.util.math.rand.Rand;
-
 import java.util.Random;
 
 /**
@@ -73,6 +71,23 @@ public class MaterialTally
     }
 
     public static int tally(Piece... material) {
+        int[] counts = new int[ Piece.VALUES.length ];
+        for (Piece piece : material) {
+            counts[ piece.ordinal() ]++;
+        }
+
+        int tally = 0;
+        for (Piece piece : Piece.VALUES) {
+            int count = counts[ piece.ordinal() ];
+            if (count != 0) {
+                tally = tally(tally,
+                          piece.colour(), piece.figure(), count);
+            }
+        }
+        return tally;
+    }
+
+    public static int tally(Iterable<Piece> material) {
         int[] counts = new int[ Piece.VALUES.length ];
         for (Piece piece : material) {
             counts[ piece.ordinal() ]++;
