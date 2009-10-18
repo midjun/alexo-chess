@@ -31,11 +31,17 @@ public class MaterialOracle implements Serializable
         System.out.println("Computing MaterialOracle for " + material);
         Stopwatch timer = new Stopwatch();
 
+        MinPerfectHash minHash = new MinPerfectHash(material);
+        
+        System.out.println("computed perfect hash, took " + timer);
+        timer = new Stopwatch();
+
         StateMap states = new StateMap();
         new PositionTraverser().traverse(
                 material, states);
 
-        System.out.println("filled state map, took " + timer);
+        System.out.println("filled state map " +
+                states.size() + ", took " + timer);
         timer = new Stopwatch();
 
         HashRetrograde retro = new HashRetrograde();

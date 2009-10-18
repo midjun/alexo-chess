@@ -1,7 +1,6 @@
 package ao.chess.v2.state.tablebase;
 
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
 import it.unimi.dsi.bits.HuTuckerTransformationStrategy;
@@ -19,13 +18,13 @@ import java.util.Iterator;
  * Date: 14-Oct-2009
  * Time: 12:53:37 AM
  */
-public class MinimalHash
+public class MinimalHashBuilder
     implements Traverser<State>,
                Iterable<String>
 {
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        MinimalHash minHash = new MinimalHash();
+        MinimalHashBuilder minHash = new MinimalHashBuilder();
 
         new PositionTraverser().traverse(
                 Arrays.asList(
@@ -76,13 +75,18 @@ public class MinimalHash
 
             @Override
             public String next() {
-                return String.valueOf(itr.next());
+                return encode( itr.next() );
             }
 
             @Override public void remove() {
                 throw new UnsupportedOperationException();
             }
         };
+    }
+
+    public static String encode(long staticHash)
+    {
+        return Long.toString( staticHash );
     }
 
 

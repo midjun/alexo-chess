@@ -33,7 +33,7 @@ public class Oracle implements Serializable
 
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        Oracle oracle = new Oracle(3);
+        Oracle oracle = new Oracle(4);
 
         State state = new State("8/8/2k5/8/8/3K3P/8/8 w");
         System.out.println(state);
