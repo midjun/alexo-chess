@@ -46,7 +46,7 @@ public class MinimalHashBuilder
 
     //--------------------------------------------------------------------
     @Override public void traverse(State state) {
-        states.add( state.longHashCode() );
+        states.add( state.staticHashCode() );
         count++;
     }
 
@@ -86,7 +86,12 @@ public class MinimalHashBuilder
 
     public static String encode(long staticHash)
     {
-        return Long.toString( staticHash );
+//        return new String(new char[]{
+//                (char) (staticHash >> 48),
+//                (char) (staticHash >> 32),
+//                (char) (staticHash >> 16),
+//                (char)  staticHash});
+        return String.valueOf( staticHash );
     }
 
 

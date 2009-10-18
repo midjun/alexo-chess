@@ -5,6 +5,7 @@ import ao.chess.v2.engine.mcts.MctsRollout;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
+import ao.chess.v2.piece.Colour;
 
 /**
  * User: alex
@@ -42,7 +43,6 @@ public class MctsRolloutImpl
     @Override public double monteCarloPlayout(
             State fromState, MctsHeuristic heuristic)
     {
-//        return Math.random();
         double sum = 0;
         for (int i = 0; i < nSims; i++) {
             State curState =
@@ -57,6 +57,7 @@ public class MctsRolloutImpl
 
     private double computeMonteCarloPlayout(
             State fromState, MctsHeuristic heuristic) {
+        Colour  pov       = fromState.nextToAct();
         State   simState  = fromState;
         int     nextCount = 0;
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
@@ -116,6 +117,6 @@ public class MctsRolloutImpl
 
         return outcome == null
                ? Double.NaN
-               : outcome.valueFor( simState.nextToAct() );
+               : outcome.valueFor( pov );
     }
 }
