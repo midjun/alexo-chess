@@ -8,7 +8,7 @@ import ao.chess.v2.state.State;
 import ao.util.data.Arr;
 import ao.util.data.AutovivifiedList;
 import ao.util.io.Dir;
-import ao.util.math.stats.Permuter;
+import ao.util.math.stats.Exhauster;
 import ao.util.misc.Factories;
 import ao.util.persist.PersistentObjects;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -78,12 +78,12 @@ public class Oracle implements Serializable
                 new AutovivifiedList<List<Piece[]>>(
                         Factories.<Piece[]>newArrayList());
 
-        for (Piece[] permutation :
-                new Permuter<Piece>(Piece.VALUES, n)) {
-            if (hasKing(permutation)) continue;
+        for (Piece[] exhaustiveCombo :
+                new Exhauster<Piece>(Piece.VALUES, n)) {
+            if (hasKing(exhaustiveCombo)) continue;
             byPawnCount.get(
-                    pawnCount(permutation)
-            ).add( permutation );
+                    pawnCount(exhaustiveCombo)
+            ).add( exhaustiveCombo );
         }
         
         for (List<Piece[]> pieceLists : byPawnCount) {

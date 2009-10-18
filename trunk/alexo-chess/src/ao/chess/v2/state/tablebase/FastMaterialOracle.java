@@ -56,8 +56,8 @@ public class FastMaterialOracle implements MaterialOracle
         timer = new Stopwatch();
 
         // initial mates
-        blackWins = LongArrayBitVector.getInstance( states.size() );
-        whiteWins = LongArrayBitVector.getInstance( states.size() );
+        blackWins = LongArrayBitVector.ofLength( states.size() );
+        whiteWins = LongArrayBitVector.ofLength( states.size() );
 
         IntSet prevWhiteWins = new IntOpenHashSet();
         IntSet prevBlackWins = new IntOpenHashSet();
