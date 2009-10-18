@@ -11,6 +11,7 @@ import ao.chess.v2.piece.Piece;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -142,12 +143,12 @@ public class State
     private static final int[]   NON_KINGS_BY_PROB        =
             {PAWNS, ROOKS, BISHOPS, KNIGHTS, QUEENS};
 
-    private static final Piece[] NON_KINGS_BY_PROB_PIECES =
-            {Piece.WHITE_PAWN  , Piece.BLACK_PAWN,
-             Piece.WHITE_ROOK  , Piece.BLACK_ROOK,
-             Piece.WHITE_BISHOP, Piece.BLACK_BISHOP,
-             Piece.WHITE_KNIGHT, Piece.BLACK_KNIGHT,
-             Piece.WHITE_QUEEN , Piece.BLACK_QUEEN};
+//    private static final Piece[] NON_KINGS_BY_PROB_PIECES =
+//            {Piece.WHITE_PAWN  , Piece.BLACK_PAWN,
+//             Piece.WHITE_ROOK  , Piece.BLACK_ROOK,
+//             Piece.WHITE_BISHOP, Piece.BLACK_BISHOP,
+//             Piece.WHITE_KNIGHT, Piece.BLACK_KNIGHT,
+//             Piece.WHITE_QUEEN , Piece.BLACK_QUEEN};
 
 
     //--------------------------------------------------------------------
@@ -1114,6 +1115,23 @@ public class State
 
 
     //--------------------------------------------------------------------
+    public byte reversibleMoves() {
+        return reversibleMoves;
+    }
+
+    public CastleType.Set castlesAvailable() {
+        return new CastleType.Set(
+                (castles & WHITE_Q_CASTLE) != 0,
+                (castles & WHITE_K_CASTLE) != 0,
+                (castles & BLACK_Q_CASTLE) != 0,
+                (castles & BLACK_K_CASTLE) != 0);
+    }
+
+    public byte enPassantFile() {
+        return (enPassant == EP_NONE)
+               ? -1 : enPassant;
+    }
+
     public boolean isDrawnBy50MovesRule() {
         return reversibleMoves > 100;
     }
@@ -1139,7 +1157,7 @@ public class State
 
 
     //--------------------------------------------------------------------
-    private Piece pieceAt(int rankIndex, int fileIndex)
+    public Piece pieceAt(int rankIndex, int fileIndex)
     {
         long loc = BitLoc.locationToBitBoard(rankIndex, fileIndex);
         for (Figure f : Figure.VALUES) {
@@ -1287,6 +1305,23 @@ public class State
 //        boolean afterUndo = myClone.checkPieces();
 //        return afterDo && afterUndo;
 //    }
+
+
+    //--------------------------------------------------------------------
+    public long compress() {
+        BitSet rep = new BitSet();
+
+
+        for (int rank = 0; rank < Location.RANKS; rank++) {
+            for (int file = 0; file < Location.FILES; file++) {
+                Piece p = pieceAt(rank, file);
+                if (p == null) continue;
+
+
+            }
+        }
+        return 0;
+    }
 
 
     //--------------------------------------------------------------------

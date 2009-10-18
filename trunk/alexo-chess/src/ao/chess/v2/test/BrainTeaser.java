@@ -5,7 +5,6 @@ import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
 import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
-import ao.chess.v2.engine.mcts.rollout.MctsTablebaseRollout;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
 import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
@@ -58,26 +57,26 @@ public class BrainTeaser {
 //                new MctsHeuristicImpl(),
 //                new MctsSchedulerImpl.Factory()
 //        );
-//        Player player = new MctsPlayer(
-//                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
-//                new Ucb1TunedValue.Factory(),
-//                new MctsRolloutImpl(),
-//                new Ucb1TunedValue.VisitSelector(),
-//                new MctsHeuristicImpl(),
-////                new NativeTransTable<Ucb1TunedValue>(
-////                        new Ucb1TunedValue.Factory()),
-//                new NullTransTable<Ucb1TunedValue>(),
-//                new MctsSchedulerImpl.Factory()
-//        );
         Player player = new MctsPlayer(
                 new MctsNodeImpl.Factory<Ucb1TunedValue>(),
                 new Ucb1TunedValue.Factory(),
-                new MctsTablebaseRollout(),
+                new MctsRolloutImpl(),
                 new Ucb1TunedValue.VisitSelector(),
                 new MctsHeuristicImpl(),
+//                new NativeTransTable<Ucb1TunedValue>(
+//                        new Ucb1TunedValue.Factory()),
                 new NullTransTable<Ucb1TunedValue>(),
                 new MctsSchedulerImpl.Factory()
         );
+//        Player player = new MctsPlayer(
+//                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+//                new Ucb1TunedValue.Factory(),
+//                new MctsTablebaseRollout(),
+//                new Ucb1TunedValue.VisitSelector(),
+//                new MctsHeuristicImpl(),
+//                new NullTransTable<Ucb1TunedValue>(),
+//                new MctsSchedulerImpl.Factory()
+//        );
 //        Player player = new MctsPlayer(
 //                new MctsNodeImpl.Factory<UcbTunedValue>(),
 //                new UcbTunedValue.Factory(),

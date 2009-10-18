@@ -5,7 +5,6 @@ import ao.chess.v2.engine.mcts.MctsRollout;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.chess.v2.state.Status;
 
 /**
  * User: alex
@@ -68,6 +67,13 @@ public class MctsRolloutImpl
         boolean wasDrawnBy50MovesRule = false;
         do
         {
+//            if (! Representation.unpackStream(
+//                    Representation.packStream(
+//                            simState)).equals( simState )) {
+//                System.out.println("PACKING ERROR!!!");
+//                System.out.println(simState);
+//            }
+
             int     move;
             boolean madeMove = false;
 
