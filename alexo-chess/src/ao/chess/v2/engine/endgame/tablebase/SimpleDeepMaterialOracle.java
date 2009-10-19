@@ -1,6 +1,5 @@
 package ao.chess.v2.engine.endgame.tablebase;
 
-import ao.chess.v2.engine.endgame.bitbase.BitMaterialOracle;
 import ao.chess.v2.engine.endgame.bitbase.BitOracle;
 import ao.chess.v2.engine.endgame.common.MaterialRetrograde;
 import ao.chess.v2.engine.endgame.common.PositionTraverser;
@@ -13,7 +12,6 @@ import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.time.Stopwatch;
 import it.unimi.dsi.bits.BitVector;
-import it.unimi.dsi.bits.LongArrayBitVector;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
@@ -28,8 +26,7 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
 {
     //--------------------------------------------------------------------
     private final MinPerfectHash     indexer;
-    private final LongArrayBitVector blackWins;
-    private final LongArrayBitVector whiteWins;
+    private final byte[]             outcomes;
 
 
     //--------------------------------------------------------------------
@@ -58,12 +55,11 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
                 new MaterialRetrograde(materialTally, indexer);
         states.traverse(retro);
 
-        System.out.println("retrograte analysis done, took " + timer);
+        System.out.println("retrograde analysis done, took " + timer);
         timer = new Stopwatch();
 
         // initial mates
-        blackWins = LongArrayBitVector.ofLength( states.size() );
-        whiteWins = LongArrayBitVector.ofLength( states.size() );
+        outcomes = new byte[ states.size() ];
 
         IntSet prevWhiteWins = new IntOpenHashSet();
         IntSet prevBlackWins = new IntOpenHashSet();
@@ -79,8 +75,9 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
         while (! prevWhiteWins.isEmpty() ||
                ! prevBlackWins.isEmpty())
         {
-            addAll( whiteWins, prevWhiteWins );
-            addAll( blackWins, prevBlackWins );
+            ply++;
+            addAll( true , prevWhiteWins, ply );
+            addAll( false, prevBlackWins, ply );
 
             IntSet nextWhiteWins = new IntOpenHashSet();
             IntSet nextBlackWins = new IntOpenHashSet();
@@ -98,31 +95,29 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             prevBlackWins = nextBlackWins;
         }
 
-        System.out.println("finalizing & trimming");
-
-        blackWins.trim();
-        whiteWins.trim();
-
         System.out.println("done, got " +
-                blackWins.count() + " | " +
-                whiteWins.count() + " | " +
+                blackWinCount() + " | " +
+                whiteWinCount() + " | " +
                 states.size());
     }
 
-    private void addAll(BitVector to, IntSet indexes) {
+    private void addAll(boolean whiteWins, IntSet indexes, int ply) {
         for (int index : indexes) {
-            to.set( index );
+            outcomes[index] = (byte)
+                    ((whiteWins)
+                     ? Math.min( ply, Byte.MAX_VALUE)
+                     : Math.max(-ply, Byte.MIN_VALUE));
         }
     }
 
 
     //--------------------------------------------------------------------
     private void addNextImmediates(
-            StateMap allStates,
+            StateMap           allStates,
             int                materialTally,
             MaterialRetrograde retro,
             IntSet             prevWins,
-            BitOracle oracle,
+            DeepOracle         oracle,
             IntSet             nextWhiteWins,
             IntSet             nextBlackWins)
     {
@@ -137,88 +132,124 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
     //--------------------------------------------------------------------
     private void addImmediateMates(
             Iterable<State> states,
-            BitOracle oracle,
+            DeepOracle      oracle,
             int             materialTally,
             IntSet          nextWhiteWins,
             IntSet          nextBlackWins)
     {
         for (State state : states) {
-            if (! isUnknown(state)) continue;
+            if (! isWinKnown(state)) continue;
 
-            Outcome result = findImminentMate(
+            DeepOutcome result = findImminentMate(
                     state, materialTally, oracle);
-            if (result == Outcome.WHITE_WINS) {
+            if (result.whiteWins()) {
                 nextWhiteWins.add(
                         indexer.index(state.staticHashCode()) );
-            } else if (result == Outcome.BLACK_WINS) {
+            } else if (result.blackWins()) {
                 nextBlackWins.add(
                         indexer.index(state.staticHashCode()) );
             }
         }
     }
 
-    private boolean isUnknown(State state) {
+    private boolean isWinKnown(State state) {
         long staticHash = state.staticHashCode();
         int  index      = indexer.index( staticHash );
-        return ! (whiteWins.get(index) ||
-                  blackWins.get(index));
+        return outcomes[ index ] != 0;
     }
 
 
     //--------------------------------------------------------------------
-    private Outcome findImminentMate(
-            State state, int materialTally, BitOracle oracle)
+    private DeepOutcome findImminentMate(
+            State state, int materialTally, DeepOracle oracle)
     {
         Outcome result = state.knownOutcome();
         if (result != null && result != Outcome.DRAW) {
-            return result;
+            return new DeepOutcome(result, 1);
         }
 
         int legalMoves[] = state.legalMoves();
         if (legalMoves == null) return null;
 
-        int ties = 0, losses = 0;
+        int ties = 0;
+        int minLossPly = Integer.MAX_VALUE;
+        int minWinPly  = Integer.MAX_VALUE;
         for (int legalMove : legalMoves)
         {
             Move.apply(legalMove, state);
 
-            long    staticHash     = state.staticHashCode();
-            Outcome imminentResult =
-                    //allStates.containsState( staticHash )
+            long        staticHash     = state.staticHashCode();
+            DeepOutcome imminentResult =
                     materialTally == state.tallyAllMaterial()
                     ? see( staticHash )
                     : oracle.see(state);
             Move.unApply(legalMove, state);
 
             if (imminentResult != null &&
-                    imminentResult != Outcome.DRAW) {
-                if (state.nextToAct() == imminentResult.winner()) {
-                    return imminentResult;
+                    ! imminentResult.isDraw()) {
+                if (state.nextToAct() ==
+                        imminentResult.outcome().winner()) {
+                    minWinPly = Math.min(minWinPly,
+                            imminentResult.plyDistance() + 1);
+//                    return imminentResult;
                 } else {
-                    losses++;
+//                    losses++;
+                    minLossPly = Math.min(minLossPly,
+                            imminentResult.plyDistance() + 1);
                 }
             } else {
                 ties++;
             }
         }
 
-        return   ties   > 0 ? null
-               : losses > 0 ? Outcome.loses( state.nextToAct() )
-                            : null;
+        if (minWinPly != Integer.MAX_VALUE) {
+            return new DeepOutcome(
+                    Outcome.wins(state.nextToAct()),
+                    minWinPly);
+        } else if (ties > 0) {
+            return null;
+        } else /*if (minLossPly != Integer.MAX_VALUE)*/ {
+            return new DeepOutcome(
+                    Outcome.loses( state.nextToAct() ),
+                    minLossPly);
+        }
     }
 
 
     //--------------------------------------------------------------------
-    public Outcome see(long staticHash) {
-        int index = indexer.index( staticHash );
-        return whiteWins.get(index)
-               ? Outcome.WHITE_WINS
-               : blackWins.get(index)
-                 ? Outcome.BLACK_WINS
+    private int whiteWinCount() {
+        int count = 0;
+        for (byte outcome : outcomes) {
+            if (outcome > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int blackWinCount() {
+        int count = 0;
+        for (byte outcome : outcomes) {
+            if (outcome < 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
+    //--------------------------------------------------------------------
+    public DeepOutcome see(long staticHash) {
+        int index   = indexer.index( staticHash );
+        int outcome = outcomes[index];
+        return outcome > 0
+               ? new DeepOutcome(Outcome.WHITE_WINS, outcome)
+               : outcome < 0
+                 ? new DeepOutcome(Outcome.BLACK_WINS, -outcome)
                  : null;
     }
 
-    @Override public Outcome see(State state) {
+    @Override public DeepOutcome see(State state) {
         return see( state.staticHashCode() );
     }
 }
