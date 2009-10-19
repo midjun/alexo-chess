@@ -1,5 +1,8 @@
-package ao.chess.v2.engine.endgame.bitbase;
+package ao.chess.v2.engine.endgame.tablebase;
 
+import ao.chess.v2.engine.endgame.bitbase.BitMaterialOracle;
+import ao.chess.v2.engine.endgame.bitbase.FastBitMaterialOracle;
+import ao.chess.v2.engine.endgame.bitbase.NilBitMaterialOracle;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
@@ -25,7 +28,7 @@ import java.util.List;
  * Date: 14-Oct-2009
  * Time: 10:01:26 PM
  */
-public class Oracle implements Serializable
+public class DeepOracle
 {
     //--------------------------------------------------------------------
     private static final File outDir = Dir.get("table/endgame");
@@ -33,7 +36,7 @@ public class Oracle implements Serializable
 
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        Oracle oracle = new Oracle(3);
+        DeepOracle oracle = new DeepOracle(3);
 
         State state = new State("8/8/2k5/8/7P/3K4/8/8 w");
         System.out.println(state);
@@ -42,14 +45,14 @@ public class Oracle implements Serializable
 
 
     //--------------------------------------------------------------------
-    private final Int2ObjectMap<MaterialOracle> oracles =
-            new Int2ObjectOpenHashMap<MaterialOracle>();
+    private final Int2ObjectMap<BitMaterialOracle> oracles =
+            new Int2ObjectOpenHashMap<BitMaterialOracle>();
 
     private final int                           pieceCount;
 
 
     //--------------------------------------------------------------------
-    public Oracle(int nPieces)
+    public DeepOracle(int nPieces)
     {
         pieceCount = nPieces;
 
@@ -66,7 +69,7 @@ public class Oracle implements Serializable
                 {}, {Piece.WHITE_KNIGHT}, {Piece.WHITE_BISHOP},
                     {Piece.BLACK_KNIGHT}, {Piece.BLACK_BISHOP}}) {
             oracles.put(MaterialTally.tally(allDraws),
-                        new NilMaterialOracle());
+                        new NilBitMaterialOracle());
         }
     }
 
@@ -85,7 +88,7 @@ public class Oracle implements Serializable
                     pawnCount(exhaustiveCombo)
             ).add( exhaustiveCombo );
         }
-        
+
         for (List<Piece[]> pieceLists : byPawnCount) {
             for (Piece[] pieces : pieceLists) {
                 add( pieces );
@@ -117,10 +120,10 @@ public class Oracle implements Serializable
         if (oracles.containsKey(tally)) return;
 
         File           cacheFile      = materialOracleFile(tally);
-        FastMaterialOracle materialOracle =
+        FastBitMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {
-            materialOracle = new FastMaterialOracle(this, nonKings(pieces));
+            materialOracle = new FastBitMaterialOracle(this, nonKings(pieces));
             PersistentObjects.persist(materialOracle, cacheFile);
             System.out.println("Oracle persisted cache for " +
                                     Arrays.toString(pieces));
@@ -145,11 +148,11 @@ public class Oracle implements Serializable
 
 
     //--------------------------------------------------------------------
-    public Outcome see(State position)
+    public DeepOutcome see(State position)
     {
         if (position.pieceCount() > pieceCount) return null;
 
-        MaterialOracle oracle =
+        BitMaterialOracle oracle =
                 oracles.get( position.tallyNonKings() );
         Outcome outcome = (oracle == null)
                           ? null : oracle.see( position );

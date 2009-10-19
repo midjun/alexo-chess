@@ -22,7 +22,7 @@ import java.util.List;
  * Date: 13-Oct-2009
  * Time: 11:15:38 PM
  */
-public class FastMaterialOracle implements MaterialOracle
+public class FastBitMaterialOracle implements BitMaterialOracle
 {
     //--------------------------------------------------------------------
     private final MinPerfectHash indexer;
@@ -31,8 +31,8 @@ public class FastMaterialOracle implements MaterialOracle
 
 
     //--------------------------------------------------------------------
-    public FastMaterialOracle(
-            final Oracle      oracle,
+    public FastBitMaterialOracle(
+            final BitOracle oracle,
             final List<Piece> material)
     {
         System.out.println("Computing MaterialOracle for " + material);
@@ -120,7 +120,7 @@ public class FastMaterialOracle implements MaterialOracle
             int                materialTally,
             MaterialRetrograde retro,
             IntSet             prevWins,
-            Oracle             oracle,
+            BitOracle oracle,
             IntSet             nextWhiteWins,
             IntSet             nextBlackWins)
     {
@@ -135,7 +135,7 @@ public class FastMaterialOracle implements MaterialOracle
     //--------------------------------------------------------------------
     private void addImmediateMates(
             Iterable<State> states,
-            Oracle          oracle,
+            BitOracle oracle,
             int             materialTally,
             IntSet          nextWhiteWins,
             IntSet          nextBlackWins)
@@ -165,7 +165,7 @@ public class FastMaterialOracle implements MaterialOracle
 
     //--------------------------------------------------------------------
     private Outcome findImminentMate(
-            State state, int materialTally, Oracle oracle)
+            State state, int materialTally, BitOracle oracle)
     {
         Outcome result = state.knownOutcome();
         if (result != null && result != Outcome.DRAW) {
