@@ -23,18 +23,20 @@ public class MctsRolloutImpl
 //    }
 
     //--------------------------------------------------------------------
-    private final int nSims;
+    private final int     nSims;
+    private final boolean opt;
 
 
     //--------------------------------------------------------------------
-    public MctsRolloutImpl()
+    public MctsRolloutImpl(boolean optimize)
     {
-        this(1);
+        this(1, optimize);
     }
 
-    public MctsRolloutImpl(int accuracy)
+    public MctsRolloutImpl(int accuracy, boolean optimize)
     {
         nSims = accuracy;
+        opt   = optimize;
     }
 
 
@@ -112,6 +114,10 @@ public class MctsRolloutImpl
                     simState.isDrawnBy50MovesRule()));
         if (wasDrawnBy50MovesRule) {
             outcome = Outcome.DRAW;
+        }
+
+        if (opt) {
+            pov = simState.nextToAct();
         }
 
         return outcome == null

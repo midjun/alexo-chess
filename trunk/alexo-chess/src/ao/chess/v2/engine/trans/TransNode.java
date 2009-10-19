@@ -30,7 +30,7 @@ public class TransNode
             new MctsFpuHeuristic();
 
     private static final MctsRollout   MC_TRIAL   =
-            new MctsRolloutImpl();
+            new MctsRolloutImpl(false);
 
     private static final MctsSelector<Ucb1TunedValue>
             SELECTOR = new Ucb1TunedValue.MeanSelector();

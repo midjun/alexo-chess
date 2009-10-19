@@ -6,7 +6,7 @@ import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.chess.v2.state.tablebase.Oracle;
+import ao.chess.v2.engine.endgame.bitbase.BitOracle;
 
 /**
  * User: alex
@@ -29,7 +29,7 @@ public class MctsTablebaseRollout
 
     //--------------------------------------------------------------------
 //    private final int    nPieces;
-    private final Oracle oracle;
+    private final BitOracle oracle;
 
 
     //--------------------------------------------------------------------
@@ -41,7 +41,7 @@ public class MctsTablebaseRollout
     public MctsTablebaseRollout(int endgamePieces)
     {
 //        nPieces = endgamePieces;
-        oracle  = new Oracle(endgamePieces);
+        oracle  = new BitOracle(endgamePieces);
     }
 
 
