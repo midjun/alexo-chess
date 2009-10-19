@@ -49,4 +49,20 @@ public class DeepOutcome
     public boolean blackWins() {
         return OUTCOME == Outcome.BLACK_WINS;
     }
+
+
+    //--------------------------------------------------------------------
+    @Override public String toString() {
+        switch (OUTCOME) {
+            case DRAW:
+                return "Draw";
+
+            case BLACK_WINS:
+                return "Black wins in " + PLY_AWAY;
+
+            //case WHITE_WINS:
+            default:
+                return "White wins in " + PLY_AWAY; 
+        }
+    }
 }
