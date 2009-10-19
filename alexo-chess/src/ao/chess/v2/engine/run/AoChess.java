@@ -1,4 +1,4 @@
-package ao.chess.v2.engine;
+package ao.chess.v2.engine.run;
 
 import ao.chess.v1.util.Io;
 import ao.chess.v2.engine.mcts.heuristic.MctsFpuHeuristic;
@@ -6,11 +6,13 @@ import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
 import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
+import ao.chess.v2.engine.mcts.rollout.MctsTablebaseRollout;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
 import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
+import ao.chess.v2.engine.Player;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -58,6 +60,10 @@ public class AoChess {
     //--------------------------------------------------------------------
     public static void main(String[] args)
     {
+        if (args.length > 1) {
+            Config.setWorkingDirectory( args[1] );
+        }
+
         try
         {
             Io.display( "Hi Mabsy!!!!" );
@@ -72,7 +78,7 @@ public class AoChess {
                 bot = new MctsPlayer(
                         new MctsNodeImpl.Factory<Ucb1TunedValue>(),
                         new Ucb1TunedValue.Factory(),
-                        new MctsRolloutImpl(),
+                        new MctsRolloutImpl(false),
                         new Ucb1TunedValue.VisitSelector(),
                         new MctsHeuristicImpl(),
                         new NullTransTable<Ucb1TunedValue>(),
@@ -109,6 +115,17 @@ public class AoChess {
 //                        new NullTransTable<Ucb1TunedValue>(),
 //                        new MctsSchedulerImpl.Factory()
 //                );
+                Io.display("loading...");
+                bot = new MctsPlayer(
+                        new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+                        new Ucb1TunedValue.Factory(),
+                        new MctsTablebaseRollout(),
+                        new Ucb1TunedValue.VisitSelector(),
+                        new MctsHeuristicImpl(),
+                        new NullTransTable<Ucb1TunedValue>(),
+                        new MctsSchedulerImpl.Factory()
+                );
+                Io.display("done loading!");
 //                bot = new MctsPlayer(
 //                        new MctsNodeImpl.Factory<Ucb1Value2>(),
 //                        new Ucb1Value2.Factory(),
@@ -165,9 +182,9 @@ public class AoChess {
                 : "must use WinBoard protocol";
         Io.write(WINBOARD_INIT);
 
-        int     moveTime  = 0;
-        int     increment = 0;
-        int     timeLeft  = 0;
+        int     moveTime  = 5000;
+        int     increment = 5000;
+        int     timeLeft  = 5000;
         boolean force     = false;
         while (true)
 		{
@@ -277,6 +294,8 @@ public class AoChess {
             State state, Player bot,
             int timeLeft, int moveTime, int timeIncrement)
     {
+        Io.display("playing " +
+                timeLeft + "\t" + moveTime + "\t" + timeIncrement);
         int move = bot.move(state, timeLeft, moveTime, timeIncrement);
         if (move != -1) // We have found a move to make
         {
