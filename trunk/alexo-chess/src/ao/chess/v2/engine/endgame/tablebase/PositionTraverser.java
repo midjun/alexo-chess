@@ -1,10 +1,9 @@
-package ao.chess.v2.state.tablebase;
+package ao.chess.v2.engine.endgame.tablebase;
 
 import ao.chess.v2.data.Location;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
 
