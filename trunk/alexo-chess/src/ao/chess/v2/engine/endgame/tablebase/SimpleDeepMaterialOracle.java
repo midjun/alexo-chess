@@ -25,8 +25,8 @@ import java.util.List;
 public class SimpleDeepMaterialOracle implements DeepMaterialOracle
 {
     //--------------------------------------------------------------------
-    private final MinPerfectHash     indexer;
-    private final byte[]             outcomes;
+    private final MinPerfectHash indexer;
+    private final byte[]         outcomes;
 
 
     //--------------------------------------------------------------------
@@ -61,38 +61,27 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
         // initial mates
         outcomes = new byte[ states.size() ];
 
-        IntSet prevWhiteWins = new IntOpenHashSet();
-        IntSet prevBlackWins = new IntOpenHashSet();
+        IntSet prevWins = new IntOpenHashSet();
 
         addImmediateMates(
-                states.states(), oracle, materialTally,
-                prevWhiteWins, prevBlackWins);
+                states.states(), oracle, materialTally, prevWins);
 
-        int ply = 1;
+        int ply = 0;
         System.out.println("initial mates found, took " + timer);
         timer = new Stopwatch();
 
-        while (! prevWhiteWins.isEmpty() ||
-               ! prevBlackWins.isEmpty())
+        while (! prevWins.isEmpty())
         {
-            ply++;
-            addAll( true , prevWhiteWins, ply );
-            addAll( false, prevBlackWins, ply );
-
-            IntSet nextWhiteWins = new IntOpenHashSet();
-            IntSet nextBlackWins = new IntOpenHashSet();
+            IntSet nextWins = new IntOpenHashSet();
 
             addNextImmediates(states, materialTally, retro,
-                    prevWhiteWins, oracle, nextWhiteWins, nextBlackWins);
-            addNextImmediates(states, materialTally, retro,
-                    prevBlackWins, oracle, nextWhiteWins, nextBlackWins);
+                                prevWins, oracle, nextWins);
 
             System.out.println(
                     "finished ply " + (ply++) + ", took " + timer);
             timer = new Stopwatch();
 
-            prevWhiteWins = nextWhiteWins;
-            prevBlackWins = nextBlackWins;
+            prevWins = nextWins;
         }
 
         System.out.println("done, got " +
@@ -101,13 +90,13 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
                 states.size());
     }
 
-    private void addAll(boolean whiteWins, IntSet indexes, int ply) {
-        for (int index : indexes) {
-            outcomes[index] = (byte)
-                    ((whiteWins)
-                     ? Math.min( ply, Byte.MAX_VALUE)
-                     : Math.max(-ply, Byte.MIN_VALUE));
+    private byte normalizePly(int relativePlyDistance) {
+        if (relativePlyDistance > 0) {
+            return (byte) Math.min(relativePlyDistance, Byte.MAX_VALUE);
+        } else if (relativePlyDistance < 0) {
+            return (byte) Math.max(relativePlyDistance, Byte.MIN_VALUE);
         }
+        return 0;
     }
 
 
@@ -118,13 +107,12 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             MaterialRetrograde retro,
             IntSet             prevWins,
             DeepOracle         oracle,
-            IntSet             nextWhiteWins,
-            IntSet             nextBlackWins)
+            IntSet             nextWins)
     {
         for (int prevWin : prevWins) {
             addImmediateMates(
                     allStates.states(retro.indexPrecedents( prevWin )),
-                    oracle, materialTally, nextWhiteWins, nextBlackWins);
+                    oracle, materialTally, nextWins);
         }
     }
 
@@ -134,21 +122,33 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             Iterable<State> states,
             DeepOracle      oracle,
             int             materialTally,
-            IntSet          nextWhiteWins,
-            IntSet          nextBlackWins)
+            IntSet          nextWins)
     {
         for (State state : states) {
-            if (! isWinKnown(state)) continue;
+            if (isWinKnown(state)) continue;
 
             DeepOutcome result = findImminentMate(
                     state, materialTally, oracle);
-            if (result.whiteWins()) {
-                nextWhiteWins.add(
-                        indexer.index(state.staticHashCode()) );
-            } else if (result.blackWins()) {
-                nextBlackWins.add(
-                        indexer.index(state.staticHashCode()) );
+            if (result != null && ! result.isDraw()) {
+                int index = indexer.index(state);
+                nextWins.add(index);
+
+                if (result.whiteWins()) {
+                   outcomes[ index ] =
+                            normalizePly( result.plyDistance() );
+                } else /*if (result.blackWins())*/ {
+                    outcomes[ index ] =
+                            normalizePly( -result.plyDistance() );
+                }
             }
+
+//            if (result.whiteWins()) {
+//                nextWhiteWins.add(
+//                        indexer.index(state.staticHashCode()) );
+//            } else if (result.blackWins()) {
+//                nextBlackWins.add(
+//                        indexer.index(state.staticHashCode()) );
+//            }
         }
     }
 
