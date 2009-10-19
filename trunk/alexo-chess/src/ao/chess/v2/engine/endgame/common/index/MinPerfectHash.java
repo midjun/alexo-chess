@@ -1,7 +1,8 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.common.index;
 
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.State;
+import ao.chess.v2.engine.endgame.common.PositionTraverser;
 import it.unimi.dsi.sux4j.mph.MinimalPerfectHashFunction;
 
 import java.io.Serializable;

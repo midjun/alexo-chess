@@ -1,10 +1,14 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.bitbase;
 
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
+import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
+import ao.chess.v2.engine.endgame.common.StateMap;
+import ao.chess.v2.engine.endgame.common.MaterialRetrograde;
+import ao.chess.v2.engine.endgame.common.PositionTraverser;
 import ao.util.time.Stopwatch;
 import it.unimi.dsi.bits.BitVector;
 import it.unimi.dsi.bits.LongArrayBitVector;
@@ -21,7 +25,7 @@ import java.util.List;
 public class FastMaterialOracle implements MaterialOracle
 {
     //--------------------------------------------------------------------
-    private final MinPerfectHash     indexer;
+    private final MinPerfectHash indexer;
     private final LongArrayBitVector blackWins;
     private final LongArrayBitVector whiteWins;
 
@@ -112,7 +116,7 @@ public class FastMaterialOracle implements MaterialOracle
 
     //--------------------------------------------------------------------
     private void addNextImmediates(
-            StateMap           allStates,
+            StateMap allStates,
             int                materialTally,
             MaterialRetrograde retro,
             IntSet             prevWins,

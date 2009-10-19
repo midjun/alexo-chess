@@ -1,4 +1,4 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.common;
 
 import ao.chess.v2.data.Location;
 import ao.chess.v2.piece.Colour;
