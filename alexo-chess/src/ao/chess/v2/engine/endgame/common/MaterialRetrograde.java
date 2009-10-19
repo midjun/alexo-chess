@@ -1,7 +1,8 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.common;
 
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
+import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
 import ao.util.data.Arr;
 import ao.util.misc.Traverser;
 

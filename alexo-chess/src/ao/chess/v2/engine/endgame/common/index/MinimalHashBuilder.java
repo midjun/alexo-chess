@@ -1,7 +1,8 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.common.index;
 
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.State;
+import ao.chess.v2.engine.endgame.common.PositionTraverser;
 import ao.util.misc.Traverser;
 import it.unimi.dsi.bits.HuTuckerTransformationStrategy;
 import it.unimi.dsi.fastutil.longs.LongIterator;

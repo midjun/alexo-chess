@@ -1,4 +1,4 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.bitbase;
 
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;

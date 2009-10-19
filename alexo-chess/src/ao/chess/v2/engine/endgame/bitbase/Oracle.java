@@ -1,4 +1,4 @@
-package ao.chess.v2.engine.endgame.tablebase;
+package ao.chess.v2.engine.endgame.bitbase;
 
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.MaterialTally;
