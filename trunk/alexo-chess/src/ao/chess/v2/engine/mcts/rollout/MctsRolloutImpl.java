@@ -22,7 +22,6 @@ public class MctsRolloutImpl
 //        }
 //    }
 
-
     //--------------------------------------------------------------------
     private final int nSims;
 

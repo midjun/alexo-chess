@@ -155,8 +155,8 @@ public class MctsNodeImpl<V extends MctsValue<V>>
             double                leafPlayout,
             TranspositionTable<V> transpositionTable)
     {
-        //double reward = 1.0 - leafPlayout;
-        double reward = leafPlayout;
+        double reward = 1.0 - leafPlayout;
+//        double reward = leafPlayout;
 
         for (int i = path.size() - 1; i >= 0; i--)
         {

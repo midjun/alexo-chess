@@ -23,6 +23,9 @@ public class MctsTablebaseRollout
 //        }
 //    }
 
+    private long invocationCount = 0;
+    private long   tableHitCount = 0;
+
 
     //--------------------------------------------------------------------
 //    private final int    nPieces;
@@ -46,6 +49,11 @@ public class MctsTablebaseRollout
     @Override public double monteCarloPlayout(
             State fromState, MctsHeuristic heuristic)
     {
+        if (++invocationCount % 1000 == 0) {
+            System.out.println("table hit fraction: " +
+                    ((double) tableHitCount) / invocationCount);
+        }
+        
         Colour  pov       = fromState.nextToAct();
         State   simState  = fromState;
         int     nextCount = 0;
@@ -54,14 +62,22 @@ public class MctsTablebaseRollout
         int     nMoves    = simState.moves(moves);
         Outcome outcome;
 
+        boolean tableHitUpdated = false;
         boolean wasDrawnBy50MovesRule = false;
         do
         {
             int     move;
             boolean madeMove = false;
 
+            if ((! tableHitUpdated) &&
+                    simState.pieceCount() <= 3) {
+                tableHitCount++;
+                tableHitUpdated = true;
+            }
+
             outcome = oracle.see(simState);
             if (outcome != null) {
+//                tableHitCount++;
                 break;
             }
 
