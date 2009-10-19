@@ -10,7 +10,7 @@ import java.io.Serializable;
  * Date: 18-Oct-2009
  * Time: 5:59:21 PM
  */
-public interface MaterialOracle extends Serializable
+public interface BitMaterialOracle extends Serializable
 {
     public Outcome see(long staticHash);
 

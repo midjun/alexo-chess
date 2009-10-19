@@ -8,7 +8,7 @@ import ao.chess.v2.state.State;
  * Date: 18-Oct-2009
  * Time: 5:59:38 PM
  */
-public class NilMaterialOracle implements MaterialOracle
+public class NilBitMaterialOracle implements BitMaterialOracle
 {
     @Override public Outcome see(long staticHash) {
         return null;
