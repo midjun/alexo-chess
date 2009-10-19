@@ -1,6 +1,7 @@
 package ao.chess.v2.engine;
 
 import ao.chess.v1.util.Io;
+import ao.chess.v2.engine.mcts.heuristic.MctsFpuHeuristic;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
@@ -10,11 +11,9 @@ import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
-import ao.chess.v2.engine.trans.TransPlayer;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.chess.v2.state.Status;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -91,7 +90,7 @@ public class AoChess {
 //                );
             } else if (botName.equals("uct_o")) {
                 Io.display("Optimized UCT");
-                bot = new TransPlayer();
+//                bot = new TransPlayer();
 //                bot = new UctPlayer(true);
 //                bot = new MctsPlayer(
 //                        new MctsNodeImpl.Factory<UcbTuned2Value>(),
