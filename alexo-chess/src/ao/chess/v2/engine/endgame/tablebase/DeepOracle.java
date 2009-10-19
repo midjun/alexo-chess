@@ -45,10 +45,10 @@ public class DeepOracle
 
 
     //--------------------------------------------------------------------
-    private final Int2ObjectMap<BitMaterialOracle> oracles =
-            new Int2ObjectOpenHashMap<BitMaterialOracle>();
+    private final Int2ObjectMap<DeepMaterialOracle> oracles =
+            new Int2ObjectOpenHashMap<DeepMaterialOracle>();
 
-    private final int                           pieceCount;
+    private final int                               pieceCount;
 
 
     //--------------------------------------------------------------------
@@ -69,7 +69,7 @@ public class DeepOracle
                 {}, {Piece.WHITE_KNIGHT}, {Piece.WHITE_BISHOP},
                     {Piece.BLACK_KNIGHT}, {Piece.BLACK_BISHOP}}) {
             oracles.put(MaterialTally.tally(allDraws),
-                        new NilBitMaterialOracle());
+                        new NilDeepMaterialOracle());
         }
     }
 
@@ -119,11 +119,12 @@ public class DeepOracle
         int tally = MaterialTally.tally(pieces);
         if (oracles.containsKey(tally)) return;
 
-        File           cacheFile      = materialOracleFile(tally);
-        FastBitMaterialOracle materialOracle =
+        File               cacheFile      = materialOracleFile(tally);
+        DeepMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {
-            materialOracle = new FastBitMaterialOracle(this, nonKings(pieces));
+            materialOracle = new SimpleDeepMaterialOracle(
+                                        this, nonKings(pieces));
             PersistentObjects.persist(materialOracle, cacheFile);
             System.out.println("Oracle persisted cache for " +
                                     Arrays.toString(pieces));
@@ -152,10 +153,15 @@ public class DeepOracle
     {
         if (position.pieceCount() > pieceCount) return null;
 
-        BitMaterialOracle oracle =
+        DeepMaterialOracle oracle =
                 oracles.get( position.tallyNonKings() );
-        Outcome outcome = (oracle == null)
-                          ? null : oracle.see( position );
-        return (outcome == null) ? Outcome.DRAW : outcome;
+
+        DeepOutcome outcome =
+                (oracle == null)
+                ? null : oracle.see( position );
+
+        return (outcome == null)
+                ? DeepOutcome.DRAW
+                : outcome;
     }
 }
