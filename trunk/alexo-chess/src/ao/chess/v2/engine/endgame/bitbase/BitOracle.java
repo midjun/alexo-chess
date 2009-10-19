@@ -120,7 +120,8 @@ public class BitOracle
         FastBitMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {
-            materialOracle = new FastBitMaterialOracle(this, nonKings(pieces));
+            materialOracle =
+                    new FastBitMaterialOracle(this, nonKings(pieces));
             PersistentObjects.persist(materialOracle, cacheFile);
             System.out.println("Oracle persisted cache for " +
                                     Arrays.toString(pieces));
