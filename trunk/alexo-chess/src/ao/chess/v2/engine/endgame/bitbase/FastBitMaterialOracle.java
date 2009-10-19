@@ -56,7 +56,7 @@ public class FastBitMaterialOracle implements BitMaterialOracle
                 new MaterialRetrograde(materialTally, indexer);
         states.traverse(retro);
 
-        System.out.println("retrograte analysis done, took " + timer);
+        System.out.println("retrograde analysis done, took " + timer);
         timer = new Stopwatch();
 
         // initial mates

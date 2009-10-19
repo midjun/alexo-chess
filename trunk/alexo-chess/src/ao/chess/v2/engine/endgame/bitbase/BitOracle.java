@@ -28,7 +28,7 @@ import java.util.List;
 public class BitOracle
 {
     //--------------------------------------------------------------------
-    private static final File outDir = Dir.get("table/endgame");
+    private static final File outDir = Dir.get("table/bitbase");
 
 
     //--------------------------------------------------------------------

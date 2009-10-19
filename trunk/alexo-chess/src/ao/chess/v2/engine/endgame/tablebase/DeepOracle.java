@@ -31,7 +31,7 @@ import java.util.List;
 public class DeepOracle
 {
     //--------------------------------------------------------------------
-    private static final File outDir = Dir.get("table/endgame");
+    private static final File outDir = Dir.get("table/tablebase");
 
 
     //--------------------------------------------------------------------

@@ -35,4 +35,18 @@ public class DeepOutcome
     public int plyDistance() {
         return PLY_AWAY;
     }
+
+
+    //--------------------------------------------------------------------
+    public boolean isDraw() {
+        return OUTCOME == Outcome.DRAW;
+    }
+
+    public boolean whiteWins() {
+        return OUTCOME == Outcome.WHITE_WINS;
+    }
+
+    public boolean blackWins() {
+        return OUTCOME == Outcome.BLACK_WINS;
+    }
 }
