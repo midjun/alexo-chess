@@ -75,7 +75,7 @@ public class Test
         System.out.println("warming up");
         for (int i = 0; i < 15001; i++)
         {
-            playOutRandom( new State() );
+            playOutRandom( State.initial() );
 //            playOutMediocre();
         }
         System.out.println("done warm-up");

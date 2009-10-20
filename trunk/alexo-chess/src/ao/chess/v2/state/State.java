@@ -23,10 +23,10 @@ import java.util.List;
 public class State
 {
     //--------------------------------------------------------------------
-    private static final byte WHITE_K_CASTLE = 1;
-    private static final byte WHITE_Q_CASTLE = 1 << 1;
-    private static final byte BLACK_K_CASTLE = 1 << 2;
-    private static final byte BLACK_Q_CASTLE = 1 << 3;
+    public static final byte WHITE_K_CASTLE = 1;
+    public static final byte WHITE_Q_CASTLE = 1 << 1;
+    public static final byte BLACK_K_CASTLE = 1 << 2;
+    public static final byte BLACK_Q_CASTLE = 1 << 3;
 
     private static final byte WHITE_CASTLE = WHITE_K_CASTLE |
                                              WHITE_Q_CASTLE;
@@ -124,7 +124,7 @@ public class State
 
 
     //--------------------------------------------------------------------
-    private static final byte EP_NONE       = -1;
+    public  static final byte EP_NONE       = -1;
     private static final byte EP_WHITE_DEST = 5;
     private static final byte EP_BLACK_DEST = 2;
 
@@ -142,13 +142,6 @@ public class State
     private static final int[]   NON_KINGS_BY_PROB        =
             {PAWNS, ROOKS, BISHOPS, KNIGHTS, QUEENS};
 
-//    private static final Piece[] NON_KINGS_BY_PROB_PIECES =
-//            {Piece.WHITE_PAWN  , Piece.BLACK_PAWN,
-//             Piece.WHITE_ROOK  , Piece.BLACK_ROOK,
-//             Piece.WHITE_BISHOP, Piece.BLACK_BISHOP,
-//             Piece.WHITE_KNIGHT, Piece.BLACK_KNIGHT,
-//             Piece.WHITE_QUEEN , Piece.BLACK_QUEEN};
-
 
     //--------------------------------------------------------------------
     private long[] wPieces;
@@ -159,7 +152,7 @@ public class State
     private byte   nPieces;
 
     private byte   enPassant; // available to take for nextToAct
-    private byte   prevEnPassants;
+    private byte   prevEnPassant;
 
     private byte   castles;
     private byte   prevCastles;
@@ -172,14 +165,56 @@ public class State
 
 
     //--------------------------------------------------------------------
-    public State(String fen)
-    {
-        loadFen(fen);
+    private static State INITIAL = fromFen(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static State initial() {
+        return INITIAL.prototype();
     }
-    public State()
+
+    public static State fromFen(String fen) {
+        return Representation.fromFen(fen);
+    }
+
+    public State(Piece[][]      board,
+                 Colour         nextToActColour,
+                 byte           reversibleMoves,
+                 CastleType.Set castleSet,
+                 byte           enPassantFile)
     {
-        loadFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR " +
-                    "w KQkq - 0 1");
+        wPieces   = new long[ Figure.VALUES.length ];
+        bPieces   = new long[ Figure.VALUES.length ];
+        castles   = 0;
+
+        whiteBB   = 0;
+        blackBB   = 0;
+        nPieces   = 0;
+
+        castles   = castleSet.toBits();
+        enPassant = enPassantFile;
+        nextToAct = nextToActColour;
+
+        for (int rank = 0; rank < Location.RANKS; rank++) {
+            for (int file = 0; file < Location.FILES; file++) {
+                Piece piece = board[rank][file];
+                if (piece == null) continue;
+
+                long location = BitLoc.locationToBitBoard(rank, file);
+                if (piece.isWhite()) {
+                    wPieces[ piece.figure().ordinal() ] |= location;
+                    whiteBB                             |= location;
+                } else {
+                    bPieces[ piece.figure().ordinal() ] |= location;
+                    blackBB                             |= location;
+                }
+
+                nPieces++;
+            }
+        }
+
+        castlePath          = 0;
+        prevCastlePath      = 0;
+        prevCastles         = castles;
+        prevReversibleMoves = reversibleMoves;
     }
 
     private State(long[] copyWPieces,
@@ -213,76 +248,8 @@ public class State
 
         prevCastles         = copyPrevCastles;
         prevCastlePath      = copyPrevCastlePath;
-        prevEnPassants      = copyPrevEnPassants;
+        prevEnPassant       = copyPrevEnPassants;
         prevReversibleMoves = copyPrevReversibleMoves;
-    }
-
-
-    //--------------------------------------------------------------------
-    public void loadFen(String fen)
-    {
-        wPieces   = new long[ Figure.VALUES.length ];
-        bPieces   = new long[ Figure.VALUES.length ];
-        castles   = 0;
-        enPassant = EP_NONE;
-        whiteBB   = 0;
-        blackBB   = 0;
-        nPieces   = 0;
-
-        String[] parts = fen.split(" ");
-        String[] ranks = parts[0].split("/");
-
-        for (int rank = 7; rank >= 0; rank--) {
-            int file = 0;
-            for (char fenPiece : ranks[7 - rank].toCharArray()) {
-                if (Character.isDigit(fenPiece)) {
-                    int emptyFiles = Character.digit(fenPiece, 10);
-                    file += emptyFiles;
-                } else {
-                    Piece piece = Piece.valueOf(fenPiece);
-
-                    (piece.isWhite()
-                     ? wPieces
-                     : bPieces)[ piece.figure().ordinal() ]
-                            |=  BitLoc.locationToBitBoard(
-                                    rank, file++);
-
-                    nPieces++;
-                }
-            }
-        }
-
-        nextToAct = parts[1].equals("w")
-                    ? Colour.WHITE : Colour.BLACK;
-
-        if (parts.length >= 3 && (! parts[2].equals("-"))) {
-            for (char castle : parts[2].toCharArray()) {
-                switch (castle) {
-                    case 'K': castles |= WHITE_K_CASTLE; break;
-                    case 'Q': castles |= WHITE_Q_CASTLE; break;
-                    case 'k': castles |= BLACK_K_CASTLE; break;
-                    case 'q': castles |= BLACK_Q_CASTLE; break;
-                }
-            }
-        }
-
-        if (parts.length >= 4 && (! parts[3].equals("-"))) {
-            enPassant = (byte) FILES.indexOf(parts[3].charAt(0));
-        }
-
-        if (parts.length >= 5 && (! parts[4].equals("-"))) {
-            reversibleMoves = Byte.parseByte(parts[4]);
-        }
-
-        for (Figure f : Figure.VALUES) {
-            whiteBB |= wPieces[ f.ordinal() ];
-            blackBB |= bPieces[ f.ordinal() ];
-        }
-
-        castlePath          = 0;
-        prevCastlePath      = 0;
-        prevCastles         = castles;
-        prevReversibleMoves = reversibleMoves;
     }
 
 
@@ -380,7 +347,6 @@ public class State
             }
         }
 
-//        return offset;
         return addCastles(moves, offset,
                 proponent, opponent);
     }
@@ -447,11 +413,6 @@ public class State
             moves[ offset++ ] = Move.capture(
                     figure, from, BitLoc.bitBoardToLocation(moveBoard));
 
-//            int move = moves[ offset - 1 ];
-//            if (! check(move)) {
-//                check(move);
-//            }
-
             moveBB &= moveBB - 1;
         }
         return offset;
@@ -513,7 +474,7 @@ public class State
         prevReversibleMoves = reversibleMoves;
 //        reversibleMoves     = 0;
         reversibleMoves++;
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant = EP_NONE;
     }
 
@@ -523,7 +484,7 @@ public class State
         toggleCastle(type);
 
         castles         = prevCastles;
-        enPassant = prevEnPassants;
+        enPassant = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
         castlePath      = prevCastlePath;
     }
@@ -634,11 +595,6 @@ public class State
                 moves[ nextAddAt++ ] =
                         Move.setPromotion(
                                 moves[addFrom + i], f);
-
-//                int move = moves[ nextAddAt - 1 ];
-//                if (! check(move)) {
-//                    check(move);
-//                }
             }
         }
         return nextAddAt;
@@ -653,7 +609,7 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant = EP_NONE;
         prevCastlePath      = castlePath;
         castlePath          = 0;
@@ -701,7 +657,7 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant           = EP_NONE;
 
         nPieces--;
@@ -731,7 +687,7 @@ public class State
     public void unPushPromote(int from, int to, int promotion)
     {
         nextToAct       = nextToAct.invert();
-        enPassant = prevEnPassants;
+        enPassant = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
         castles         = prevCastles;
         castlePath      = prevCastlePath;
@@ -745,7 +701,7 @@ public class State
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassant       = prevEnPassants;
+        enPassant       = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
 
         long toBB = BitLoc.locationToBitBoard(to);
@@ -769,7 +725,7 @@ public class State
                    BitLoc.locationToBitBoard(fromSquareIndex),
                    BitLoc.locationToBitBoard(toSquareIndex));
 
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant = EP_NONE;
         prevCastlePath      = castlePath;
         castlePath          = 0;
@@ -817,7 +773,7 @@ public class State
 
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassant = prevEnPassants;
+        enPassant = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -861,7 +817,7 @@ public class State
                 BitLoc.locationToBitBoard(fromSquareIndex), toBB);
 
         prevReversibleMoves = reversibleMoves;
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant           = EP_NONE;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
@@ -923,7 +879,7 @@ public class State
 
         nextToAct       = nextToAct.invert();
         castles         = prevCastles;
-        enPassant       = prevEnPassants;
+        enPassant       = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
 
         nPieces++;
@@ -965,7 +921,7 @@ public class State
         enPassantSwaps(from, to, captured);
 
         nextToAct           = nextToAct.invert();
-        prevEnPassants      = enPassant;
+        prevEnPassant = enPassant;
         enPassant = EP_NONE;
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
@@ -976,7 +932,7 @@ public class State
             int from, int to, int captured)
     {
         nextToAct       = nextToAct.invert();
-        enPassant = prevEnPassants;
+        enPassant = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
         castlePath      = prevCastlePath;
 
@@ -1135,11 +1091,7 @@ public class State
     }
 
     public CastleType.Set castlesAvailable() {
-        return new CastleType.Set(
-                (castles & WHITE_Q_CASTLE) != 0,
-                (castles & WHITE_K_CASTLE) != 0,
-                (castles & BLACK_Q_CASTLE) != 0,
-                (castles & BLACK_K_CASTLE) != 0);
+        return new CastleType.Set(castles);
     }
 
     public byte enPassantFile() {
@@ -1215,7 +1167,7 @@ public class State
                          blackBB,
                          prevCastles,
                          prevReversibleMoves,
-                         prevEnPassants,
+                prevEnPassant,
                          castlePath,
                          prevCastlePath
                );
@@ -1330,122 +1282,18 @@ public class State
 
     //--------------------------------------------------------------------
     @Override public String toString() {
-        StringBuffer str = new StringBuffer();
-
-        str.append("Next to Act: ").append(nextToAct);
-        str.append("\nReversible Moves: ").append(reversibleMoves);
-
-        if (castles != 0) {
-            str.append("\nCastles Available: ");
-
-            if ((castles & WHITE_CASTLE) != 0) {
-                str.append("[white: ");
-                if ((castles & WHITE_CASTLE) == WHITE_CASTLE) {
-                    str.append("O-O, O-O-O");
-                } else if ((castles & WHITE_Q_CASTLE) != 0) {
-                    str.append("O-O-O");
-                } else {
-                    str.append("O-O");
-                }
-                str.append("] ");
-            }
-            if ((castles & BLACK_CASTLE) != 0) {
-                str.append("[black: ");
-                if ((castles & BLACK_CASTLE) == BLACK_CASTLE) {
-                    str.append("O-O, O-O-O");
-                } else if ((castles & BLACK_Q_CASTLE) != 0) {
-                    str.append("O-O-O");
-                } else {
-                    str.append("O-O");
-                }
-                str.append("]");
-            }
-        }
-
-        if (enPassant != 0) {
-            str.append("\nEn Passants: ");
-            if (enPassant != EP_NONE) {
-                str.append(enPassant);
-            }
-        }
-
-        for (int rank = 7; rank >= 0; rank--)
-        {
-            str.append("\n");
-            for (int file = 0; file < 8; file++)
-            {
-                Piece p = pieceAt(rank, file);
-                str.append((p == null) ? "." : p);
-            }
-        }
-
-        return str.toString();
+        return Representation.displayPosition(
+                Representation.board(this),
+                nextToAct, reversibleMoves,
+                castlesAvailable(), enPassant);
     }
 
-
-    //--------------------------------------------------------------------
     public String toFen()
     {
-        StringBuilder str = new StringBuilder();
-
-        for (int rank = 7; rank >= 0; rank--) {
-            int emptySquares = 0;
-            for (int file = 0; file < 8; file++) {
-                Piece p = pieceAt(rank, file);
-                if (p == null) {
-                    emptySquares++;
-                } else {
-                    if (emptySquares > 0) {
-                        str.append(emptySquares);
-                        emptySquares = 0;
-                    }
-                    str.append(p.toString());
-                }
-            }
-            if (emptySquares > 0) {
-                str.append(emptySquares);
-            }
-
-            if (rank != 0 ) {
-                str.append("/");
-            }
-        }
-
-        str.append(" ");
-        str.append(nextToAct == Colour.WHITE
-                   ? "w" : "b");
-        str.append(" ");
-
-        if (castles == 0) {
-            str.append("-");
-        } else {
-            if ((castles & WHITE_K_CASTLE) != 0) str.append("K");
-            if ((castles & WHITE_Q_CASTLE) != 0) str.append("Q");
-
-            if ((castles & BLACK_K_CASTLE) != 0) str.append("k");
-            if ((castles & BLACK_Q_CASTLE) != 0) str.append("q");
-        }
-        str.append(" ");
-
-		// En passant square
-        if (enPassant == EP_NONE) {
-            str.append("-");
-        } else {
-            str.append(FILES.charAt(enPassant));
-//            str.append(" ");
-            if (nextToAct == Colour.WHITE) {
-                str.append(EP_WHITE_DEST + 1);
-            } else {
-                str.append(EP_BLACK_DEST + 1);
-            }
-        }
-        str.append(" ");
-
-        str.append(reversibleMoves);
-        str.append(" ");
-        str.append("n"); // full moves since start of game
-
-		return str.toString();
+        return Representation.fen(
+                Representation.board(this),
+                nextToAct, reversibleMoves,
+                castlesAvailable(), enPassant);
     }
 
 
@@ -1475,6 +1323,8 @@ public class State
         return result;
     }
 
+
+    //--------------------------------------------------------------------
     public long longHashCode() {
         return nextToActPostprocess(
                 Zobrist.toggleReversibleMoves(

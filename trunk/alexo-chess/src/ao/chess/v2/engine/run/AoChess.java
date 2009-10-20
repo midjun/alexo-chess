@@ -167,7 +167,7 @@ public class AoChess {
     //--------------------------------------------------------------------
     private static boolean winboard(Player bot) throws IOException
     {
-        State state = new State();
+        State state = State.initial();
 //		board.setupStart();
 
 //        long time = System.currentTimeMillis();
@@ -198,7 +198,7 @@ public class AoChess {
             else if (command.equals( WINBOARD_NEW ))
             {
                 force = false;
-                state = new State();
+                state = State.initial();
             }
 
             else if (command.equals( WINBOARD_QUIT ))
@@ -208,7 +208,7 @@ public class AoChess {
 
             else if (command.startsWith( WINBOARD_SETBOARD ))
             {
-                state.loadFen( command.substring(9) );
+                state = State.fromFen( command.substring(9) );
             }
 
             else if (command.startsWith( WINBOARD_TIME ))

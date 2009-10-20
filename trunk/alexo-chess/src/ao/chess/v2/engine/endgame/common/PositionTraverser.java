@@ -4,6 +4,7 @@ import ao.chess.v2.data.Location;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
+import ao.chess.v2.state.Representation;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
 
@@ -101,14 +102,14 @@ public class PositionTraverser
             Colour           nextToAct,
             Traverser<State> visitor)
     {
-        checkValid(new State(
-                fen(nextToAct, -1)), visitor);
+        checkValid(new State(BOARD, nextToAct,
+                (byte) 0, null, State.EP_NONE), visitor);
 
-        int enPassant = enPassant( nextToAct.invert() );
+        byte enPassant = enPassant( nextToAct.invert() );
         if (enPassant == -1) return;
 
-        checkValid(new State(
-                fen(nextToAct, enPassant)), visitor);
+        checkValid(new State(BOARD, nextToAct,
+                (byte) 0, null, enPassant), visitor);
     }
 
     private void checkValid(
@@ -130,9 +131,9 @@ public class PositionTraverser
 
 
     //--------------------------------------------------------------------
-    private int enPassant(Colour by) {
+    private byte enPassant(Colour by) {
         if (by == Colour.WHITE) {
-            for (int file = 0; file < Location.FILES; file++) {
+            for (byte file = 0; file < Location.FILES; file++) {
                 if (BOARD[3][file] == Piece.WHITE_PAWN &&
                         BOARD[2][file] == null &&
                         BOARD[1][file] == null) {
@@ -140,7 +141,7 @@ public class PositionTraverser
                 }
             }
         } else {
-            for (int file = 0; file < Location.FILES; file++) {
+            for (byte file = 0; file < Location.FILES; file++) {
                 if (BOARD[4][file] == Piece.BLACK_PAWN &&
                         BOARD[5][file] == null &&
                         BOARD[6][file] == null) {
@@ -148,70 +149,6 @@ public class PositionTraverser
                 }
             }
         }
-        return -1;
-    }
-
-
-    //--------------------------------------------------------------------
-    private String fen(Colour nextToAct, int enPassant)
-    {
-        StringBuilder str = new StringBuilder();
-
-        for (int rank = 7; rank >= 0; rank--) {
-            int emptySquares = 0;
-            for (int file = 0; file < 8; file++) {
-                Piece p = BOARD[rank][file];
-                if (p == null) {
-                    emptySquares++;
-                } else {
-                    if (emptySquares > 0) {
-                        str.append(emptySquares);
-                        emptySquares = 0;
-                    }
-                    str.append(p.toString());
-                }
-            }
-            if (emptySquares > 0) {
-                str.append(emptySquares);
-            }
-
-            if (rank != 0 ) {
-                str.append("/");
-            }
-        }
-
-        str.append(" ");
-        str.append(nextToAct == Colour.WHITE
-                   ? "w" : "b");
-        str.append(" ");
-
-        // castles
-        str.append("-");
-
-        str.append(" ");
-
-		// En passant square
-        if (enPassant == -1) {
-            str.append("-");
-        } else {
-            str.append(State.FILES.charAt(enPassant));
-//            str.append(" ");
-            if (nextToAct == Colour.WHITE) {
-                str.append(6);
-            } else {
-                str.append(3);
-            }
-        }
-        str.append(" ");
-
-        // reversible moves
-        str.append("0");
-
-        str.append(" ");
-
-        // full moves since start of game
-        str.append("0");
-
-		return str.toString();
+        return State.EP_NONE;
     }
 }

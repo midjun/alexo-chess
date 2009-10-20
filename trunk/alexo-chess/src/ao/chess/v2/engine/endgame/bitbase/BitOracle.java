@@ -36,7 +36,7 @@ public class BitOracle
     public static void main(String[] args) {
         BitOracle oracle = new BitOracle(3);
 
-        State state = new State("8/8/2k5/8/7P/3K4/8/8 w");
+        State state = State.fromFen("8/8/2k5/8/7P/3K4/8/8 w");
         System.out.println(state);
         System.out.println(oracle.see(state));
     }

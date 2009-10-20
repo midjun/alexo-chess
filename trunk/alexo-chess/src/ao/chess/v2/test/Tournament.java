@@ -98,7 +98,7 @@ public class Tournament
     //--------------------------------------------------------------------
     private static Outcome round(Player white, Player black)
     {
-        State state = new State();
+        State state = State.initial();
 
         while (! state.isDrawnBy50MovesRule())
         {

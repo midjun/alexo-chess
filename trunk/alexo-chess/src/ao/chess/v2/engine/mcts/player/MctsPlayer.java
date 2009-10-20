@@ -9,6 +9,7 @@ import ao.chess.v2.engine.mcts.message.MctsAction;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 import ao.util.math.rand.Rand;
+import ao.util.time.Sched;
 import it.unimi.dsi.fastutil.longs.LongLists;
 
 /**
@@ -60,7 +61,10 @@ public class MctsPlayer implements Player
             int   timeIncrement)
     {
         int oracleAction = oracleAction(position);
-        if (oracleAction != -1) return oracleAction;
+        if (oracleAction != -1) {
+            Sched.sleep(2500);
+            return oracleAction;
+        }
 
         MctsNode root = null;
         if (prevState != null && prevPlay != null) {
