@@ -41,7 +41,7 @@ public class Tournament
 //        Player a = new RandomPlayer();
 //        Player a = new SimPlayer(false);
 
-//        Player b = new SimPlayer(false);
+        Player b = new SimPlayer(false);
 //        Player b = new TransPlayer();
 //        Player b = new MctsPlayer(
 //                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
@@ -52,15 +52,15 @@ public class Tournament
 //                new NullTransTable<Ucb1TunedValue>(),
 //                new MctsSchedulerImpl.Factory()
 //        );
-        Player b = new MctsPlayer(
-                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
-                new Ucb1TunedValue.Factory(),
-                new MctsRolloutImpl(true),
-                new Ucb1TunedValue.VisitSelector(),
-                new MctsHeuristicImpl(),
-                new NullTransTable<Ucb1TunedValue>(),
-                new MctsSchedulerImpl.Factory()
-        );
+//        Player b = new MctsPlayer(
+//                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
+//                new Ucb1TunedValue.Factory(),
+//                new MctsRolloutImpl(true),
+//                new Ucb1TunedValue.VisitSelector(),
+//                new MctsHeuristicImpl(),
+//                new NullTransTable<Ucb1TunedValue>(),
+//                new MctsSchedulerImpl.Factory()
+//        );
 
         int aWins = 0;
         int bWins = 0;

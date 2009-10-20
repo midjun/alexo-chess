@@ -1,12 +1,13 @@
 package ao.chess.v2.engine.mcts.rollout;
 
+import ao.chess.v2.engine.endgame.tablebase.DeepOracle;
+import ao.chess.v2.engine.endgame.tablebase.DeepOutcome;
 import ao.chess.v2.engine.mcts.MctsHeuristic;
 import ao.chess.v2.engine.mcts.MctsRollout;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.chess.v2.engine.endgame.bitbase.BitOracle;
 
 /**
  * User: alex
@@ -14,35 +15,19 @@ import ao.chess.v2.engine.endgame.bitbase.BitOracle;
  * Time: 11:56:58 PM
  */
 public class MctsTablebaseRollout
-    implements MctsRollout
+        implements MctsRollout
 {
     //--------------------------------------------------------------------
-//    public static class Factory implements MctsRollout.Factory {
-//        @Override public MctsRollout newRollout() {
-//            return new MctsRolloutImpl();
-//        }
-//    }
-
     private long invocationCount = 0;
     private long   tableHitCount = 0;
 
 
     //--------------------------------------------------------------------
-//    private final int    nPieces;
-    private final BitOracle oracle;
+//    private final DeepOracle oracle;
 
 
     //--------------------------------------------------------------------
-    public MctsTablebaseRollout()
-    {
-        this(3);
-    }
-
-    public MctsTablebaseRollout(int endgamePieces)
-    {
-//        nPieces = endgamePieces;
-        oracle  = new BitOracle(endgamePieces);
-    }
+    public MctsTablebaseRollout() {}
 
 
     //--------------------------------------------------------------------
@@ -60,24 +45,28 @@ public class MctsTablebaseRollout
         int[]   nextMoves = new int[ Move.MAX_PER_PLY ];
         int[]   moves     = new int[ Move.MAX_PER_PLY ];
         int     nMoves    = simState.moves(moves);
-        Outcome outcome;
+        Outcome outcome   = null;
 
-        boolean tableHitUpdated = false;
+        int     discount              = 0;
+        boolean tableHitUpdated       = false;
         boolean wasDrawnBy50MovesRule = false;
         do
         {
             int     move;
             boolean madeMove = false;
 
-            if ((! tableHitUpdated) &&
-                    simState.pieceCount() <= 3) {
-                tableHitCount++;
-                tableHitUpdated = true;
-            }
-
-            outcome = oracle.see(simState);
-            if (outcome != null) {
+//            if ((! tableHitUpdated) &&
+//                    simState.pieceCount() <= 3) {
 //                tableHitCount++;
+//                tableHitUpdated = true;
+//            }
+
+            DeepOutcome deepOutcome =
+                    DeepOracle.INSTANCE.see(simState);
+            if (deepOutcome != null) {
+                tableHitCount++;
+                discount = deepOutcome.plyDistance();
+                outcome  = deepOutcome.outcome();
                 break;
             }
 
@@ -121,5 +110,7 @@ public class MctsTablebaseRollout
         return outcome == null
                ? Double.NaN
                : outcome.valueFor( pov );
+//                 * (discount == 0
+//                    ? 1 : (1.0 - (double) discount / 500));
     }
 }

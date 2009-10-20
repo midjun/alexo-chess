@@ -56,4 +56,12 @@ public enum Outcome
                  ? Colour.BLACK
                  : null;
     }
+
+    public Colour loser() {
+        return (this == WHITE_WINS)
+               ? Colour.BLACK
+               : (this == BLACK_WINS)
+                 ? Colour.WHITE
+                 : null;
+    }
 }

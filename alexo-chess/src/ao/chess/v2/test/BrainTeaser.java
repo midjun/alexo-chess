@@ -96,6 +96,9 @@ public class BrainTeaser {
 //        Player player = new TransPlayer();
 
         State  state  = new State(
+                // endgame test
+                "8/8/8/k7/8/8/3R4/7K w "
+
                 // my
 //                "r2kq2r/pb2ppbp/1p4p1/2ppP3/1n3P2/2NPQN2/PPP3PP/1KR2B1R w kq"
 //                "r1r2k2/4p1bp/1p3pp1/1p1pP3/1P1PbP2/1P3NP1/NK5P/2R2R2 w"
@@ -113,7 +116,7 @@ public class BrainTeaser {
 //                "4rQK1/6P1/8/8/8/8/5R2/6k1 w"
 
                 // mate in four (7)
-                "kq4n1/4p2Q/1P2P4/1K6/8/8/p7/8 w"
+//                "kq4n1/4p2Q/1P2P4/1K6/8/8/p7/8 w"
 
                 // mate in five (11)
                 // http://www.chess-poster.com/chess_problems/mate_in_5.htm

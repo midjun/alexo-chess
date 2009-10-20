@@ -2,13 +2,14 @@ package ao.chess.v2.engine.mcts.player;
 
 import ao.chess.v1.util.Io;
 import ao.chess.v2.engine.Player;
+import ao.chess.v2.engine.endgame.tablebase.DeepOracle;
+import ao.chess.v2.engine.endgame.tablebase.DeepOutcome;
 import ao.chess.v2.engine.mcts.*;
 import ao.chess.v2.engine.mcts.message.MctsAction;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
+import ao.util.math.rand.Rand;
 import it.unimi.dsi.fastutil.longs.LongLists;
-import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 /**
  * User: alex
@@ -58,6 +59,9 @@ public class MctsPlayer implements Player
             int   timePerMove,
             int   timeIncrement)
     {
+        int oracleAction = oracleAction(position);
+        if (oracleAction != -1) return oracleAction;
+
         MctsNode root = null;
         if (prevState != null && prevPlay != null) {
             root = prevPlay.childMatching(
@@ -104,6 +108,46 @@ public class MctsPlayer implements Player
         Move.apply(act.action(), prevState);
 
         return act.action();
+    }
+
+    private int oracleAction(State from) {
+        if (from.pieceCount() > 5) return -1;
+
+        boolean canDraw     = false;
+        int     bestOutcome = 0;
+        int     bestMove    = -1;
+        for (int legalMove : from.legalMoves()) {
+            Move.apply(legalMove, from);
+            DeepOutcome outcome = DeepOracle.INSTANCE.see(from);
+            Move.unApply(legalMove, from);
+            if (outcome == null || outcome.isDraw()) {
+                canDraw = true;
+                continue;
+            }
+
+            if (outcome.outcome().winner() == from.nextToAct()) {
+                if (bestOutcome <= 0 ||
+                        bestOutcome > outcome.plyDistance() ||
+                        (bestOutcome == outcome.plyDistance() &&
+                            Rand.nextBoolean())) {
+                    Io.display(outcome.outcome() + " in " +
+                                outcome.plyDistance() + " with " +
+                                Move.toString(legalMove));
+                    bestOutcome = outcome.plyDistance();
+                    bestMove    = legalMove;
+                }
+            } else if (! canDraw && bestOutcome <= 0
+                            && bestOutcome > -outcome.plyDistance()) {
+                Io.display(outcome.outcome() + " in " +
+                                outcome.plyDistance() + " with " +
+                                Move.toString(legalMove));
+                bestOutcome = -outcome.plyDistance();
+                bestMove    = legalMove;
+            }
+        }
+
+        return (bestOutcome <= 0 && canDraw)
+                ? -1 : bestMove;
     }
 
 

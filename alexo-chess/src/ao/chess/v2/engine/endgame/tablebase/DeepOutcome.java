@@ -1,5 +1,6 @@
 package ao.chess.v2.engine.endgame.tablebase;
 
+import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Outcome;
 
 /**
@@ -50,6 +51,10 @@ public class DeepOutcome
         return OUTCOME == Outcome.BLACK_WINS;
     }
 
+    public Colour winner() {
+        return OUTCOME.winner();
+    }
+    
 
     //--------------------------------------------------------------------
     @Override public String toString() {

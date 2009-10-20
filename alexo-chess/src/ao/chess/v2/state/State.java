@@ -1158,6 +1158,8 @@ public class State
         if (moves == null) {
             if (isInCheck( nextToAct() )) {
                 return Outcome.loses( nextToAct() );
+            } else {
+                System.out.println("State: WTF does this mean??!?");
             }
         } else if (moves.length == 0) {
             if (isInCheck( nextToAct() )) {
