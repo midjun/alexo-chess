@@ -34,10 +34,11 @@ public class MctsTablebaseRollout
     @Override public double monteCarloPlayout(
             State fromState, MctsHeuristic heuristic)
     {
-        if (++invocationCount % 1000 == 0) {
-            System.out.println("table hit fraction: " +
-                    ((double) tableHitCount) / invocationCount);
-        }
+//        if (++invocationCount % 10000 == 0) {
+//            System.out.println(
+//                    "table hits\t" + tableHitCount + "\tfraction\t" +
+//                    ((double) tableHitCount) / invocationCount);
+//        }
         
         Colour  pov       = fromState.nextToAct();
         State   simState  = fromState;

@@ -34,9 +34,9 @@ public class DeepOracle
 
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-        DeepOracle oracle = new DeepOracle(3);
+        DeepOracle oracle = INSTANCE;
 
-        State state = new State("8/7Q/2k5/8/8/3K4/8/8 w");
+        State state = State.fromFen("8/7Q/2k5/8/8/3K4/8/8 w");
         System.out.println(state);
         System.out.println(oracle.see(state));
     }

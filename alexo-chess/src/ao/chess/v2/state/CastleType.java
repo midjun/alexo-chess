@@ -28,10 +28,10 @@ public enum CastleType
         //----------------------------------------------------------------
         public Set(byte fromBits)
         {
-            this(((fromBits >>> 3) & 1) == 1,
-                 ((fromBits >>> 2) & 1) == 1,
-                 ((fromBits >>> 1) & 1) == 1,
-                 ( fromBits        & 1) == 1
+            this((fromBits & State.WHITE_Q_CASTLE) != 0,
+                 (fromBits & State.WHITE_K_CASTLE) != 0,
+                 (fromBits & State.BLACK_Q_CASTLE) != 0,
+                 (fromBits & State.BLACK_K_CASTLE) != 0
                 );
         }
 
@@ -50,10 +50,49 @@ public enum CastleType
         //----------------------------------------------------------------
         public byte toBits() {
             return (byte)(
-                   (whiteQueen ? 1 : 0) << 3 |
-                   (whiteKing  ? 1 : 0) << 2 |
-                   (blackQueen ? 1 : 0) << 1 |
-                   (blackKing  ? 1 : 0));
+                   (whiteQueen ? State.WHITE_Q_CASTLE : 0) |
+                   (whiteKing  ? State.WHITE_K_CASTLE : 0) |
+                   (blackQueen ? State.BLACK_Q_CASTLE : 0) |
+                   (blackKing  ? State.BLACK_K_CASTLE : 0));
+        }
+
+
+        //----------------------------------------------------------------
+        public boolean noneAvailable() {
+            return ! (whiteQueen || whiteKing ||
+                        blackQueen || blackKing );
+        }
+
+        public boolean whiteAvailable() {
+            return whiteQueen || whiteKing;
+        }
+
+        public boolean allWhiteAvailable() {
+            return whiteQueen && whiteKing;
+        }
+
+        public boolean blackAvailable() {
+            return blackQueen || blackKing;
+        }
+
+        public boolean allBlackAvailable() {
+            return blackQueen && blackKing;
+        }
+
+        public boolean whiteQueenSide() {
+            return whiteQueen;
+        }
+
+        public boolean whiteKingSide() {
+            return whiteKing;
+        }
+
+        public boolean blackQueenSide() {
+            return blackQueen;
+        }
+
+        public boolean blackKingSide() {
+            return blackKing;
         }
 
 
