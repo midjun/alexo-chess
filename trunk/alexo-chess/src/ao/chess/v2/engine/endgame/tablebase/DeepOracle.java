@@ -1,12 +1,10 @@
 package ao.chess.v2.engine.endgame.tablebase;
 
-import ao.chess.v2.engine.endgame.bitbase.BitMaterialOracle;
-import ao.chess.v2.engine.endgame.bitbase.FastBitMaterialOracle;
-import ao.chess.v2.engine.endgame.bitbase.NilBitMaterialOracle;
+import ao.chess.v1.util.Io;
+import ao.chess.v2.engine.run.Config;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.data.Arr;
 import ao.util.data.AutovivifiedList;
@@ -18,7 +16,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,17 +28,23 @@ import java.util.List;
 public class DeepOracle
 {
     //--------------------------------------------------------------------
-    private static final File outDir = Dir.get("table/tablebase");
+    private static final File outDir = Dir.get(
+            Config.workingDirectory() + "table/tablebase");
 
 
     //--------------------------------------------------------------------
     public static void main(String[] args) {
         DeepOracle oracle = new DeepOracle(3);
 
-        State state = new State("8/7P/2k5/8/8/3K4/8/8 w");
+        State state = new State("8/7Q/2k5/8/8/3K4/8/8 w");
         System.out.println(state);
         System.out.println(oracle.see(state));
     }
+
+
+    //--------------------------------------------------------------------
+    public static final DeepOracle INSTANCE =
+            new DeepOracle(3);
 
 
     //--------------------------------------------------------------------
@@ -119,7 +122,9 @@ public class DeepOracle
         int tally = MaterialTally.tally(pieces);
         if (oracles.containsKey(tally)) return;
 
-        File               cacheFile      = materialOracleFile(tally);
+        File cacheFile = materialOracleFile(tally);
+        Io.display("DeepOracle: adding " + cacheFile);
+
         DeepMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {

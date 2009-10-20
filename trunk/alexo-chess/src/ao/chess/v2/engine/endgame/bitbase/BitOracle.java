@@ -1,5 +1,6 @@
 package ao.chess.v2.engine.endgame.bitbase;
 
+import ao.chess.v2.engine.run.Config;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
@@ -15,7 +16,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +28,8 @@ import java.util.List;
 public class BitOracle
 {
     //--------------------------------------------------------------------
-    private static final File outDir = Dir.get("table/bitbase");
+    private static final File outDir = Dir.get(
+            Config.workingDirectory() + "table/bitbase");
 
 
     //--------------------------------------------------------------------

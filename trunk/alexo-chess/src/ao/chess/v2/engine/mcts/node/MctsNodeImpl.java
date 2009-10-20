@@ -1,12 +1,14 @@
 package ao.chess.v2.engine.mcts.node;
 
+import ao.chess.v2.engine.endgame.tablebase.DeepOutcome;
+import ao.chess.v2.engine.endgame.tablebase.DeepOracle;
 import ao.chess.v2.engine.mcts.*;
 import ao.chess.v2.engine.mcts.message.MctsAction;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 import it.unimi.dsi.fastutil.longs.LongCollection;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +66,6 @@ public class MctsNodeImpl<V extends MctsValue<V>>
             MctsHeuristic         heuristic)
     {
         State cursor = fromProtoState.prototype();
-
         List<MctsNodeImpl<V>> path =
                 new ArrayList<MctsNodeImpl<V>>();
         path.add(this);

@@ -1,6 +1,5 @@
 package ao.chess.v2.engine.endgame.tablebase;
 
-import ao.chess.v2.engine.endgame.bitbase.BitOracle;
 import ao.chess.v2.engine.endgame.common.MaterialRetrograde;
 import ao.chess.v2.engine.endgame.common.PositionTraverser;
 import ao.chess.v2.engine.endgame.common.StateMap;
@@ -11,7 +10,6 @@ import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.time.Stopwatch;
-import it.unimi.dsi.bits.BitVector;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
@@ -141,14 +139,6 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
                             normalizePly( -result.plyDistance() );
                 }
             }
-
-//            if (result.whiteWins()) {
-//                nextWhiteWins.add(
-//                        indexer.index(state.staticHashCode()) );
-//            } else if (result.blackWins()) {
-//                nextBlackWins.add(
-//                        indexer.index(state.staticHashCode()) );
-//            }
         }
     }
 
@@ -166,18 +156,19 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
         Outcome result = state.knownOutcome();
         if (result != null && result != Outcome.DRAW) {
             return new DeepOutcome(result, 1);
+        } else if (result == Outcome.DRAW) {
+            return null;
         }
 
         int legalMoves[] = state.legalMoves();
         if (legalMoves == null) return null;
 
-        int ties = 0;
-        int minLossPly = Integer.MAX_VALUE;
+        int ties       = 0;
         int minWinPly  = Integer.MAX_VALUE;
+        int maxLossPly = Integer.MIN_VALUE;
         for (int legalMove : legalMoves)
         {
             Move.apply(legalMove, state);
-
             long        staticHash     = state.staticHashCode();
             DeepOutcome imminentResult =
                     materialTally == state.tallyAllMaterial()
@@ -188,13 +179,11 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             if (imminentResult != null &&
                     ! imminentResult.isDraw()) {
                 if (state.nextToAct() ==
-                        imminentResult.outcome().winner()) {
+                        imminentResult.winner()) {
                     minWinPly = Math.min(minWinPly,
                             imminentResult.plyDistance() + 1);
-//                    return imminentResult;
                 } else {
-//                    losses++;
-                    minLossPly = Math.min(minLossPly,
+                    maxLossPly = Math.max(maxLossPly,
                             imminentResult.plyDistance() + 1);
                 }
             } else {
@@ -208,10 +197,10 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
                     minWinPly);
         } else if (ties > 0) {
             return null;
-        } else /*if (minLossPly != Integer.MAX_VALUE)*/ {
+        } else /*if (maxLossPly != Integer.MIN_VALUE)*/ {
             return new DeepOutcome(
                     Outcome.loses( state.nextToAct() ),
-                    minLossPly);
+                    maxLossPly);
         }
     }
 
