@@ -19,6 +19,10 @@ public enum CastleType
     public static class Set
     {
         //----------------------------------------------------------------
+        public static final Set NONE = new Set((byte) 0);
+
+
+        //----------------------------------------------------------------
         private final boolean whiteQueen;
         private final boolean whiteKing;
         private final boolean blackQueen;

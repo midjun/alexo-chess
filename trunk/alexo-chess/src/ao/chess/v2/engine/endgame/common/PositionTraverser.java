@@ -4,7 +4,7 @@ import ao.chess.v2.data.Location;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.Representation;
+import ao.chess.v2.state.CastleType;
 import ao.chess.v2.state.State;
 import ao.util.misc.Traverser;
 
@@ -103,13 +103,13 @@ public class PositionTraverser
             Traverser<State> visitor)
     {
         checkValid(new State(BOARD, nextToAct,
-                (byte) 0, null, State.EP_NONE), visitor);
+                (byte) 0, CastleType.Set.NONE, State.EP_NONE), visitor);
 
         byte enPassant = enPassant( nextToAct.invert() );
         if (enPassant == -1) return;
 
         checkValid(new State(BOARD, nextToAct,
-                (byte) 0, null, enPassant), visitor);
+                (byte) 0, CastleType.Set.NONE, enPassant), visitor);
     }
 
     private void checkValid(
