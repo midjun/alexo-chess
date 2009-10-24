@@ -9,6 +9,7 @@ import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
+import ao.util.misc.Traverser;
 import ao.util.time.Stopwatch;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -82,6 +83,8 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             prevWins = nextWins;
         }
 
+        compact(material);
+
         System.out.println("done, got " +
                 blackWinCount() + " | " +
                 whiteWinCount() + " | " +
@@ -95,6 +98,57 @@ public class SimpleDeepMaterialOracle implements DeepMaterialOracle
             return (byte) Math.max(relativePlyDistance, Byte.MIN_VALUE);
         }
         return 0;
+    }
+
+
+    //--------------------------------------------------------------------
+    public void compact(List<Piece> material) {
+        int       round = 0;
+        Stopwatch timer = new Stopwatch();
+        while (compactRound(material)) {
+            System.out.println("Compaction round " + (++round) +
+                    " done, took " + timer);
+            timer = new Stopwatch();
+        }
+    }
+    private boolean compactRound(List<Piece> material) {
+        final boolean wasChanged[] = {false};
+        new PositionTraverser().traverse(material,
+                new Traverser<State>() {
+                    @Override public void traverse(State state) {
+                        int index = indexer.index(state);
+                        int ply   = outcomes[ index ];
+
+                        if (ply == 0) return;
+                        int[] legalMoves = state.legalMoves();
+                        if (legalMoves == null) return;
+
+                        int minWin  = Byte.MAX_VALUE;
+                        int maxLoss = Byte.MIN_VALUE;
+                        for (int legalMove : legalMoves) {
+                            Move.apply(legalMove, state);
+                            int kidIndex = indexer.index(state);
+                            Move.unApply(legalMove, state);
+
+                            byte kidOutcome = outcomes[ kidIndex ];
+                            if (ply > 0 && kidOutcome > 0) {
+                                minWin  = (byte) Math.min(
+                                            minWin, kidOutcome);
+                            } else if (ply < 0 && kidOutcome < 0) {
+                                maxLoss = (byte) Math.max(
+                                            maxLoss, -kidOutcome);
+                            }
+                        }
+
+                        if (ply > 0 && minWin < ply) {
+                            outcomes[index] = normalizePly(minWin);
+                            wasChanged[0]   = true;
+                        } else if (ply < 0 && maxLoss > -ply) {
+                            outcomes[index] = normalizePly(-maxLoss);
+                            wasChanged[0]   = true;
+                        }
+                    }});
+        return wasChanged[0];
     }
 
 

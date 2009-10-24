@@ -22,7 +22,7 @@ public class MctsHeuristicImpl
 
     //--------------------------------------------------------------------
     @Override
-    public double firstPlayUrgency() {
+    public double firstPlayUrgency(int move) {
         return 1000 + Math.random();
 //        return 1.0
     }

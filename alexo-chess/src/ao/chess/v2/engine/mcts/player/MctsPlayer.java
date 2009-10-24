@@ -93,15 +93,15 @@ public class MctsPlayer implements Player
             root.runTrajectory(
                     position, values, rollouts, transTable, heuristics);
 
-//            if (count++ != 0 && count % 10000 == 0) {
-//                long timer  = System.currentTimeMillis() - lastReport;
-//                long before = System.currentTimeMillis();
-//                Io.display( root );
-//                Io.display( root.bestMove(sellectors).information() );
-//                Io.display( "took " + timer + " | " +
-//                        (System.currentTimeMillis() - before) );
-//                lastReport = System.currentTimeMillis();
-//            }
+            if (count++ != 0 && count % 10000 == 0) {
+                long timer  = System.currentTimeMillis() - lastReport;
+                long before = System.currentTimeMillis();
+                Io.display( root );
+                Io.display( root.bestMove(sellectors).information() );
+                Io.display( "took " + timer + " | " +
+                        (System.currentTimeMillis() - before) );
+                lastReport = System.currentTimeMillis();
+            }
         }
 
         MctsAction act = root.bestMove(sellectors);
