@@ -79,10 +79,10 @@ public class MctsRolloutImpl
             int     move;
             boolean madeMove = false;
 
-//            int[] moveOrder = heuristic.orderMoves(
-//                    simState, moves, nMoves);
-//            for (int moveIndex : moveOrder)
-            for (int moveIndex = 0; moveIndex < nMoves; moveIndex++)
+            int[] moveOrder = heuristic.orderMoves(
+                    simState, moves, nMoves);
+            for (int moveIndex : moveOrder)
+//            for (int moveIndex = 0; moveIndex < nMoves; moveIndex++)
             {
                 move = Move.apply(moves[ moveIndex ], simState);
 
@@ -116,9 +116,9 @@ public class MctsRolloutImpl
             outcome = Outcome.DRAW;
         }
 
-        if (opt) {
-            pov = simState.nextToAct();
-        }
+//        if (opt) {
+//            pov = simState.nextToAct();
+//        }
 
         return outcome == null
                ? Double.NaN

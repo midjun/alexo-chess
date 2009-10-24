@@ -36,15 +36,17 @@ public class DeepOracle
     public static void main(String[] args) {
         DeepOracle oracle = INSTANCE;
 
-        State state = State.fromFen("8/7Q/2k5/8/8/3K4/8/8 w");
+        State state = State.fromFen("8/8/8/8/8/3k3K/7P/8 w - - 0 1");
         System.out.println(state);
         System.out.println(oracle.see(state));
+
+        System.exit(0);
     }
 
 
     //--------------------------------------------------------------------
     public static final DeepOracle INSTANCE =
-            new DeepOracle(4);
+            new DeepOracle(3);
 
 
     //--------------------------------------------------------------------
@@ -125,7 +127,7 @@ public class DeepOracle
         File cacheFile = materialOracleFile(tally);
         Io.display("DeepOracle: adding " + cacheFile);
 
-        DeepMaterialOracle materialOracle =
+        SimpleDeepMaterialOracle materialOracle =
                 PersistentObjects.retrieve( cacheFile );
         if (materialOracle == null) {
             materialOracle = new SimpleDeepMaterialOracle(
@@ -136,6 +138,9 @@ public class DeepOracle
         } else {
             System.out.println("Oracle retrieved cache for " +
                                     Arrays.toString(pieces));
+            
+//            materialOracle.compact(nonKings(pieces));
+//            PersistentObjects.persist(materialOracle, cacheFile);
         }
         oracles.put(tally, materialOracle);
     }

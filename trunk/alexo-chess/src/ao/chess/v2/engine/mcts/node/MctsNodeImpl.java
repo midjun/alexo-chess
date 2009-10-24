@@ -109,7 +109,7 @@ public class MctsNodeImpl<V extends MctsValue<V>>
 
             double banditValue;
             if (kid == null || kid.isUnvisited()) {
-                banditValue = heuristic.firstPlayUrgency();
+                banditValue = heuristic.firstPlayUrgency(acts[i]);
             } else {
                 banditValue = kid.value.confidenceBound(
                         transTable.get(kid.stateHash),

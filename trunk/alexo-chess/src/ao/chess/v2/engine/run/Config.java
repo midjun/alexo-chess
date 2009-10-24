@@ -1,5 +1,9 @@
 package ao.chess.v2.engine.run;
 
+import ao.util.io.Dir;
+
+import java.io.File;
+
 /**
  * User: aostrovsky
  * Date: 18-Oct-2009
@@ -22,5 +26,11 @@ public class Config
 
     public static void setWorkingDirectory(String workingDir) {
         workingDirectory = workingDir;
+    }
+
+
+    //--------------------------------------------------------------------
+    public static File dir(String relativePath) {
+        return Dir.get(workingDirectory + relativePath);
     }
 }

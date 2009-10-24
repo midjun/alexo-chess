@@ -1,18 +1,19 @@
 package ao.chess.v2.engine.run;
 
 import ao.chess.v1.util.Io;
-import ao.chess.v2.engine.mcts.heuristic.MctsFpuHeuristic;
+import ao.chess.v2.engine.Player;
+import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
+import ao.chess.v2.engine.heuristic.simple.SimpleWinTally;
+import ao.chess.v2.engine.mcts.heuristic.MctsCaptureHeuristic;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;
 import ao.chess.v2.engine.mcts.player.MctsPlayer;
 import ao.chess.v2.engine.mcts.rollout.MctsRolloutImpl;
-import ao.chess.v2.engine.mcts.rollout.MctsTablebaseRollout;
 import ao.chess.v2.engine.mcts.scheduler.MctsSchedulerImpl;
 import ao.chess.v2.engine.mcts.transposition.NullTransTable;
 import ao.chess.v2.engine.mcts.value.Ucb1TunedValue;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.engine.simple.SimPlayer;
-import ao.chess.v2.engine.Player;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -28,6 +29,12 @@ import java.util.Arrays;
 "C:\Program Files\Java\jdk1.6.0_14\bin\java.exe -server -Xmx512m -jar C:\~\proj\personal\chess\chess.jar uct"
 "C:\Program Files\Java\jdk1.6.0_14\bin\java.exe -server -Xmx512m -jar C:\~\proj\personal\chess\chess.jar sim"
 "C:\Program Files\Java\jdk1.6.0_14\bin\java.exe -server -Xmx512m -jar C:\~\proj\personal\chess\chess.jar random"
+
+"C:\Program Files\Java\jdk1.6.0_16\bin\java.exe -server -ea -Xmx512m -jar C:\~\proj\personal\chess\Chess.jar uct C:\~\proj\personal\chess\"
+"C:\Program Files\Java\jdk1.6.0_16\bin\java.exe -server -ea -Xmx512m -jar C:\~\proj\personal\chess\Chess.jar uct_o C:\~\proj\personal\chess\"
+
+"C:\Program Files\Java\jdk1.6.0_16\bin\java.exe -server -ea -Xmx512m -jar C:\~\proj\personal\chess\Chess.jar heu C:\~\proj\personal\chess\"
+
  *
  */
 public class AoChess {
@@ -119,9 +126,9 @@ public class AoChess {
                 bot = new MctsPlayer(
                         new MctsNodeImpl.Factory<Ucb1TunedValue>(),
                         new Ucb1TunedValue.Factory(),
-                        new MctsTablebaseRollout(),
+                        new MctsRolloutImpl(false),
                         new Ucb1TunedValue.VisitSelector(),
-                        new MctsHeuristicImpl(),
+                        new MctsCaptureHeuristic(),
                         new NullTransTable<Ucb1TunedValue>(),
                         new MctsSchedulerImpl.Factory()
                 );
@@ -140,6 +147,10 @@ public class AoChess {
                 bot = new SimPlayer(false);
             } else if (botName.equals("sim_o")) {
                 bot = new SimPlayer(true);
+            } else if (botName.equals("heu")) {
+                Io.display("Heuristic Bot");
+                bot = new HeuristicPlayer(
+                        new SimpleWinTally("test"));
             }
 
 //            if (botName.matches("\\d+"))

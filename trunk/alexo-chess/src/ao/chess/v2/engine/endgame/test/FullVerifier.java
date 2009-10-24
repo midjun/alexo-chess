@@ -5,8 +5,8 @@ import ao.chess.v2.engine.endgame.tablebase.DeepOracle;
 import ao.chess.v2.engine.endgame.tablebase.DeepOutcome;
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
-import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
+import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.data.Arr;
 import ao.util.math.stats.Exhauster;
@@ -23,10 +23,10 @@ public class FullVerifier
 {
     //--------------------------------------------------------------------
     public static void main(String[] args) {
-//        verifyFully(3);
-        verifyMaterial(Arrays.asList(
-                Piece.WHITE_KING, Piece.BLACK_KING, Piece.WHITE_QUEEN
-        ));
+        verifyFully(3);
+//        verifyMaterial(Arrays.asList(
+//                Piece.WHITE_KING, Piece.BLACK_KING, Piece.WHITE_PAWN
+//        ));
 
         System.out.println("DONE");
     }
@@ -72,11 +72,25 @@ public class FullVerifier
     //--------------------------------------------------------------------
     private static void verifyPath(State from) {
         DeepOutcome outcome = DeepOracle.INSTANCE.see(from);
-        if (outcome == null || outcome.isDraw()) return;
+//        if (outcome == null || outcome.isDraw()) return;
+        boolean isDraw = (outcome == null || outcome.isDraw());
+
+        Outcome realOutcome = from.knownOutcome();
+        if (realOutcome != null) {
+            if (isDraw && realOutcome != Outcome.DRAW ||
+                    outcome == null ||
+                    realOutcome != outcome.outcome()) {
+                System.out.println(
+                        "KNOWN OUTCOME INCONSISTENCY!!!! in\n" + from +
+                        "\n" + outcome + " vs " + realOutcome);
+            }
+            return;
+        }
 
         boolean canDraw     = false;
         int     shortestWin = Integer.MAX_VALUE;
         int     longestLoss = Integer.MIN_VALUE;
+
         for (int legalMove : from.legalMoves()) {
             Move.apply(legalMove, from);
             DeepOutcome subOutcome = DeepOracle.INSTANCE.see(from);
@@ -88,16 +102,17 @@ public class FullVerifier
 
             if (subOutcome.winner() == from.nextToAct()) {
                 shortestWin = Math.min(
-                        shortestWin, subOutcome.plyDistance());
+                        shortestWin, subOutcome.plyDistance() + 1);
             } else {
                 longestLoss = Math.max(
-                        longestLoss, subOutcome.plyDistance());
+                        longestLoss, subOutcome.plyDistance() + 1);
             }
         }
 
         if (shortestWin != Integer.MAX_VALUE) {
-            if (outcome.winner() != from.nextToAct() ||
-                    outcome.plyDistance() < (shortestWin + 1)) {
+            if (outcome == null ||
+                    outcome.winner() != from.nextToAct() ||
+                    outcome.plyDistance() < shortestWin) {
                 System.out.println(
                         "WIN INCONSISTENCY!!!! in\n" + from +
                         "\n" + outcome + " vs " +
@@ -105,20 +120,27 @@ public class FullVerifier
 //                verifyPath(from);
             }
         } else if (canDraw) {
-            if (outcome.winner() == from.nextToAct().invert()) {
+            if (! isDraw) {
                 System.out.println(
                         "TIE INCONSISTENCY!!!! in\n" + from +
                         "\n" + outcome + " vs " +
                         shortestWin + " | " + longestLoss);
             }
         } else if (longestLoss != Integer.MIN_VALUE) {
-            if (outcome.winner() == from.nextToAct() ||
-                    outcome.plyDistance() > (longestLoss + 1)) {
+            if (isDraw || outcome.winner() == from.nextToAct() ||
+                    outcome.plyDistance() > longestLoss) {
                 System.out.println(
                         "LOSS INCONSISTENCY!!!! in\n" + from +
                         "\n" + outcome + " vs " +
                         shortestWin + " | " + longestLoss);
 //                verifyPath(from);
+            }
+        } else {
+            if (! isDraw) {
+                System.out.println(
+                        "??? INCONSISTENCY!!!! in\n" + from +
+                        "\n" + outcome + " vs " +
+                        shortestWin + " | " + longestLoss);
             }
         }
     }

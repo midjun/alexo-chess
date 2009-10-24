@@ -108,7 +108,7 @@ public class TransNode
 
             double banditValue;
             if (kid == null || kid.isUnvisited()) {
-                banditValue = heuristic.firstPlayUrgency();
+                banditValue = heuristic.firstPlayUrgency(acts[i]);
             } else if (path.contains(kid)) {
                 continue;
             } else {
