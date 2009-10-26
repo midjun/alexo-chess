@@ -3,7 +3,7 @@ package ao.chess.v2.engine.run;
 import ao.chess.v1.util.Io;
 import ao.chess.v2.engine.Player;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
-import ao.chess.v2.engine.heuristic.simple.SimpleWinTally;
+import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
 import ao.chess.v2.engine.mcts.heuristic.MctsCaptureHeuristic;
 import ao.chess.v2.engine.mcts.heuristic.MctsHeuristicImpl;
 import ao.chess.v2.engine.mcts.node.MctsNodeImpl;

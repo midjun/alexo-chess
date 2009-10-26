@@ -1,6 +1,7 @@
 package ao.chess.v2.engine.simple;
 
 import ao.chess.v2.engine.PlayerImpl;
+import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
 
 /**
@@ -11,7 +12,7 @@ import ao.chess.v2.state.State;
 public class RandomPlayer extends PlayerImpl
 {
     //--------------------------------------------------------------------
-    private final int[] moves = new int[128];
+    private final int[] moves = new int[ Move.MAX_PER_PLY ];
 
 
     //--------------------------------------------------------------------
@@ -19,6 +20,8 @@ public class RandomPlayer extends PlayerImpl
             State position)
     {
         int nMoves = position.legalMoves(moves);
+        if (nMoves <= 0) return -1;
+
         return moves[(int)(Math.random() * nMoves)];
     }
 }

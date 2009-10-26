@@ -1,4 +1,4 @@
-package ao.chess.v2.engine.heuristic.simple;
+package ao.chess.v2.engine.heuristic.impl.simple;
 
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
 import ao.chess.v2.engine.run.Config;
