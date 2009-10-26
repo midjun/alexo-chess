@@ -31,6 +31,8 @@ public class HeuristicPlayer implements Player
     {
         double   total      = 0;
         int   [] legalMoves = position.legalMoves();
+        if (legalMoves == null || legalMoves.length == 0) return -1;
+
         double[] moveValues = new double[ legalMoves.length ];
         for (int i = 0; i < legalMoves.length; i++) {
             double value = HEURISTIC.evaluate(position, legalMoves[i]);
