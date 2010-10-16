@@ -31,6 +31,7 @@
         <ao.util.version>2.0.0</ao.util.version>
     </properties>
 
+
     <!--====================================================================-->
     <dependencies>
         <dependency>
@@ -40,8 +41,14 @@
         </dependency>
         <dependency>
             <groupId>ao.util</groupId>
-            <artifactId>util-serial</artifactId>
+            <artifactId>util-serial-persist</artifactId>
             <version>${ao.util.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ao.ai</groupId>
+            <artifactId>ai-classification</artifactId>
+            <version>0.0.3</version>
         </dependency>
 
         <dependency>

@@ -1,6 +1,7 @@
 package ao.chess.v2.engine.run;
 
-import ao.util.io.Dir;
+
+import ao.util.io.Dirs;
 
 import java.io.File;
 
@@ -31,6 +32,6 @@ public class Config
 
     //--------------------------------------------------------------------
     public static File dir(String relativePath) {
-        return Dir.get(workingDirectory + relativePath);
+        return Dirs.get(workingDirectory + relativePath);
     }
 }

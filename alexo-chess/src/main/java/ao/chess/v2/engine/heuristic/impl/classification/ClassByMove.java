@@ -1,5 +1,13 @@
 package ao.chess.v2.engine.heuristic.impl.classification;
 
+import ao.ai.classify.decision.impl.classification.raw.Prediction;
+import ao.ai.classify.decision.impl.input.raw.example.Context;
+import ao.ai.classify.decision.impl.input.raw.example.ContextImpl;
+import ao.ai.classify.decision.impl.input.raw.example.Datum;
+import ao.ai.classify.decision.impl.input.raw.example.ExampleImpl;
+import ao.ai.classify.decision.impl.model.raw.Classifier;
+import ao.ai.classify.decision.impl.model.raw.ClassifierImpl;
+import ao.ai.classify.decision.impl.random.RandomLearner;
 import ao.chess.v2.data.Location;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
 import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
@@ -7,14 +15,6 @@ import ao.chess.v2.engine.run.Config;
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.supervised.classifier.raw.Classifier;
-import ao.supervised.classifier.raw.ClassifierImpl;
-import ao.supervised.decision.classification.raw.Prediction;
-import ao.supervised.decision.input.raw.example.Context;
-import ao.supervised.decision.input.raw.example.ContextImpl;
-import ao.supervised.decision.input.raw.example.Datum;
-import ao.supervised.decision.input.raw.example.ExampleImpl;
-import ao.supervised.decision.random.RandomLearner;
 import ao.util.persist.PersistentObjects;
 import ao.util.serial.Serializer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
