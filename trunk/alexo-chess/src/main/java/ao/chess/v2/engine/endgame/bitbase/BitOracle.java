@@ -8,7 +8,7 @@ import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
 import ao.util.data.Arr;
 import ao.util.data.AutovivifiedList;
-import ao.util.io.Dir;
+import ao.util.io.Dirs;
 import ao.util.math.stats.Exhauster;
 import ao.util.misc.Factories;
 import ao.util.persist.PersistentObjects;
@@ -28,7 +28,7 @@ import java.util.List;
 public class BitOracle
 {
     //--------------------------------------------------------------------
-    private static final File outDir = Dir.get(
+    private static final File outDir = Dirs.get(
             Config.workingDirectory() + "table/bitbase");
 
 
