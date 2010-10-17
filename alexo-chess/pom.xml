@@ -28,7 +28,7 @@
 
     <!--====================================================================-->
     <properties>
-        <ao.util.version>2.0.0</ao.util.version>
+        <ao.util.version>2.4.0</ao.util.version>
     </properties>
 
 
@@ -48,7 +48,8 @@
         <dependency>
             <groupId>ao.ai</groupId>
             <artifactId>ai-classification</artifactId>
-            <version>0.0.3</version>
+            <!--<version>0.0.4</version>-->
+            <version>0.0.5-SNAPSHOT</version>
         </dependency>
 
         <dependency>

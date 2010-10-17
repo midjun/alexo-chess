@@ -3,6 +3,7 @@ package ao.chess.v2.engine.heuristic.train;
 import ao.chess.v2.engine.Player;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
 import ao.chess.v2.engine.heuristic.impl.classification.ClassByMove;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearSingular;
 import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
 import ao.chess.v2.piece.Colour;
@@ -31,15 +32,18 @@ public class HeuristicTrainer
     public static void main(String[] args)
     {
         String        id        = "test";
-        MoveHeuristic heuristic = SimpleWinTally.retrieve(id);
+        MoveHeuristic heuristic = new LinearSingular( id );
+//        MoveHeuristic heuristic = SimpleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = DoubleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = ClassByMove.retrieve(id);
         Stopwatch     timer     = new Stopwatch();
 
+        System.out.println("Starting with: " + heuristic);
+
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
             trainingRound( heuristic );
 
-            if ((i + 1) % 10000 == 0) {
+            if ((i + 1) % 100 == 0) {
                 System.out.println((i + 1) + " took " + timer);
                 timer = new Stopwatch();
 

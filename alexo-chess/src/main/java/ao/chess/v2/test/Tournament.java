@@ -1,6 +1,7 @@
 package ao.chess.v2.test;
 
 import ao.chess.v2.engine.Player;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearSingular;
 import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
 import ao.chess.v2.engine.simple.RandomPlayer;
@@ -33,10 +34,11 @@ public class Tournament
 //                new NullTransTable<Ucb1TunedValue>(),
 //                new MctsSchedulerImpl.Factory()
 //        );
-        Player a = new RandomPlayer();
+//        Player a = new RandomPlayer();
 //        Player a = new SimPlayer(false);
-//        Player a = new HeuristicPlayer(
-//                        new SimpleWinTally("test"));
+        Player a = new HeuristicPlayer(
+//                new SimpleWinTally("test"));
+                new LinearSingular("test"));
 
 //        Player b = new SimPlayer(false);
 //        Player b = new HeuristicPlayer(
