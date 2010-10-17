@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class State
 {
-    //--------------------------------------------------------------------
+    //------------------------------------------------------------------------
     public static final byte WHITE_K_CASTLE = 1;
     public static final byte WHITE_Q_CASTLE = 1 << 1;
     public static final byte BLACK_K_CASTLE = 1 << 2;
@@ -1126,6 +1126,12 @@ public class State
 
 
     //--------------------------------------------------------------------
+    /**
+     * @param rankIndex rank
+     * @param fileIndex file
+     * @return Piece at [rankIndex rank, fileIndex index)
+     *          or null if the square is empty
+     */
     public Piece pieceAt(int rankIndex, int fileIndex)
     {
         long loc = BitLoc.locationToBitBoard(rankIndex, fileIndex);
