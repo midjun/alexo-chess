@@ -1,11 +1,11 @@
 package ao.chess.v2.engine.endgame.test;
 
 import ao.chess.v2.data.Location;
-import ao.chess.v2.piece.Piece;
-import ao.chess.v2.state.State;
-import ao.chess.v2.state.Outcome;
 import ao.chess.v2.engine.endgame.common.PositionTraverser;
-import ao.util.misc.Traverser;
+import ao.chess.v2.piece.Piece;
+import ao.chess.v2.state.Outcome;
+import ao.chess.v2.state.State;
+import ao.util.pass.Traverser;
 
 import java.util.Arrays;
 import java.util.List;

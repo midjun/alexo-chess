@@ -1,9 +1,9 @@
 package ao.chess.v2.engine.endgame.common;
 
+import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
 import ao.chess.v2.state.Representation;
 import ao.chess.v2.state.State;
-import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
-import ao.util.misc.Traverser;
+import ao.util.pass.Traverser;
 
 import java.util.Iterator;
 

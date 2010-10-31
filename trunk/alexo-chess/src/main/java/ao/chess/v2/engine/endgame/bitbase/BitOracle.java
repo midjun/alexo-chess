@@ -6,7 +6,7 @@ import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.util.data.Arr;
+import ao.util.data.Arrs;
 import ao.util.data.AutovivifiedList;
 import ao.util.io.Dirs;
 import ao.util.math.stats.Exhauster;
@@ -97,8 +97,8 @@ public class BitOracle
 
     //--------------------------------------------------------------------
     private boolean hasKing(Piece[] pieces) {
-        return Arr.indexOf(pieces, Piece.WHITE_KING) != -1 ||
-                Arr.indexOf(pieces, Piece.BLACK_KING) != -1;
+        return Arrs.indexOf(pieces, Piece.WHITE_KING) != -1 ||
+                Arrs.indexOf(pieces, Piece.BLACK_KING) != -1;
     }
 
     private int pawnCount(Piece[] pieces) {
