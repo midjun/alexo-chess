@@ -8,9 +8,9 @@ import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.util.data.Arr;
+import ao.util.data.Arrs;
 import ao.util.math.stats.Exhauster;
-import ao.util.misc.Traverser;
+import ao.util.pass.Traverser;
 
 import java.util.*;
 
@@ -37,8 +37,8 @@ public class FullVerifier
         Set<Integer> seen = new HashSet<Integer>();
         for (Piece[] pick :
                 new Exhauster<Piece>(Piece.VALUES, nPieces - 2)) {
-            if (Arr.indexOf(pick, Piece.WHITE_KING) != -1 ||
-                    Arr.indexOf(pick, Piece.BLACK_KING) != -1) {
+            if (Arrs.indexOf(pick, Piece.WHITE_KING) != -1 ||
+                    Arrs.indexOf(pick, Piece.BLACK_KING) != -1) {
                 continue;
             }
 

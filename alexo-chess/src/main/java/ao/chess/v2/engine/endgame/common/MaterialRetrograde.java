@@ -1,10 +1,10 @@
 package ao.chess.v2.engine.endgame.common;
 
+import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
-import ao.chess.v2.engine.endgame.common.index.MinPerfectHash;
-import ao.util.data.Arr;
-import ao.util.misc.Traverser;
+import ao.util.data.Arrs;
+import ao.util.pass.Traverser;
 
 import java.util.Arrays;
 
@@ -63,7 +63,7 @@ public class MaterialRetrograde
         {
             precedents[index] = new int[]{ parentIndex };
         }
-        else if (Arr.indexOf(parents, parentIndex) == -1)
+        else if (Arrs.indexOf(parents, parentIndex) == -1)
         {
             int[] newParents = Arrays.copyOf(
                     parents, parents.length + 1);

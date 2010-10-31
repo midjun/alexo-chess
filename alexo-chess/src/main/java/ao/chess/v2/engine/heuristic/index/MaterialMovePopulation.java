@@ -3,7 +3,7 @@ package ao.chess.v2.engine.heuristic.index;
 import ao.chess.v2.data.MovePicker;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.State;
-import ao.util.text.Format;
+import ao.util.text.AoFormat;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -33,7 +33,7 @@ public class MaterialMovePopulation
                 LOG.debug("round " + (i + 1) +
                             "/" + consecutiveNoneAdded +
                             " with " + tallyToMoves.size() +
-                            "/" + Format.decimal(
+                            "/" + AoFormat.decimal(
                                     deepCount(tallyToMoves)));
             }
 

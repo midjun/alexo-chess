@@ -6,7 +6,7 @@ import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.CastleType;
 import ao.chess.v2.state.State;
-import ao.util.misc.Traverser;
+import ao.util.pass.Traverser;
 
 import java.util.Arrays;
 import java.util.List;

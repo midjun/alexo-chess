@@ -9,7 +9,7 @@ import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
-import ao.util.misc.Traverser;
+import ao.util.pass.Traverser;
 import ao.util.time.Stopwatch;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
