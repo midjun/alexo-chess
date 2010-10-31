@@ -2,7 +2,7 @@ package ao.chess.v2.engine.heuristic.train;
 
 import ao.chess.v2.engine.Player;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
-import ao.chess.v2.engine.heuristic.impl.classification.LinearBinarySingular;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearMultiSingular;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.piece.Colour;
@@ -32,7 +32,8 @@ public class HeuristicTrainer
     public static void main(String[] args)
     {
         String        id        = "test";
-        MoveHeuristic heuristic = new LinearBinarySingular( id );
+        MoveHeuristic heuristic = new LinearMultiSingular( id );
+//        MoveHeuristic heuristic = new LinearBinarySingular( id );
 //        MoveHeuristic heuristic = SimpleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = DoubleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = ClassByMove.retrieve(id);
