@@ -2,14 +2,14 @@ package ao.chess.v2.engine.heuristic.train;
 
 import ao.chess.v2.engine.Player;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
-import ao.chess.v2.engine.heuristic.impl.classification.ClassByMove;
-import ao.chess.v2.engine.heuristic.impl.classification.LinearSingular;
-import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearBinarySingular;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
+import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
+import ao.util.math.rand.Rand;
 import ao.util.time.Stopwatch;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -32,7 +32,7 @@ public class HeuristicTrainer
     public static void main(String[] args)
     {
         String        id        = "test";
-        MoveHeuristic heuristic = new LinearSingular( id );
+        MoveHeuristic heuristic = new LinearBinarySingular( id );
 //        MoveHeuristic heuristic = SimpleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = DoubleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = ClassByMove.retrieve(id);
@@ -40,8 +40,21 @@ public class HeuristicTrainer
 
         System.out.println("Starting with: " + heuristic);
 
+//        System.out.println("Random-priming");
+//        for (int i = 0; i < 1000; i++) {
+//            trainingRound( heuristic, true );
+//
+//            if ((i + 1) % 100 == 0) {
+//                System.out.println((i + 1) + " took " + timer);
+//                timer = new Stopwatch();
+//
+//                heuristic.persist();
+//            }
+//        }
+
+        System.out.println("Self-training");
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
-            trainingRound( heuristic );
+            trainingRound( heuristic, false );
 
             if ((i + 1) % 100 == 0) {
                 System.out.println((i + 1) + " took " + timer);
@@ -55,14 +68,28 @@ public class HeuristicTrainer
 
     //--------------------------------------------------------------------
     public static void trainingRound(
-            MoveHeuristic heuristic)
+            MoveHeuristic heuristic, boolean randomize)
     {
         List<State> stateHistory  = new ArrayList<State>();
         IntList     actionHistory = new IntArrayList();
 
+        Player whitePlayer = new HeuristicPlayer(heuristic);
+        Player blackPlayer = new HeuristicPlayer(heuristic);
+
+        if (randomize)
+        {
+            if (Rand.nextBoolean())
+            {
+                whitePlayer = new RandomPlayer();
+            }
+            else
+            {
+                blackPlayer = new RandomPlayer();
+            }
+        }
+
         Outcome outcome = round(
-                new HeuristicPlayer(heuristic),
-                new HeuristicPlayer(heuristic),
+                whitePlayer, blackPlayer,
                 stateHistory, actionHistory);
 
         for (int i = 0; i < stateHistory.size(); i++) {
@@ -90,10 +117,9 @@ public class HeuristicTrainer
             boolean moveMade = false;
             int move = nextToAct.move(state.prototype(),
                     TIME_PER_MOVE, TIME_PER_MOVE, TIME_PER_MOVE);
-            int undoable = -1;
             if (move != -1) {
                 State beforeMove = state.prototype();
-                undoable = Move.apply(move, state);
+                int undoable = Move.apply(move, state);
                 if (undoable != -1) {
                     moveMade = true;
 

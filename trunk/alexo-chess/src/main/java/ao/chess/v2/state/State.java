@@ -1173,7 +1173,7 @@ public class State
                          blackBB,
                          prevCastles,
                          prevReversibleMoves,
-                prevEnPassant,
+                         prevEnPassant,
                          castlePath,
                          prevCastlePath
                );
