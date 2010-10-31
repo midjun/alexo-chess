@@ -1,13 +1,11 @@
 package ao.chess.v2.engine.heuristic.impl.classification;
 
-import ao.ai.classify.linear.PassiveAggressive;
-import ao.ai.ml.model.algo.OnlineBinaryScoreLearner;
+import ao.ai.classify.linear.SpaLearner;
+import ao.ai.ml.model.algo.OnlineMultiScoreLearner;
 import ao.ai.ml.model.input.RealList;
-import ao.ai.ml.model.output.BinaryClass;
-import ao.ai.ml.model.output.BinaryScoreClass;
+import ao.ai.ml.model.output.MultiScoreClass;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
 import ao.chess.v2.engine.run.Config;
-import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -37,7 +35,7 @@ public class LinearMultiSingular
 
     //------------------------------------------------------------------------
     private final String                             id;
-    private final OnlineBinaryScoreLearner<RealList> learner;
+    private final OnlineMultiScoreLearner<RealList> learner;
 
 
     //------------------------------------------------------------------------
@@ -45,11 +43,11 @@ public class LinearMultiSingular
     {
         this.id = id;
 
-        OnlineBinaryScoreLearner<RealList> rememberedLearner =
+        OnlineMultiScoreLearner<RealList> rememberedLearner =
                 PersistentObjects.retrieve( new File(dir, id) );
 
         learner = ((rememberedLearner == null)
-                   ? new PassiveAggressive()
+                   ? new SpaLearner()
                    : rememberedLearner);
     }
 
@@ -61,12 +59,17 @@ public class LinearMultiSingular
         State beingEvaluated = state.prototype();
         Move.apply( move, beingEvaluated );
 
-        BinaryScoreClass classification =
+        MultiScoreClass classification =
                 learner.classify(ChessClassUtils.encode(
                         beingEvaluated));
 
-        return (state.nextToAct() == Colour.WHITE ? 1 : -1) *
-                classification.positiveScore();
+        double drawConf = classification.scoreOfClass(
+                Outcome.DRAW.ordinal());
+
+        double winConf = classification.scoreOfClass(
+                Outcome.wins(state.nextToAct()).ordinal());
+
+        return winConf + drawConf / 2.0;
     }
 
 
@@ -86,8 +89,8 @@ public class LinearMultiSingular
         learner.learn(
                 ChessClassUtils.encode(
                         beingEvaluated),
-                BinaryClass.create(
-                        outcome == Outcome.WHITE_WINS));
+                MultiScoreClass.create(
+                        outcome.ordinal()));
     }
 
 
