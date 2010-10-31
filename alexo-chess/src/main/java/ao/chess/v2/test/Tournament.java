@@ -1,11 +1,8 @@
 package ao.chess.v2.test;
 
 import ao.chess.v2.engine.Player;
-import ao.chess.v2.engine.heuristic.impl.classification.LinearSingular;
-import ao.chess.v2.engine.heuristic.impl.simple.SimpleWinTally;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearBinarySingular;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
-import ao.chess.v2.engine.simple.RandomPlayer;
-import ao.chess.v2.engine.simple.SimPlayer;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
@@ -38,12 +35,13 @@ public class Tournament
 //        Player a = new SimPlayer(false);
         Player a = new HeuristicPlayer(
 //                new SimpleWinTally("test"));
-                new LinearSingular("test"));
+                new LinearBinarySingular("test"));
 
 //        Player b = new SimPlayer(false);
-//        Player b = new HeuristicPlayer(
+        Player b = new HeuristicPlayer(
 //                        new SimpleWinTally("test"));
-        Player b = new RandomPlayer();
+                new LinearBinarySingular("test"));
+//        Player b = new RandomPlayer();
 //        Player b = new TransPlayer();
 //        Player b = new MctsPlayer(
 //                new MctsNodeImpl.Factory<Ucb1TunedValue>(),
