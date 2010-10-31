@@ -45,9 +45,9 @@ public class HeuristicPlayer implements Player
         for (int i = 0; i < legalMoves.length; i++) {
 //            double probability = moveValues[ i ] / total;
 //            double value       = Rand.nextDouble( probability );
-            double value       = moveValues[ i ];
-//            double value       =
-//                    moveValues[ i ] + Rand.nextDouble(0.05);
+//            double value       = moveValues[ i ];
+            double value       =
+                    moveValues[ i ] + Rand.nextDouble(0.0001);
 
             if (maxMoveValue < value) {
                 maxMoveValue = value;
@@ -56,5 +56,13 @@ public class HeuristicPlayer implements Player
         }
 
         return maxMove;
+    }
+
+
+    //--------------------------------------------------------------------
+    @Override
+    public String toString()
+    {
+        return HEURISTIC.toString();
     }
 }

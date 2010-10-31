@@ -2,7 +2,7 @@ package ao.chess.v2.engine.heuristic.train;
 
 import ao.chess.v2.engine.Player;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
-import ao.chess.v2.engine.heuristic.impl.classification.LinearMultiSingular;
+import ao.chess.v2.engine.heuristic.impl.classification.LinearByMaterial;
 import ao.chess.v2.engine.heuristic.player.HeuristicPlayer;
 import ao.chess.v2.engine.simple.RandomPlayer;
 import ao.chess.v2.piece.Colour;
@@ -32,11 +32,12 @@ public class HeuristicTrainer
     public static void main(String[] args)
     {
         String        id        = "test";
-        MoveHeuristic heuristic = new LinearMultiSingular( id );
+//        MoveHeuristic heuristic = new LinearMultiSingular( id );
 //        MoveHeuristic heuristic = new LinearBinarySingular( id );
 //        MoveHeuristic heuristic = SimpleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = DoubleWinTally.retrieve(id);
 //        MoveHeuristic heuristic = ClassByMove.retrieve(id);
+        MoveHeuristic heuristic = new LinearByMaterial( id );
         Stopwatch     timer     = new Stopwatch();
 
         System.out.println("Starting with: " + heuristic);
@@ -54,10 +55,12 @@ public class HeuristicTrainer
 //        }
 
         System.out.println("Self-training");
-        for (int i = 0; i < Integer.MAX_VALUE; i++) {
-            trainingRound( heuristic, false );
+        for (int i = 0; i < Integer.MAX_VALUE; i++)
+        {
+//            trainingRound( heuristic, false );
+            trainingRound( heuristic, true );
 
-            if ((i + 1) % 100 == 0) {
+            if ((i + 1) % 1000 == 0) {
                 System.out.println((i + 1) + " took " + timer);
                 timer = new Stopwatch();
 
@@ -79,19 +82,24 @@ public class HeuristicTrainer
 
         if (randomize)
         {
-            if (Rand.nextBoolean())
-            {
-                whitePlayer = new RandomPlayer();
-            }
-            else
-            {
-                blackPlayer = new RandomPlayer();
+            Player thirdParty = new RandomPlayer();
+//            Player thirdParty = new SimPlayer( false );
+            if (Rand.nextBoolean()) {
+                whitePlayer = thirdParty;
+            } else {
+                blackPlayer = thirdParty;
             }
         }
 
         Outcome outcome = round(
                 whitePlayer, blackPlayer,
                 stateHistory, actionHistory);
+
+        if (outcome != Outcome.DRAW) {
+            System.out.println( outcome + ": " +
+                    (outcome == Outcome.WHITE_WINS
+                    ? whitePlayer : blackPlayer));
+        }
 
         for (int i = 0; i < stateHistory.size(); i++) {
             heuristic.update(

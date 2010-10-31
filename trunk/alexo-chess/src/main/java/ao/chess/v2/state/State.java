@@ -2,6 +2,7 @@ package ao.chess.v2.state;
 
 import ao.chess.v2.data.BitBoard;
 import ao.chess.v2.data.BitLoc;
+import ao.chess.v2.data.BoardLocation;
 import ao.chess.v2.data.Location;
 import ao.chess.v2.move.SlidingPieces;
 import ao.chess.v2.piece.Colour;
@@ -9,9 +10,9 @@ import ao.chess.v2.piece.Figure;
 import ao.chess.v2.piece.MaterialTally;
 import ao.chess.v2.piece.Piece;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Date: Feb 6, 2009
@@ -609,8 +610,8 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassant = enPassant;
-        enPassant = EP_NONE;
+        prevEnPassant       = enPassant;
+        enPassant           = EP_NONE;
         prevCastlePath      = castlePath;
         castlePath          = 0;
         prevCastles         = castles;
@@ -657,7 +658,7 @@ public class State
         nextToAct           = nextToAct.invert();
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
-        prevEnPassant = enPassant;
+        prevEnPassant       = enPassant;
         enPassant           = EP_NONE;
 
         nPieces--;
@@ -773,7 +774,7 @@ public class State
 
         castles         = prevCastles;
         castlePath      = prevCastlePath;
-        enPassant = prevEnPassant;
+        enPassant       = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
     }
 
@@ -817,7 +818,7 @@ public class State
                 BitLoc.locationToBitBoard(fromSquareIndex), toBB);
 
         prevReversibleMoves = reversibleMoves;
-        prevEnPassant = enPassant;
+        prevEnPassant       = enPassant;
         enPassant           = EP_NONE;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
@@ -921,20 +922,22 @@ public class State
         enPassantSwaps(from, to, captured);
 
         nextToAct           = nextToAct.invert();
-        prevEnPassant = enPassant;
-        enPassant = EP_NONE;
+        prevEnPassant       = enPassant;
+        enPassant           = EP_NONE;
         prevReversibleMoves = reversibleMoves;
         reversibleMoves     = 0;
         prevCastlePath      = castlePath;
         castlePath          = 0;
+        nPieces--;
     }
     public void unEnPassantCapture(
             int from, int to, int captured)
     {
         nextToAct       = nextToAct.invert();
-        enPassant = prevEnPassant;
+        enPassant       = prevEnPassant;
         reversibleMoves = prevReversibleMoves;
         castlePath      = prevCastlePath;
+        nPieces++;
 
         enPassantSwaps(from, to, captured);
     }
@@ -960,7 +963,7 @@ public class State
     }
 
     // requires that a Figure.PAWN is moving
-    public void updateEnPassantRights(int from, int to)
+    private void updateEnPassantRights(int from, int to)
     {
         if (Math.abs(Location.rankIndex(from) -
                      Location.rankIndex(to  )) > 1) {
@@ -1018,17 +1021,22 @@ public class State
         return nPieces;
     }
 
-    public List<Piece> material() {
-        List<Piece> material = new ArrayList<Piece>(4);
-        material(material, wPieces);
-        material(material, bPieces);
-        return material;
+    public Map<BoardLocation, Piece> material() {
+        Map<BoardLocation, Piece> locationToPiece =
+                new EnumMap<BoardLocation, Piece>(
+                        BoardLocation.class);
+        material(locationToPiece, wPieces, Colour.WHITE);
+        material(locationToPiece, bPieces, Colour.BLACK);
+        return locationToPiece;
     }
-    private void material(List<Piece> addTo, long[] pieces) {
+    private void material(Map<BoardLocation, Piece> addTo,
+                          long[] pieces, Colour col) {
         for (Figure f : Figure.VALUES) {
             long bb = pieces[ f.ordinal() ];
             while (bb != 0) {
-                addTo.add(Piece.valueOf(nextToAct, f));
+                addTo.put(BoardLocation.get(
+                            BitLoc.bitBoardToLocation(bb)),
+                          Piece.valueOf(col, f));
                 bb &= bb - 1;
             }
         }

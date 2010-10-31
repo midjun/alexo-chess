@@ -116,4 +116,19 @@ public class DoubleWinTally implements MoveHeuristic, Serializable
                     " totalling " + totalCount +
                     " took " + timer);
     }
+
+
+    //--------------------------------------------------------------------
+    @Override
+    public String toString()
+    {
+        int vCount = 0;
+        for (Int2ObjectMap<int[]> v : stateToMoveToStats.values())
+        {
+            vCount += v.size();
+        }
+
+        return "DoubleWinTally " + stateToMoveToStats.size() +
+                    " -> " + vCount;
+    }
 }
