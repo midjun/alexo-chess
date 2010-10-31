@@ -7,7 +7,6 @@ import ao.ai.ml.model.output.BinaryClass;
 import ao.ai.ml.model.output.BinaryScoreClass;
 import ao.chess.v2.engine.heuristic.MoveHeuristic;
 import ao.chess.v2.engine.run.Config;
-import ao.chess.v2.piece.Colour;
 import ao.chess.v2.state.Move;
 import ao.chess.v2.state.Outcome;
 import ao.chess.v2.state.State;
@@ -65,8 +64,9 @@ public class LinearBinarySingular
                 learner.classify(ChessClassUtils.encode(
                         beingEvaluated));
 
-        return (state.nextToAct() == Colour.WHITE ? 1 : -1) *
-                classification.positiveScore();
+//        return (state.nextToAct() == Colour.WHITE ? 1 : -1) *
+//                classification.positiveScore();
+        return classification.positiveScore();
     }
 
 
@@ -74,11 +74,11 @@ public class LinearBinarySingular
     @Override
     public void update(State fromState, int move, Outcome outcome)
     {
-        if (outcome == Outcome.DRAW)
-        {
-            // binary classification for now
-            return;
-        }
+//        if (outcome == Outcome.DRAW)
+//        {
+//            // binary classification for now
+//            return;
+//        }
 
         State beingEvaluated = fromState.prototype();
         Move.apply( move, beingEvaluated );
@@ -87,7 +87,8 @@ public class LinearBinarySingular
                 ChessClassUtils.encode(
                         beingEvaluated),
                 BinaryClass.create(
-                        outcome == Outcome.WHITE_WINS));
+                        outcome.winner() == fromState.nextToAct()));
+//                        outcome == Outcome.WHITE_WINS));
     }
 
 

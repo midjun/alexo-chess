@@ -2,6 +2,7 @@ package ao.chess.v2.engine.heuristic.impl.classification;
 
 import ao.ai.ml.model.common.AiModelUtils;
 import ao.ai.ml.model.input.RealList;
+import ao.chess.v2.data.BoardLocation;
 import ao.chess.v2.piece.Colour;
 import ao.chess.v2.piece.Piece;
 import ao.chess.v2.state.State;
@@ -15,6 +16,30 @@ public class ChessClassUtils
 {
     //------------------------------------------------------------------------
     private ChessClassUtils() {}
+
+
+    //------------------------------------------------------------------------
+    public static RealList encodeByMaterial(State state)
+    {
+        double[] coding = new double[
+                2 * state.pieceCount() + 1 + 1 ];
+
+        // bias
+        coding[ coding.length - 1 ] = 1;
+
+        // next-to-act
+        coding[ coding.length - 2 ] = AiModelUtils.sgn(
+                state.nextToAct() == Colour.WHITE);
+
+        int nextIndex = 0;
+        for (BoardLocation orderedLocation : state.material().keySet())
+        {
+            coding[ nextIndex++ ] = orderedLocation.rank();
+            coding[ nextIndex++ ] = orderedLocation.file();
+        }
+
+        return new RealList( coding );
+    }
 
 
     //------------------------------------------------------------------------

@@ -67,9 +67,30 @@ public class LinearMultiSingular
                 Outcome.DRAW.ordinal());
 
         double winConf = classification.scoreOfClass(
-                Outcome.wins(state.nextToAct()).ordinal());
+                Outcome.wins( state.nextToAct() ).ordinal());
 
-        return winConf + drawConf / 2.0;
+        double lossConf = classification.scoreOfClass(
+                Outcome.loses( state.nextToAct() ).ordinal());
+
+        double minConf = Math.min(drawConf, Math.min(winConf, lossConf));
+        if (minConf > 0)
+        {
+            return (winConf + drawConf / 2.0) / (winConf + drawConf + lossConf);
+        }
+        else
+        {
+            double drawAbs = (drawConf < 0 ? -drawConf : drawConf - minConf);
+            double winAbs  = (winConf  < 0 ? -winConf  : winConf  - minConf);
+            double lossAbs = (lossConf < 0 ? -lossConf : lossConf - minConf);
+
+            return (winAbs + drawAbs / 2.0) / (winAbs + drawAbs + lossAbs);
+        }
+
+//        double totalConf = drawConf + winConf + lossConf;
+
+//        return winConf;
+//        return winConf + drawConf / 2.0;
+//        return -drawConf;
     }
 
 
@@ -77,12 +98,6 @@ public class LinearMultiSingular
     @Override
     public void update(State fromState, int move, Outcome outcome)
     {
-        if (outcome == Outcome.DRAW)
-        {
-            // binary classification for now
-            return;
-        }
-
         State beingEvaluated = fromState.prototype();
         Move.apply( move, beingEvaluated );
 

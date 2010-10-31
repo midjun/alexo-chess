@@ -19,7 +19,5 @@ public class Pool
             Runtime.getRuntime().availableProcessors() - 1, 1), 8);
 
     public static final ExecutorService EXEC  =
-            Executors.newFixedThreadPool(CORES);
-
-
+            Executors.newFixedThreadPool( CORES );
 }

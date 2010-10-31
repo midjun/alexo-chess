@@ -41,7 +41,7 @@ public class Io
     public static void display(Object text)
     {
         textArea.setText(text + "\n" + textArea.getText());
-        System.out.println(text);
+//        System.out.println(text);
     }
 
 

@@ -321,6 +321,11 @@ public class Move
 
 
     //--------------------------------------------------------------------
+    /**
+     * @param move Move to apply
+     * @param toState State (board) on which to apply the move
+     * @return Move that can be undone
+     */
     public static int apply(int move, State toState)
     {
 //        Colour colour = colour(move);
